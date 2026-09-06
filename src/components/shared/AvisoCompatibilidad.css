@@ -1,0 +1,28 @@
+.aviso-compat {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: #fff8e1;
+  border: 1px solid var(--yellow);
+  border-left: 5px solid var(--yellow);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 24px 0;
+}
+
+.aviso-compat-icon {
+  flex-shrink: 0;
+  color: #b8860b;
+  margin-top: 2px;
+}
+
+.aviso-compat p {
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: #4a3c00;
+  margin: 0;
+}
+
+.aviso-compat strong {
+  color: #7a5c00;
+}

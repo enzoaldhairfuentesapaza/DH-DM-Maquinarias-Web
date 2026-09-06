@@ -1,0 +1,107 @@
+.maq-destacada {
+  padding: 70px 0;
+  background: #fafafa;
+}
+
+.maq-destacada-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+  margin-top: 30px;
+}
+
+.maq-destacada-card {
+  background: white;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid #ececec;
+  transition: 0.25s;
+  display: block;
+}
+
+.maq-destacada-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.1);
+}
+
+.maq-destacada-media {
+  height: 190px;
+  background-color: #121212;
+  background-image: linear-gradient(135deg, #1c1c1c, #121212);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  color: var(--yellow);
+  overflow: hidden;
+}
+
+.maq-condicion {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: var(--yellow);
+  color: var(--black);
+}
+
+.maq-condicion.reacondicionado {
+  background: #7fd1a3;
+}
+
+.maq-destacada-body {
+  padding: 18px 20px 22px;
+}
+
+.maq-destacada-body h3 {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--black);
+  margin: 6px 0 12px;
+}
+
+.maq-destacada-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 12.5px;
+  color: #777;
+  font-weight: 600;
+}
+
+.maq-destacada-meta span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.maq-destacada-cta {
+  text-align: center;
+  margin-top: 34px;
+}
+
+.btn-secondary-dark {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--black);
+  color: white;
+  padding: 14px 28px;
+  border-radius: 8px;
+  font-weight: 700;
+  transition: 0.25s;
+}
+
+.btn-secondary-dark:hover {
+  background: var(--yellow);
+  color: var(--black);
+}
+
+@media (max-width: 900px) {
+  .maq-destacada-grid {
+    grid-template-columns: 1fr;
+  }
+}

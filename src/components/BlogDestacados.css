@@ -1,0 +1,114 @@
+.blog {
+    background: var(--gray);
+}
+
+.blog-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 45px;
+    flex-wrap: wrap;
+}
+
+    .blog-header .blog-title {
+        text-align: left;
+        margin-bottom: 0;
+    }
+
+.blog-more-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--black);
+    color: var(--white) !important;
+    font-weight: 700;
+    font-size: 14px;
+    padding: 12px 22px;
+    border-radius: 30px;
+    white-space: nowrap;
+    transition: 0.25s;
+    flex-shrink: 0;
+}
+
+    .blog-more-btn:hover {
+        background: var(--yellow);
+        color: var(--black) !important;
+    }
+
+.blog-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 26px;
+}
+
+.blog-card {
+    background: var(--white);
+    border-radius: 14px;
+    overflow: hidden;
+    transition: 0.3s;
+}
+
+    .blog-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 14px 28px rgba(0, 0, 0, 0.1);
+    }
+
+.blog-thumb {
+    height: 170px;
+    background-color: var(--yellow);
+    background-image: linear-gradient(135deg, var(--yellow) 0%, var(--black) 160%);
+    background-size: cover;
+    background-position: center;
+}
+
+.blog-body {
+    padding: 22px;
+}
+
+.blog-fecha {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--gray-dark);
+    margin-bottom: 10px;
+}
+
+.blog-body h4 {
+    font-size: 17px;
+    color: var(--black);
+    margin-bottom: 8px;
+}
+
+.blog-body p {
+    font-size: 14px;
+    color: var(--gray-dark);
+    margin-bottom: 14px;
+}
+
+.blog-body a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+    font-size: 14px;
+    color: #8a6d00;
+}
+
+@media (max-width: 900px) {
+    .blog-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    .blog-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .blog-more-btn {
+        align-self: flex-start;
+    }
+}

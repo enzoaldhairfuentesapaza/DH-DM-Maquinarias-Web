@@ -1,0 +1,55 @@
+.floating-cotizador-btn {
+  position: fixed;
+  bottom: 26px;
+  left: 26px;
+  background: var(--yellow, #f4c20d);
+  color: var(--black, #121212);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 18px;
+  border-radius: 999px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.3);
+  font-size: 14px;
+  font-weight: 800;
+  z-index: 900;
+  transition:
+    transform 0.15s,
+    background 0.15s;
+}
+
+.floating-cotizador-btn:hover {
+  background: var(--black, #121212);
+  color: var(--yellow, #f4c20d);
+  transform: translateY(-2px);
+}
+
+.floating-cotizador-btn span {
+  white-space: nowrap;
+}
+
+.floating-cotizador-badge {
+  background: var(--black, #121212);
+  color: var(--yellow, #f4c20d);
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.floating-cotizador-btn:hover .floating-cotizador-badge {
+  background: var(--yellow, #f4c20d);
+  color: var(--black, #121212);
+}
+
+@media (max-width: 600px) {
+  .floating-cotizador-btn {
+    left: 16px;
+    bottom: 16px;
+    padding: 13px;
+  }
+  .floating-cotizador-btn span {
+    display: none;
+  }
+}

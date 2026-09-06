@@ -1,0 +1,569 @@
+:root {
+  --yellow: #f4c20d;
+  --yellow-hover: #e5b800;
+
+  --black: #121212;
+  --white: #ffffff;
+
+  --gray: #ececec;
+  --text: #444;
+}
+
+/* ============================= */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ============================= */
+
+.header-wrap {
+  width: 100%;
+}
+
+/* ============================= */
+/* BARRA SUPERIOR: LOGO + BUSCADOR + COTIZACIÓN */
+/* ============================= */
+
+.logo-bar {
+  width: 100%;
+  min-height: 110px;
+
+  position: relative;
+  overflow: hidden;
+
+  background: var(--black);
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: 14px 60px;
+  gap: 24px;
+}
+
+.logo-bar::before {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  background-image: url("/textura.png");
+
+  background-repeat: repeat;
+
+  background-position: center;
+
+  background-size: cover;
+
+  opacity: 0.25;
+
+  pointer-events: none;
+
+  z-index: 1;
+}
+
+.logo-bar > * {
+  position: relative;
+  z-index: 2;
+}
+
+.logo-bar-link {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.logo {
+  height: auto;
+  height: auto;
+  width: auto;
+  max-width: 350px;
+  object-fit: contain;
+}
+
+.logo-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* ============================= */
+/* MENÚ (barra negra inferior) */
+/* ============================= */
+
+.header {
+  width: 100%;
+  height: 60px;
+  position: relative;
+
+  background: var(--black);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  padding: 0 60px;
+
+  border-bottom: 4px solid var(--yellow);
+}
+
+.navbar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  gap: 45px;
+}
+
+.navbar a {
+  color: white;
+  text-decoration: none;
+  font-size: 18px;
+  font-weight: 600;
+  transition: 0.3s;
+  position: relative;
+}
+
+.navbar a::after {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  bottom: -8px;
+
+  width: 0;
+
+  height: 3px;
+
+  background: var(--yellow);
+
+  transition: 0.3s;
+}
+
+.navbar a:hover {
+  color: var(--yellow);
+}
+
+.navbar a:hover::after {
+  width: 100%;
+}
+
+/* ============================= */
+/* DERECHA */
+/* ============================= */
+
+.header-right {
+  flex: 1;
+
+  display: flex;
+
+  justify-content: flex-end;
+
+  align-items: center;
+
+  gap: 15px;
+}
+
+/* ============================= */
+/* BUSCADOR */
+/* ============================= */
+
+.search-box {
+  width: 330px;
+
+  height: 48px;
+
+  background: white;
+
+  border-radius: 30px;
+
+  display: flex;
+
+  align-items: center;
+
+  padding: 0 18px;
+
+  gap: 10px;
+
+  transition: 0.3s;
+}
+
+.search-box:hover {
+  box-shadow: 0 0 12px rgba(244, 194, 13, 0.35);
+}
+
+.search-box svg {
+  color: #777;
+}
+
+.search-box input {
+  width: 100%;
+
+  border: none;
+
+  outline: none;
+
+  font-size: 16px;
+
+  color: var(--text);
+}
+
+/* ============================= */
+/* BOTÓN */
+/* ============================= */
+
+.quote-btn {
+  width: 145px;
+
+  height: 48px;
+
+  border: none;
+
+  border-radius: 8px;
+
+  background: var(--yellow);
+
+  color: black;
+
+  font-size: 17px;
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition: 0.3s;
+}
+
+.quote-btn:hover {
+  background: var(--yellow-hover);
+
+  transform: translateY(-2px);
+}
+
+/* ============================= */
+/* RESPONSIVE */
+/* ============================= */
+
+@media (max-width: 1200px) {
+  .header,
+  .logo-bar {
+    padding: 14px 25px;
+  }
+
+  .navbar {
+    gap: 25px;
+  }
+
+  .search-box {
+    width: 220px;
+  }
+}
+
+@media (max-width: 992px) {
+  .navbar {
+    display: none;
+  }
+
+  .logo-bar-right .search-box,
+  .logo-bar-right .cart-btn {
+    display: none;
+  }
+
+  .header {
+    justify-content: flex-end;
+    padding: 0 20px;
+    height: 0;
+    border-bottom: none;
+    overflow: visible;
+  }
+
+  .logo-bar {
+    min-height: unset;
+    padding: 12px 20px;
+  }
+
+  .logo {
+    height: 56px;
+  }
+
+  .burger {
+    display: block;
+  }
+}
+
+/* ============================= */
+/* DROPDOWNS */
+/* ============================= */
+
+.nav-dropdown-wrap {
+  position: relative;
+}
+
+.nav-drop-trigger {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 0;
+  padding-top: 26px; /* espacio visual sin dejar hueco fuera del área "hover" */
+  background: transparent;
+  z-index: 500;
+}
+
+.dropdown-menu-inner {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
+  padding: 14px 0;
+  border-top: 3px solid var(--yellow);
+}
+
+.dropdown-simple {
+  min-width: 260px;
+  display: flex;
+  flex-direction: column;
+}
+
+.dropdown-simple a {
+  color: #222 !important;
+  font-weight: 600;
+  font-size: 14.5px;
+  padding: 11px 22px;
+  white-space: nowrap;
+  transition: 0.2s;
+}
+
+.dropdown-simple a:hover {
+  background: #fdf3d0;
+  color: #7a5c00 !important;
+}
+
+.dropdown-grid {
+  min-width: 560px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2px 8px;
+  padding: 16px 16px;
+}
+
+.dropdown-grid a {
+  color: #222 !important;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 9px 12px;
+  border-radius: 6px;
+  transition: 0.2s;
+}
+
+.dropdown-grid a:hover {
+  background: #fdf3d0;
+  color: #7a5c00 !important;
+}
+
+/* ============================= */
+/* CARRITO DE COTIZACIÓN */
+/* ============================= */
+
+.cart-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  position: relative;
+  width: auto;
+  padding: 0 18px;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.cart-badge {
+  background: var(--black);
+  color: var(--yellow);
+  font-size: 12px;
+  font-weight: 800;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ============================= */
+/* BURGER / MOBILE */
+/* ============================= */
+
+.burger {
+  display: none;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+}
+
+@media (max-width: 992px) {
+  .navbar {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--black);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    padding: 10px 0;
+    border-bottom: 4px solid var(--yellow);
+  }
+
+  .navbar.open {
+    display: flex;
+  }
+
+  .navbar a {
+    width: 100%;
+    padding: 14px 30px;
+  }
+
+  .nav-dropdown-wrap {
+    width: 100%;
+  }
+
+  .dropdown-menu {
+    position: static;
+    transform: none;
+    padding-top: 0;
+  }
+
+  .dropdown-menu-inner {
+    box-shadow: none;
+    border-top: none;
+    background: #1c1c1c;
+    padding-left: 10px;
+    border-radius: 0;
+  }
+
+  .dropdown-simple a,
+  .dropdown-grid a {
+    color: white !important;
+  }
+
+  .dropdown-grid {
+    grid-template-columns: 1fr;
+    min-width: unset;
+  }
+
+  .burger {
+    display: block;
+  }
+
+  .search-box {
+    display: none;
+  }
+
+  .cart-btn {
+    padding: 0 14px;
+  }
+}
+
+/* ============================= */
+/* AREA DE CUENTA (login/registro/panel) */
+/* ============================= */
+
+.account-area {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: 6px;
+  padding-left: 16px;
+  border-left: 1px solid var(--gray, #ececec);
+}
+
+.account-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--black, #121212);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  background: var(--gray, #ececec);
+  border: 1.5px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 9px 14px;
+  white-space: nowrap;
+}
+
+.account-link:hover {
+  background: #e2e2e2;
+  color: var(--black, #121212);
+}
+
+.account-greeting {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--black, #121212);
+  white-space: nowrap;
+}
+
+.account-btn-primary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--black, #121212);
+  color: #fff;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.account-btn-primary:hover {
+  background: #2a2a2a;
+}
+
+.account-btn-primary.admin-panel-cta {
+  background: var(--yellow, #f4c20d);
+  color: var(--black, #121212);
+}
+
+.account-btn-primary.admin-panel-cta:hover {
+  background: var(--yellow-hover, #e5b800);
+}
+
+@media (max-width: 1200px) {
+  .account-area {
+    border-left: none;
+    padding-left: 0;
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .account-area {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .account-greeting {
+    display: none;
+  }
+}
