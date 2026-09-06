@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>HDM Maquinarias - Cotización</title>
+    <link rel="stylesheet" href="estilos.css" />
+    <link rel="icon" href="icono.png" />
+  </head>
+
+  <body>
+    <header>
+      <img src="/Logo.jpg" alt="HDM Maquinarias" class="logo" />
+      <button
+        class="btn-historial"
+        onclick="window.location.href = 'historial.html'"
+      >
+        Ver Historial
+      </button>
+      <button
+        class="btn-historial"
+        onclick="window.location.href = '/admin/ventas-cotizaciones'"
+      >
+        Volver al Panel
+      </button>
+      <button class="btn-historial" onclick="window.location.href = '/'">
+        Ver sitio web
+      </button>
+    </header>
+
+    <div class="container">
+      <!-- PANEL IZQUIERDO -->
+      <div class="left-panel">
+        <h2 id="tituloCotizacion">Cotización Nueva</h2>
+
+        <p id="modoEdicionAviso" class="aviso-edicion" style="display: none">
+          Estás visualizando una cotización anterior. Al guardar, se creará una
+          nueva versión sin modificar la original.
+        </p>
+
+        <div class="form-row">
+          <div class="form-row">
+            <div>
+              <label>Cliente</label>
+              <input id="cliente" oninput="updatePDFPreview()" />
+            </div>
+
+            <div>
+              <label>DNI</label>
+              <input id="dni" oninput="updatePDFPreview()" />
+            </div>
+          </div>
+          <div>
+            <label>Dirección</label>
+            <input id="direccion" oninput="updatePDFPreview()" />
+          </div>
+        </div>
+
+        <hr />
+
+        <h3 id="tituloProducto">Nuevo Producto</h3>
+
+        <div class="form-row">
+          <div>
+            <label>Código producto</label>
+            <div style="position: relative">
+              <input id="codigoProducto" autocomplete="off" />
+
+              <div
+                id="sugerencias"
+                style="
+                  position: absolute;
+                  background: white;
+                  border: 1px solid #ccc;
+                  width: 100%;
+                  z-index: 1000;
+                "
+              ></div>
+            </div>
+          </div>
+
+          <div>
+            <label>Marca</label>
+            <select id="marca" onchange="toggleOtraMarca()">
+              <option value="CAT">CAT</option>
+              <option value="CTP">CTP</option>
+              <option value="Handok">HANDOK</option>
+              <option value="IPD">IPD</option>
+              <option value="Otro">Otro</option>
+            </select>
+            <input
+              id="otraMarca"
+              placeholder="Especificar marca"
+              style="display: none"
+            />
+            <div
+              id="brandAdjustmentsBox"
+              style="margin-top: 6px; font-size: 12px"
+            ></div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div>
+            <label>Unidad</label>
+            <input id="unidad" placeholder="UND" />
+          </div>
+          <div>
+            <label>Cantidad</label>
+            <input type="number" id="cantidad" value="1" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div>
+            <label>Precio original</label>
+            <input type="number" id="precio" />
+            <small>Moneda: <span id="monedaLabel">PEN</span></small>
+          </div>
+          <div>
+            <label>Moneda del precio original</label>
+            <select id="monedaProducto" onchange="updateMonedaLabel()">
+              <option value="USD" selected>Dólares ($)</option>
+              <option value="PEN">Soles (S/)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div>
+            <label>Descripción</label>
+            <input id="descripcion" />
+          </div>
+
+          <div class="discount-action">
+            <label>Descuentos (%)</label>
+            <div class="discount-input-group">
+              <input type="number" id="descuentoInput" placeholder="%" />
+              <div class="discount-mini-buttons">
+                <button type="button" onclick="addDiscount()">+</button>
+                <button type="button" onclick="removeDiscount()">−</button>
+              </div>
+            </div>
+            <small id="listaDescuentos">Ningun descuento añadido</small>
+            <div class="discount-toggle">
+              <label class="brand-adjustment">
+                <input type="checkbox" id="mostrarDescCheck" checked />
+                <span>Mostrar descuentos en descripcion</span>
+              </label>
+            </div>
+            <small class="info-text">
+              Solo afecta la visualización en el PDF, los descuentos igual se
+              toman en cuenta sobre el precio original
+            </small>
+          </div>
+        </div>
+        <hr />
+        <div class="form-actions">
+          <div class="actions">
+            <button id="btnAgregar" class="add" onclick="addProduct()">
+              Agregar Producto
+            </button>
+            <button class="save" onclick="guardarCotizacion()">
+              Guardar Cotizacion
+            </button>
+            <button class="download" onclick="downloadPDF()">
+              Descargar PDF
+            </button>
+            <button class="delete" onclick="clearProducts()">
+              Limpiar Documento
+            </button>
+          </div>
+        </div>
+
+        <hr />
+
+        <div class="form-row">
+          <div>
+            <label>Tipo de cambio </label>
+            <input type="number" id="tc" step="0.01" />
+            <small class="info-text">
+              El tipo de cambio solo se aplica a productos en USD
+            </small>
+          </div>
+          <!--
+<div class="currency-global">
+    <button class="btn-currency usd" onclick="convertAll('USD')">
+      💲 Todo en USD
+    </button>
+    <button class="btn-currency pen" onclick="convertAll('PEN')">
+      🪙 Todo en Soles
+    </button>
+  </div>
+-->
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Unidad</th>
+              <th>Marca</th>
+              <th>Cant</th>
+              <th>Descripción</th>
+              <th>Precio original</th>
+              <th>Subtotal (S/.)</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tabla"></tbody>
+        </table>
+
+        <div class="total">Total en soles: <span id="total">0.00</span></div>
+      </div>
+
+      <!-- PANEL DERECHO -->
+      <div class="right-panel">
+        <h3>Vista previa PDF</h3>
+        <iframe id="pdfPreview"></iframe>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script type="module" src="script.js"></script>
+
+    <div id="editModal" class="modal">
+      <div class="modal-content">
+        <h3>Editar Producto</h3>
+
+        <input id="editCodigo" placeholder="Código" />
+        <input id="editDescripcion" placeholder="Descripción" />
+        <input id="editPrecio" type="number" placeholder="Precio" />
+        <input id="editCantidad" type="number" placeholder="Cantidad" />
+
+        <div class="modal-buttons">
+          <button onclick="guardarEdicion()">Guardar</button>
+          <button onclick="cerrarModal()">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
