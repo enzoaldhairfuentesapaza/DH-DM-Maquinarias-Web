@@ -1,23 +1,23 @@
-# Excel en el panel — versión 2.1.0
+# Excel en el panel — versión 2.2.0
 
 ## Qué permite
 
-Cada sección tiene **Descargar todo (.xlsx)**, **Plantilla** y **Subir Excel**. También puedes entrar en **Importar / exportar Excel** desde el menú del panel, en `/admin/excel`.
+Las cuentas con permiso Excel ven **Descargar todo (.xlsx)** y, cuando el rol permite importar y la tabla es editable, **Plantilla** y **Subir Excel**. También puedes entrar en **Importar / exportar Excel** desde el menú del panel, en `/admin/excel`.
 
-La descarga incluye todos los registros de la sección, incluso si tienes un filtro de búsqueda activo. El archivo tiene una hoja `Datos` y otra `Instrucciones`; conserva la hoja `Datos` para volver a importarlo.
+La descarga incluye los registros autorizados de la sección, aunque tengas un filtro de búsqueda activo. El grupo de cotizaciones elegido se respeta; solo el owner accede a maquinaria. El archivo tiene una hoja `Datos` y otra `Instrucciones`; conserva la hoja `Datos` para volver a importarlo.
 
 | Secciones | Importar | Exportar | Permiso |
 |---|---|---|---|
 | Repuestos, maquinaria, categorías, promociones, blog y novedades | Sí, agregar registros | Sí | Admin / owner |
-| Ventas, solicitudes y cotizaciones formales | Sí, agregar registros | Sí | Cotizador / admin / owner |
+| Ventas, solicitudes y cotizaciones formales | Admin / owner | Sí | Cotizador solo exporta repuestos; maquinaria solo owner |
 | Sugerencias y reclamos | Sí, agregar registros | Sí | Admin / owner |
 | Contactos del sitio | Sí, actualizar por `clave` | Sí | Solo owner |
 | Accesos | Sí, crear cuentas con contraseña nueva | Sí, sin contraseñas ni hashes | Owner |
 | Auditoría y papelera | No, se generan con las operaciones del panel | Sí | Owner |
 | Mis notificaciones | No, se generan con las respuestas | Sí, únicamente las propias | Admin / owner |
-| Estadísticas | Se recalculan al importar ventas o solicitudes | Sí, desde Estadísticas | Cotizador / admin / owner |
+| Estadísticas | Se recalculan al importar ventas o solicitudes | Sí, desde Estadísticas | Admin / owner |
 
-El historial del cotizador formal tiene un enlace al Centro de Excel. Las cuentas inactivas también figuran en la exportación de accesos; la importación crea cuentas activas nuevas y nunca sustituye una contraseña existente.
+Los roles autorizados acceden al Centro de Excel desde el menú. Las cuentas inactivas también figuran en la exportación de accesos; la importación crea cuentas activas nuevas y nunca sustituye una contraseña existente.
 
 ## Subir un Excel paso a paso
 
@@ -80,3 +80,9 @@ La comparación ignora mayúsculas, espacios repetidos y tildes habituales. Pued
 En las bandejas de repuestos o maquinaria, Descargar todo exporta únicamente el grupo de esa bandeja. El Centro de Excel puede exportar todas las solicitudes. No se importan solicitudes mixtas: usa dos filas, una con productos de tipo `repuesto` y otra con productos de tipo `maquinaria`. Importar en una bandeja también comprueba que la fila corresponda a ese grupo. La configuración de teléfonos y correo ahora es exclusiva del owner.
 
 Contacto se exporta desde su propia sección (solo admin/owner) y queda excluido de los Excel de cotizaciones. El historial de la calculadora identifica las oficiales y sus vínculos. Importar filas al historial no registra cotizaciones oficiales ni PDFs: el registro oficial requiere el switch y el guardado desde la calculadora.
+
+## Permisos en 2.2.0
+
+Cotizador puede exportar ventas, cotizaciones de repuestos e historial de la calculadora. La interfaz no ofrece plantillas ni subida de archivos para este rol; la API también bloquea la revisión e importación de filas. Admin conserva Excel para sus secciones. Un rol personalizado requiere el permiso Excel y el permiso de la sección. Accesos, configuración, auditoría y papelera son exclusivos del owner. Las cotizaciones e historial de maquinaria solo se importan/exportan como owner. Importar el historial de la calculadora conserva su carácter de prueba: no registra cotizaciones oficiales.
+
+Un rol con solo Calculadora puede preparar y guardar pruebas. Para registrar documentos oficiales o trabajar con una solicitud existente necesita además Cotizaciones de repuestos.

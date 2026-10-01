@@ -1,6 +1,6 @@
 # Ejecutar localmente — Windows / PowerShell
 
-Versión 2.1.0. Todos los bloques marcados powershell se ejecutan en PowerShell. Usa la copia del repositorio que ya clonaste; no hace falta volver a clonarlo. La instalación inicial crea SQLite y un owner local; no se conecta a la base del hosting.
+Versión 2.2.0. Todos los bloques marcados powershell se ejecutan en PowerShell. Usa la copia del repositorio que ya clonaste; no hace falta volver a clonarlo. La instalación inicial crea SQLite y un owner local; no se conecta a la base del hosting.
 
 ## 1. Requisitos y carpeta
 
@@ -227,8 +227,16 @@ Para actualizar una copia ya instalada conservando sus datos, usa **VERSION-2.md
 
 La actualización 2.1 necesita ejecutar `php .\backend-php\migrate.php` antes de arrancar PHP. La bienvenida se edita en Editar Página > Bienvenida del inicio. Los teléfonos y el correo solo los modifica el owner.
 
-### Campos nuevos de la calculadora en 2.1.0
+### Campos nuevos de la calculadora en 2.2.0
 
 Esta actualización requiere ejecutar la migración antes de iniciar la API: `php backend-php/migrate.php`. Si despliegas sin terminal, importa `backend-php/migration.mysql.sql` en la base de datos existente. Conserva `config.local.php`, archivos privados y cargas existentes. La migración conserva el historial previo y lo deja sin registro oficial automático.
 
 La calculadora está integrada en React (`/admin/calculadora`) y usa la misma API y sesión del panel. Los enlaces `/cotizador` y `/cotizador-app/index.html` siguen abriendo la nueva ruta; sus páginas antiguas solo redirigen.
+
+### Roles personalizados en 2.2.0 (migración obligatoria)
+
+La migración crea `roles_panel`. En MySQL cambia `usuarios.rol` a `VARCHAR(80)` para admitir los identificadores de roles personalizados; conserva las cuentas y sus roles actuales. Respaldar la base y ejecutar `php backend-php/migrate.php` antes de iniciar la API. En el hosting también puede importarse el SQL idempotente actualizado `migration.mysql.sql` en la base correcta. No ejecutar seed en una base existente.
+
+Prueba owner, admin, cotizador y un rol personalizado. El cotizador no puede entrar a estadísticas ni importar Excel; la maquinaria solo se cotiza/gestiona con owner. En Administrar Accesos, crea un rol, marca sus secciones y asígnalo a una cuenta. Excel requiere marcar además la sección a trabajar. Los permisos del owner permanecen exclusivos.
+
+Un rol con solo Calculadora puede preparar y guardar pruebas. Para registrar documentos oficiales o trabajar con una solicitud existente necesita además Cotizaciones de repuestos.

@@ -68,7 +68,7 @@ with tempfile.TemporaryDirectory(prefix='hdm-test-') as directory:
         status,row,_=call('/api/accesos','POST',{'nombre':'Cotizador','email':'quote@example.test','password':'TestPassword123!','rol':'cotizador'},owner)
         internal_id=row['id']; expect(status==201,'create cotizador role');internal=login('quote@example.test')
         expect(call('/api/sugerencias',token=internal)[0]==403,'cotizador denied complaints')
-        expect(call('/api/estadisticas',token=internal)[0]==200,'cotizador allowed stats')
+        expect(call('/api/estadisticas',token=internal)[0]==403,'cotizador denied statistics')
         expect(call('/api/accesos',token=internal)[0]==403,'cotizador denied accounts')
         expect(call('/api/repuestos','POST',{'codigo':'X'},owner)[0]==422,'CRUD required fields')
         rep={'codigo':'X','nombre':'Filtro','marca':'CAT','categoria':'Filtros','descripcion':'Prueba','stock_cantidad':2,'stock_disponible':True,'destacado':False}

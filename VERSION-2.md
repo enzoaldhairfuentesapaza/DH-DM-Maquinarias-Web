@@ -1,23 +1,25 @@
-# DH & DM Maquinarias — versión 2.1.0
+# DH & DM Maquinarias — versión 2.2.0
 
 ## Cambios de esta versión
+
+La versión 2.2.0 agrega roles personalizados con selección visual de secciones, resumen de los roles existentes, permisos exclusivos del owner para cotizar maquinaria, retiro de estadísticas y de importación de Excel del cotizador y formularios/ayudas mejorados. La API también verifica los permisos. Ejecuta la migración antes de arrancar.
 
 Bienvenida editable en el panel; bandejas y carritos separados para repuestos/maquinaria; formularios de especificaciones con botones +/−; vista previa centrada; configuración de teléfonos y correo exclusiva del owner; acciones de accesos con iconos.
 
 - El globo de sugerencias/reclamos está encima del de Mi cotización, sin superponerse, también en móvil.
 - La bienvenida siempre es la primera tarjeta. Las promociones destacadas la acompañan en la portada: imagen grande, título, vigencia, botones y selector de promociones.
-- La portada cambia cada **6 segundos** cuando hay al menos una promoción destacada. Tiene controles anterior/siguiente y pausa; solo se pausa con su botón de pausa. Respeta la preferencia de movimiento reducido del dispositivo.
+- La portada cambia cada **6 segundos** cuando hay al menos una promoción destacada. Tiene controles anterior/siguiente y pausa; solo se pausa con su botón de pausa. La rotación está activa por defecto; la preferencia de movimiento reducido desactiva las animaciones de entrada, y el botón permite pausar la rotación.
 - Se retiró la promoción secundaria que acompañaba al tablón de anuncios.
 - La edición de contenidos tiene **Ampliar · tamaño real**, con vistas de escritorio (1200 px) y móvil (390 px), sin guardar el borrador. Usa los estilos públicos a escala 1:1; omite encabezado, pie y elementos relacionados. En promociones usa el mismo componente de la portada.
 - Importación, plantillas y exportación **.xlsx** para las tablas editables, con vista previa, asignación de columnas, validación y omisión de duplicados. Auditoría, papelera y notificaciones tienen exportación. Estadísticas permite descargar el informe calculado.
 - Tags privados de nombres repetidos en las listas y formularios del panel. Dos repuestos con distinto código pueden conservar el mismo nombre.
-- Versión del panel y del paquete: **2.1.0**.
+- Versión del panel y del paquete: **2.2.0**.
 
 Esta entrega modifica los archivos del proyecto. No publica automáticamente el dominio ni modifica tu repositorio remoto.
 
 ## Actualizar tu copia local — PowerShell
 
-Detén las terminales de Vite y PHP con **Ctrl+C**. Descarga `DH-DM-actualizacion-2.1.0-integrada.zip` a Descargas. Los archivos del ZIP están en la raíz, sin carpeta adicional.
+Detén las terminales de Vite y PHP con **Ctrl+C**. Descarga `DH-DM-actualizacion-2.2.0.zip` a Descargas. Los archivos del ZIP están en la raíz, sin carpeta adicional.
 
 ### 1. Respaldar
 
@@ -42,7 +44,7 @@ if ($LASTEXITCODE -ne 0) { throw 'No se creó la rama. Revisa si version-2 ya ex
 El paquete excluye `.git`, entornos privados, `config.local.php`, bases de datos, archivos de clientes y dependencias. Copiarlo sobre el proyecto conserva esos datos existentes. No borres la carpeta del proyecto ni el backend para hacer la actualización.
 
 ```powershell
-$zipV2 = Join-Path $env:USERPROFILE 'Downloads\DH-DM-actualizacion-2.1.0-integrada.zip'
+$zipV2 = Join-Path $env:USERPROFILE 'Downloads\DH-DM-actualizacion-2.2.0.zip'
 if (-not (Test-Path -LiteralPath $zipV2)) { throw ('No se encontró: ' + $zipV2) }
 $extraccionV2 = Join-Path $env:TEMP ('DH-DM-v2-' + [guid]::NewGuid().ToString('N'))
 Expand-Archive -LiteralPath $zipV2 -DestinationPath $extraccionV2 -ErrorAction Stop
@@ -115,15 +117,15 @@ Sigue **DEPLOY-WEBUZO.md**. `npm run release` genera la API y el frontend juntos
 
 Los resultados de las pruebas están en `tests/resultados/`. Se verificaron permisos e importaciones con SQLite y MariaDB, además del recorrido en navegador de portada, globos, borradores y Excel. La comprobación del hosting real queda pendiente de tu despliegue.
 
-### Ajustes adicionales de 2.1.0
+### Ajustes adicionales de 2.2.0
 
 - Bienvenida organizada en cuatro grupos: mensaje, imagen, botones y cifras, con campos amplios y vista previa en vivo.
-- El tablón muestra exclusivamente novedades guardadas en la base de datos, con destacadas primero. Sin novedades o ante un error se muestra un mensaje, sin anuncios fijos de respaldo.
+- El tablón muestra exclusivamente novedades guardadas en la base de datos, mostrando únicamente las marcadas como destacadas. Sin novedades o ante un error se muestra un mensaje, sin anuncios fijos de respaldo.
 - Contacto tiene su propia bandeja y ya no se mezcla con cotizaciones. Cada mensaje indica si se eligió página, WhatsApp o correo.
 
 - Lista de maquinaria con estado de destacada; especificaciones con campos estilizados, controles compactos y selector de imágenes compartido.
 
-### Unión de la calculadora con el panel (2.1.0)
+### Unión de la calculadora con el panel (2.2.0)
 
 - Calculadora React/TypeScript y PDF compartido entre edición e historial. Los enlaces antiguos redirigen al panel integrado.
 - Moneda final mediante un selector uniforme; conserva precios originales, ajustes sucesivos por marca, descuentos y redondeo al entero.
@@ -136,3 +138,11 @@ Los resultados de las pruebas están en `tests/resultados/`. Se verificaron perm
 - Las pruebas del historial pueden eliminarse; los documentos oficiales se conservan y se editan como nuevas versiones.
 
 **Actualización obligatoria:** ejecutar `php backend-php/migrate.php` (o importar `backend-php/migration.mysql.sql` en phpMyAdmin) antes de iniciar la API. Añade los campos de oficial, vínculo de solicitud, PDF y cliente sin borrar registros. No volver a cargar las semillas.
+
+## Ajustes de la versión 2.2.0
+
+- Bienvenida con el mismo estilo visual de las promociones; conserva textos editables, botones y las tres cifras. Rotación automática cada seis segundos desde la primera visita.
+- Tablón conectado a las novedades destacadas de la base de datos; sin destacadas muestra un aviso.
+- Nuevo logo Handok Hydraulic en marcas asociadas.
+- Estadísticas con rankings completos y separados de repuestos y maquinaria: orden por solicitudes distintas, unidades como desempate. Un producto repetido en una solicitud cuenta una vez; sus unidades se suman. No incluye pruebas de calculadora, contactos ni solicitudes eliminadas.
+- Estos ajustes no cambian el esquema de datos: si ya instalaste 2.2.0, no necesitas otra migración.

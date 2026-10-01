@@ -1,3 +1,5 @@
+import { useAuth } from "../../context/AuthContext";
+import { routePermission } from "../../context/permissions";
 import { Link } from "react-router-dom";
 import { Truck, Wrench, Tags } from "lucide-react";
 import "./admin.css";
@@ -24,6 +26,7 @@ const secciones = [
 ];
 
 export default function ProductosHub() {
+  const {can}=useAuth();
   return (
     <div>
       <div className="admin-header-row">
@@ -34,7 +37,7 @@ export default function ProductosHub() {
       </div>
 
       <div className="admin-cards">
-        {secciones.map((s) => (
+        {secciones.filter(s=>can(routePermission(s.to))).map((s) => (
           <Link to={s.to} key={s.to} className="admin-card">
             <div className="icon-badge">{s.icon}</div>
             <h3>{s.titulo}</h3>

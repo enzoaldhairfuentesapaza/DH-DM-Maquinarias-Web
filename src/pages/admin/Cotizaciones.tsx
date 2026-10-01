@@ -68,7 +68,7 @@ export default function Cotizaciones({ contacto = false }: { contacto?: boolean 
   const feedback = useFeedback();
   const {isOwner}=useAuth();
   const [params,setParams] = useSearchParams();
-  const grupo = params.get("tipo") === "maquinaria" ? "maquinaria" : "repuesto";
+  const grupo = isOwner && params.get("tipo") === "maquinaria" ? "maquinaria" : "repuesto";
   const [items, setItems] = useState<Cotizacion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -150,7 +150,7 @@ export default function Cotizaciones({ contacto = false }: { contacto?: boolean 
         </Link>
       </div>
 
-      {!contacto && <div className="quote-group-tabs"><button className={grupo==="repuesto"?"active":""} onClick={()=>setParams({tipo:"repuesto"})}><Package size={17}/>Repuestos y otros</button><button className={grupo==="maquinaria"?"active":""} onClick={()=>setParams({tipo:"maquinaria"})}><Truck size={17}/>Maquinaria</button></div>}
+      {!contacto && <div className="quote-group-tabs"><button className={grupo==="repuesto"?"active":""} onClick={()=>setParams({tipo:"repuesto"})}><Package size={17}/>Repuestos y otros</button>{isOwner&&<button className={grupo==="maquinaria"?"active":""} onClick={()=>setParams({tipo:"maquinaria"})}><Truck size={17}/>Maquinaria</button>}</div>}
       <div className="admin-search-bar">
         <Search size={16} />
         <input

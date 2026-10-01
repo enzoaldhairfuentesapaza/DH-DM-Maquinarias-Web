@@ -44,6 +44,8 @@ if ($path === '/api' || str_starts_with($path, '/api/')) {
 }
 $segments = array_values(array_filter(explode('/', $path)));
 
+if (($segments[0] ?? '') === 'roles') roles_handle($segments,$method);
+
 if ($segments === ['bienvenida']) bienvenida_handle($method);
 
 if (($segments[0] ?? null) === 'excel') excel_handle($segments, $method);
@@ -159,7 +161,7 @@ if (($segments[0] ?? null) === 'accesos') {
         $body = get_json_body();
         validate_account($body);
         $rol = $body['rol'] ?? 'admin';
-        if (!in_array($rol, ['admin', 'owner', 'cotizador'], true)) {
+        if (($rol === 'cliente' || !valid_role($rol))) {
             json_error('Rol invalido, usa el endpoint de registro para clientes', 400);
         }
         $email = trim($body['email'] ?? '');
@@ -181,7 +183,7 @@ if (($segments[0] ?? null) === 'accesos') {
         }
         $body = get_json_body();
         $rol = $body['rol'] ?? 'cliente';
-        if (!in_array($rol, ['cliente', 'admin', 'owner', 'cotizador'], true)) {
+        if (!valid_role($rol)) {
             json_error('Rol invalido', 400);
         }
         $stmt = db()->prepare('UPDATE usuarios SET rol = ? WHERE id = ?');
@@ -311,9 +313,8 @@ if (in_array($segments[0] ?? null, ['cotizaciones','contactos'], true)) {
     $esContacto = $segments[0] === 'contactos';
     $condicionOrigen = $esContacto ? "origen = 'contacto'" : "origen <> 'contacto'";
     if (($segments[1] ?? null) !== null && ctype_digit((string)$segments[1])) {
-        require_ventas_access();
-        if($esContacto)require_admin_or_owner();
-        $check=db()->prepare('SELECT id FROM cotizaciones WHERE id = ? AND ' . $condicionOrigen);$check->execute([$segments[1]]);if(!$check->fetch())json_error('Registro no encontrado',404);
+        require_permission($esContacto?'contactos':'cotizaciones');
+        $check=db()->prepare('SELECT * FROM cotizaciones WHERE id = ? AND ' . $condicionOrigen);$check->execute([$segments[1]]);$checked=$check->fetch();if(!$checked)json_error('Registro no encontrado',404);if(!$esContacto && is_machine_quote($checked))require_owner();
     }
     // /cotizaciones/mias -> historial de cotizaciones del cliente logueado
     if ($method === 'GET' && ($segments[1] ?? null) === 'mias') {
@@ -365,9 +366,9 @@ if (in_array($segments[0] ?? null, ['cotizaciones','contactos'], true)) {
     }
 
     if ($method === 'GET' && ($segments[1] ?? null) === null) {
-        require_ventas_access();
-        if ($esContacto) require_admin_or_owner();
+        require_permission($esContacto?'contactos':'cotizaciones');
         $rows = db()->query('SELECT * FROM cotizaciones WHERE eliminado_en IS NULL AND ' . $condicionOrigen . ' ORDER BY id DESC')->fetchAll();
+        if(!$esContacto && current_user()['rol']!=='owner')$rows=array_values(array_filter($rows,fn($r)=>!is_machine_quote($r)));
         foreach ($rows as &$r) {
             $r['detalle'] = json_decode($r['detalle'], true) ?? [];
         }
@@ -603,34 +604,17 @@ if (($segments[0] ?? null) === 'notificaciones') {
 
 // ---------- /estadisticas (dashboard de ventas y cotizaciones) ----------
 if (($segments[0] ?? null) === 'estadisticas') {
-    require_ventas_access();
+    require_permission('estadisticas');
 
     $ventas = db()->query("SELECT total, creado_en FROM ventas WHERE estado <> 'anulado'")->fetchAll();
     $cotizaciones = db()->query('SELECT creado_en, estado FROM cotizaciones WHERE eliminado_en IS NULL AND origen <> \'contacto\'')->fetchAll();
     $detalles = db()->query("SELECT detalle FROM cotizaciones WHERE eliminado_en IS NULL AND origen <> 'contacto'")->fetchAll();
 
-    // Ranking de repuestos y maquinarias mas cotizados (por nombre+tipo, ya
-    // que el detalle guardado no trae el id del producto).
-    $conteo = []; // clave "tipo|nombre" => ['tipo'=>, 'nombre'=>, 'unidades'=>, 'solicitudes'=>]
-    foreach ($detalles as $fila) {
-        $detalle = json_decode($fila['detalle'] ?? '{}', true);
-        $productos = is_array($detalle['productos'] ?? null) ? $detalle['productos'] : [];
-        foreach ($productos as $p) {
-            $tipo = ($p['tipo'] ?? '') === 'maquinaria' ? 'maquinaria' : 'repuesto';
-            $nombre = trim((string) ($p['nombre'] ?? 'Sin nombre'));
-            $clave = $tipo . '|' . $nombre;
-            if (!isset($conteo[$clave])) {
-                $conteo[$clave] = ['tipo' => $tipo, 'nombre' => $nombre, 'unidades' => 0, 'solicitudes' => 0];
-            }
-            $conteo[$clave]['unidades'] += (float) ($p['cantidad'] ?? 1);
-            $conteo[$clave]['solicitudes'] += 1;
-        }
-    }
-
-    $repuestosRanking = array_values(array_filter($conteo, fn($c) => $c['tipo'] === 'repuesto'));
-    $maquinariasRanking = array_values(array_filter($conteo, fn($c) => $c['tipo'] === 'maquinaria'));
-    usort($repuestosRanking, fn($a, $b) => $b['unidades'] <=> $a['unidades']);
-    usort($maquinariasRanking, fn($a, $b) => $b['unidades'] <=> $a['unidades']);
+    require_once __DIR__ . '/estadisticas_productos.php';
+    $ranking=product_quote_rankings($detalles,[
+        'repuesto'=>db()->query('SELECT id,codigo,nombre FROM repuestos')->fetchAll(),
+        'maquinaria'=>db()->query('SELECT id,nombre FROM maquinarias')->fetchAll(),
+    ]);
 
     json_response([
         'ventas' => [
@@ -651,8 +635,8 @@ if (($segments[0] ?? null) === 'estadisticas') {
             'cotizaciones_respondidas' => count(array_filter($cotizaciones, fn($c) => $c['estado'] === 'respondida')),
             'cotizaciones_denegadas' => count(array_filter($cotizaciones, fn($c) => $c['estado'] === 'denegada')),
         ],
-        'top_repuestos' => array_slice($repuestosRanking, 0, 8),
-        'top_maquinarias' => array_slice($maquinariasRanking, 0, 8),
+        'top_repuestos' => $ranking['repuesto'],
+        'top_maquinarias' => $ranking['maquinaria'],
     ]);
 }
 
@@ -663,15 +647,17 @@ if (in_array($segments[0] ?? null, ['documentos', 'uploads'], true) && $method =
     if (count($segments) !== 2 || !preg_match('/^[a-f0-9]{32}\.(pdf|docx?|xlsx?|jpg|jpeg|png|gif|webp)$/i', $filename)) json_error('No encontrado', 404);
     $url = '/api/' . $segments[0] . '/' . $filename;
     $legacyUrl = '/uploads/' . $filename;
-    $stmt = db()->prepare('SELECT usuario_id, mostrar_en_pagina, eliminado_en FROM cotizaciones WHERE archivo_respuesta = ? OR archivo_respuesta = ?');
+    $stmt = db()->prepare('SELECT * FROM cotizaciones WHERE archivo_respuesta = ? OR archivo_respuesta = ?');
     $stmt->execute([$url, $legacyUrl]);
     $quotes = $stmt->fetchAll();
-    $allowed = es_rol_interno($user['rol']);
+    $allowed=false;
+    foreach($quotes as $q)if(($q['origen']==='contacto'?has_permission($user,'contactos'):has_permission($user,'cotizaciones')) && (!is_machine_quote($q)||$user['rol']==='owner'))$allowed=true;
     foreach ($quotes as $quote) {
         if ((int) $quote['usuario_id'] === (int) $user['id'] && $quote['mostrar_en_pagina'] && $quote['eliminado_en'] === null) $allowed = true;
     }
-    $formal=db()->prepare('SELECT id FROM cotizaciones_formales WHERE archivo_pdf = ?');$formal->execute([$url]);
-    $formalFile=(bool)$formal->fetch();
+    $formal=db()->prepare('SELECT * FROM cotizaciones_formales WHERE archivo_pdf = ?');$formal->execute([$url]);
+    $formalRow=$formal->fetch();$formalFile=(bool)$formalRow;
+    if($formalRow && has_permission($user,'calculadora') && (!machine_history($formalRow)||$user['rol']==='owner'))$allowed=true;
     if ((!$quotes && !$formalFile) || !$allowed) json_error('No tienes permiso para descargar este archivo', 403);
     $dir = config()[$segments[0] === 'documentos' ? 'documents_dir' : 'uploads_dir'];
     $file = $dir . '/' . $filename;
@@ -685,7 +671,7 @@ if (in_array($segments[0] ?? null, ['documentos', 'uploads'], true) && $method =
 
 // ---------- /uploads (subir imagenes, solo admin/owner) ----------
 if (($segments[0] ?? null) === 'uploads' && $method === 'POST') {
-    require_admin_or_owner();
+    $u=current_user();if(!array_intersect(user_permissions($u),['bienvenida','novedades','blog','promociones','maquinaria','repuestos']))json_error('No tienes permiso para subir imágenes',403);
 
     if (!isset($_FILES['file'])) {
         json_error('No se envio ningun archivo', 400);

@@ -1,3 +1,4 @@
+import { routePermission } from "../../context/permissions";
 import { Link } from "react-router-dom";
 import { Megaphone, FileText, Tag, Phone } from "lucide-react";
 import "./admin.css";
@@ -32,7 +33,7 @@ const secciones = [
 ];
 
 export default function EditarPagina() {
-  const { isOwner } = useAuth();
+  const { can } = useAuth();
   return (
     <div>
       <div className="admin-header-row">
@@ -44,7 +45,7 @@ export default function EditarPagina() {
 
       <p className="admin-section-title">Contenido del sitio</p>
       <div className="admin-cards">
-        {secciones.filter(s => isOwner || s.to !== "/admin/configuracion").map((s) => (
+        {secciones.filter(s => can(routePermission(s.to))).map((s) => (
           <Link to={s.to} key={s.to} className="admin-card">
             <div className="icon-badge">{s.icon}</div>
             <h3>{s.titulo}</h3>

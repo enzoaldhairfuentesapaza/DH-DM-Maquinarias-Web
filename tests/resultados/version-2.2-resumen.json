@@ -1,0 +1,18 @@
+{
+  "version": "2.2.0",
+  "checks": {
+    "api-2.2-sqlite": 61,
+    "excel-2.2-sqlite": 71,
+    "permisos-2.2-sqlite": 72,
+    "permisos-2.2-mariadb": 72,
+    "calculadora-contactos-2.2-sqlite": 40,
+    "workflows-2.2-sqlite": 24,
+    "interfaz-2.2": 29,
+    "ranking-2.2-sqlite": 34,
+    "ranking-2.2-mariadb": 34,
+    "inicio-2.2": 11
+  },
+  "offline_sql_migration": "Esquema anterior importado y migración SQL aplicada dos veces: cuenta/rol conservados; rol personalizado asignable.",
+  "verification": "Sintaxis PHP, ESLint, TypeScript y compilación de producción; revisión visual de escritorio/móvil.",
+  "production_deployed": false
+}

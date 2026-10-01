@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/jwt.php';
+require_once __DIR__ . '/permisos.php';
 
 function json_response($data, int $status = 200): void
 {
@@ -83,7 +84,8 @@ function current_user(): array
 function require_roles(array $roles): array
 {
     $user = current_user();
-    if (!in_array($user['rol'], $roles, true)) {
+    if (api_permission() && !has_permission($user,api_permission())) json_error('No tienes acceso a esta sección',403);
+    if (!in_array($user['rol'], $roles, true) && !(count($roles)>1 && !isset(builtin_permissions()[$user['rol']]) && api_permission() && has_permission($user,api_permission()))) {
         json_error('No tienes permisos para esta accion', 403);
     }
     return $user;
@@ -101,14 +103,14 @@ function require_owner(): array
 
 /**
  * Roles que pueden entrar al panel de administracion.
- * El "cotizador" entra pero solo ve ventas/cotizaciones y estadisticas.
+ * El cotizador entra a ventas, cotizaciones de repuestos y calculadora.
  */
 function require_panel_access(): array
 {
-    return require_roles(['admin', 'owner', 'cotizador']);
+    $user=current_user();if(!user_permissions($user))json_error('No tienes acceso al panel',403);return $user;
 }
 
-/** Acceso a cotizaciones, ventas y estadisticas (incluye al cotizador). */
+/** Acceso a ventas y cotizaciones; la sección se verifica antes de autorizar. */
 function require_ventas_access(): array
 {
     return require_roles(['admin', 'owner', 'cotizador']);
@@ -117,7 +119,7 @@ function require_ventas_access(): array
 /** true si el rol puede ver datos de cualquier cliente (no solo los suyos). */
 function es_rol_interno(string $rol): bool
 {
-    return in_array($rol, ['admin', 'owner', 'cotizador'], true);
+    return $rol !== 'cliente' && valid_role($rol);
 }
 
 /**
@@ -158,6 +160,9 @@ function verify_password(string $plain, string $hashed): bool
 /** Quita el hashed_password antes de devolver un usuario en JSON. */
 function sanitize_user(array $user): array
 {
+    $user['permisos'] = user_permissions($user);
+    $user['rol_nombre'] = ucfirst($user['rol']);
+    if (!isset(builtin_permissions()[$user['rol']])) { $q=db()->prepare('SELECT nombre FROM roles_panel WHERE clave=?');$q->execute([$user['rol']]);$user['rol_nombre']=$q->fetchColumn()?:$user['rol']; }
     unset($user['hashed_password'], $user['token_version']);
     $user['activo'] = (bool) $user['activo'];
     return $user;

@@ -14,9 +14,8 @@ type Slide = {
 export default function TablonAnuncios() {
   const [activo, setActivo] = useState(0);
   const { data: novedades, loading, error } = useNovedades();
-  // Solo contenido de la API: las destacadas aparecen primero.
-  const slides: Slide[] = [...novedades]
-    .sort((a,b) => Number(b.destacado)-Number(a.destacado))
+  // El tablón publica únicamente las novedades marcadas como destacadas.
+  const slides: Slide[] = novedades.filter(n => n.destacado)
     .map(n => ({imagen:n.imagen, titulo:n.titulo, texto:n.resumen, link:"/novedades"}));
 
   const siguiente = useCallback(() => {
@@ -40,7 +39,7 @@ export default function TablonAnuncios() {
     return () => clearInterval(id);
   }, [siguiente, slides.length]);
 
-  if (loading || error || !slides.length) return <section className="tablon tablon-status" aria-label="Tablón de novedades"><p role={error ? "alert" : "status"}>{loading ? "Cargando novedades…" : error ? "No se pudieron cargar las novedades. Intenta recargar la página." : "Todavía no hay novedades publicadas."}</p></section>;
+  if (loading || error || !slides.length) return <section className="tablon tablon-status" aria-label="Tablón de novedades"><p role={error ? "alert" : "status"}>{loading ? "Cargando novedades…" : error ? "No se pudieron cargar las novedades. Intenta recargar la página." : "Todavía no hay novedades destacadas."}</p></section>;
 
   return (
     <section className="tablon">

@@ -1,8 +1,17 @@
 # DH & DM Maquinarias
 
-Sitio corporativo y sistema de gestión de maquinaria, repuestos y cotizaciones. Versión **2.1.0**. Desarrollado con React, TypeScript y Vite, con una API PHP. SQLite se usa para desarrollo; MySQL/MariaDB para producción.
+Sitio corporativo y sistema de gestión de maquinaria, repuestos y cotizaciones. Versión **2.2.0**. Desarrollado con React, TypeScript y Vite, con una API PHP. SQLite se usa para desarrollo; MySQL/MariaDB para producción.
 
 Sitio de producción configurado: https://dh-dm-maquinarias.com/. La configuración del proyecto no confirma que esta versión esté publicada en el hosting.
+
+## Novedades de 2.2.0
+
+- Calculadora con ayudas al pasar el mouse o enfocar botones; filtros del historial y formularios del panel con un diseño uniforme.
+- Solo el owner prepara y gestiona cotizaciones de maquinaria. Sus solicitudes, historial y PDFs quedan fuera del acceso de otros roles internos. El cliente conserva acceso a la respuesta de su propia solicitud.
+- Cotizador: ventas, cotizaciones de repuestos y calculadora. Sin estadísticas ni importación de Excel; puede exportar sus secciones.
+- El owner crea y edita roles personalizados desde Administrar Accesos, seleccionando secciones con casillas. Las tarjetas muestran todos los roles y sus permisos. Un rol asignado a usuarios no se puede eliminar hasta reasignarlos.
+- Los permisos se verifican en las rutas y en la API; Excel requiere acceso a Excel y a la sección elegida. Los permisos exclusivos del owner no se pueden asignar a otros roles.
+- Migración obligatoria y aditiva: tabla `roles_panel` y columna `usuarios.rol` como `VARCHAR(80)` en MySQL, conservando los valores actuales.
 
 ## Documentación
 
@@ -32,7 +41,7 @@ Empieza por LOCAL.md para trabajar en tu equipo. El README describe el proyecto;
 | Cuenta | Registro, inicio de sesión, perfil e historial propio de solicitudes |
 | Sugerencias y contactos flotantes | Formulario de sugerencias y accesos de contacto |
 
-Una cuenta de cliente puede consultar las respuestas que el equipo marque como visibles y descargar sus adjuntos autorizados. El cotizador formal es una herramienta interna distinta del formulario público de cotización.
+Una cuenta de cliente puede consultar las respuestas a sus solicitudes y descargar sus adjuntos autorizados. El cotizador formal es una herramienta interna distinta del formulario público de cotización.
 
 ## Panel y roles
 
@@ -40,15 +49,16 @@ Una cuenta de cliente puede consultar las respuestas que el equipo marque como v
 |---|---|
 | Visitante | Catálogos, contenido público y formularios públicos |
 | Cliente | Perfil, historial propio y respuestas/adjuntos visibles |
-| Cotizador | Ventas, solicitudes, estadísticas y cotizador formal |
-| Admin | Lo anterior, productos, categorías, contenido, contactos y sugerencias |
-| Owner | Lo anterior, gestión de cuentas/roles, auditoría y papelera |
+| Cotizador | Ventas, solicitudes de repuestos y calculadora; sin estadísticas ni importación de Excel |
+| Admin | Repuestos, calculadora, ventas, productos, categorías, contenido, contactos, sugerencias, estadísticas y Excel |
+| Owner | Todo el panel, cotizaciones de maquinaria, cuentas/roles, números/correo, auditoría y papelera |
+| Personalizado | Las secciones elegidas por el owner; Excel exige además acceso a su sección |
 
 El panel se abre en `/admin`; el acceso está en `/admin/login`. Los permisos se comprueban también en PHP, no solo en los menús.
 
-El cotizador formal permite agregar productos, aplicar ajustes por marca, trabajar con PEN/USD y tipo de cambio, generar PDF y consultar historial. `/cotizador` abre esa herramienta y `/cotizador/historial` abre su historial. Sus archivos están en **public/cotizador-app/**. Guardar una cotización recuperada del historial crea una copia. Los PDF mantienen el redondeo de precios a enteros de la regla comercial existente.
+El cotizador formal permite agregar productos, aplicar ajustes por marca, trabajar con PEN/USD y tipo de cambio, generar PDF y consultar historial. `/cotizador` abre esa herramienta y `/cotizador/historial` abre su historial. Su interfaz está en **src/pages/admin/Calculadora.tsx**, con cálculo y PDF en **src/features/calculadora/**; **public/cotizador-app/** conserva la plantilla y redirecciones de enlaces anteriores. Guardar una cotización recuperada del historial crea una copia. Los PDF mantienen el redondeo de precios a enteros de la regla comercial existente.
 
-## Novedades de 2.1.0
+## Mejoras conservadas de versiones anteriores
 
 La bienvenida original vuelve a ser la primera tarjeta del inicio, con sus cifras y botones. Tiene una edición independiente en `/admin/bienvenida`. El carrusel rota cada seis segundos entre la bienvenida y las promociones destacadas, incluso con el cursor encima; conserva controles y pausa explícita.
 
@@ -98,7 +108,7 @@ npm run dev usa el modo development; npm run build y npm run release usan produc
 | src/context/ | Autenticación, carrito y mensajes de interfaz |
 | src/api/ | Cliente HTTP y resolución de archivos |
 | src/types/, hooks/, utils/ | Tipos y utilidades compartidas |
-| public/ | Imágenes, reglas Apache y cotizador estático |
+| public/ | Imágenes, reglas Apache, plantilla PDF y redirecciones del cotizador |
 | backend-php/ | API, esquemas, migraciones y utilidades CLI |
 | backend-php/seed_data/ | Catálogos y contenido inicial de muestra |
 | scripts/ | Preparación de vendor y paquete de publicación |
@@ -126,7 +136,7 @@ Ejecuta el comando que corresponda a tu tarea. dev mantiene la terminal ocupada;
 - Mantener un único documento por tarea y retirar guías antiguas duplicadas.
 - Conservar package-lock.json; instalar con npm ci y comprobar cada cambio antes de subirlo.
 - Separar archivos generados, datos locales y credenciales mediante .gitignore.
-- Mantener el cotizador en public/cotizador-app; no conservar otra copia activa en la raíz.
+- Mantener la calculadora React como única interfaz activa; public/cotizador-app conserva recursos y redirecciones de enlaces anteriores.
 - Cambiar nombres y mover módulos solo después de revisar imports y usos.
 - Hacer refactorizaciones pequeñas: componentes del panel grandes, utilidades compartidas y pruebas de los flujos afectados.
 
@@ -136,10 +146,14 @@ Pendientes para una etapa posterior: paginación/filtros desde la API, optimizac
 
 El blog y la maquinaria de muestra ya tienen rutas locales; las fotos externas de referencia están incluidas y acreditadas en /creditos-imagenes.html. build comprueba que los archivos iniciales existan. Los repuestos sin foto original conservan su estado sin fotografía; no se les asignan fotos de otros productos.
 
-### Calculadora integrada y Contacto en 2.1.0
+### Calculadora integrada y Contacto en 2.2.0
 
 Contacto tiene una bandeja independiente en el panel y una pestaña propia en el perfil del cliente. Elegir WhatsApp o correo registra primero el mensaje en la página y después abre la aplicación externa. El canal registrado es el elegido para el envío; no confirma la entrega externa.
 
 La calculadora está en `/admin/calculadora`, hecha con React y TypeScript. Guarda pruebas y versiones en el historial sin crear solicitudes oficiales. El switch de registro oficial está apagado por defecto: al activarlo, el cliente, productos, importe y PDF se guardan en el panel. “Hacer cotización” desde una solicitud carga cliente y productos; completar sus precios sigue siendo necesario. Al guardar como oficial actualiza esa solicitud y adjunta el PDF, sin duplicarla. Las nuevas oficiales de repuestos y maquinaria se registran por separado. El historial anterior se conserva sin convertirlo automáticamente en oficial.
 
 Después de copiar esta actualización es obligatorio ejecutar `php backend-php/migrate.php`. Nunca uses `seed.php` para actualizar una base con datos reales.
+
+Un rol con solo Calculadora puede preparar y guardar pruebas. Para registrar documentos oficiales o trabajar con una solicitud existente necesita además Cotizaciones de repuestos.
+
+La actualización 2.2.0 también unifica el diseño de bienvenida y promociones, activa su rotación por defecto, publica únicamente novedades destacadas en el tablón y renueva el logo Handok. Estadísticas incluye el ranking completo de repuestos y maquinaria por número de solicitudes, junto con las unidades cotizadas.

@@ -26,6 +26,8 @@ interface PuntoDato {
 interface RankingItem {
   tipo: "repuesto" | "maquinaria";
   nombre: string;
+  codigo?: string;
+  producto_id?: number;
   unidades: number;
   solicitudes: number;
 }
@@ -78,7 +80,7 @@ export default function Estadisticas() {
         for (const point of data.ventas[group]) rows.push({seccion:"Ventas",agrupacion:group,...point});
         for (const point of data.cotizaciones[group]) rows.push({seccion:"Cotizaciones",agrupacion:group,...point});
       }
-      for (const item of [...data.top_repuestos,...data.top_maquinarias]) rows.push({seccion:"Ranking de solicitudes",...item});
+      for (const items of [data.top_repuestos,data.top_maquinarias]) items.forEach((item,index)=>rows.push({seccion:"Ranking de solicitudes",posicion:index+1,...item}));
       await saveWorkbook({key:"estadisticas",fields:[],importable:false,identity:[],updates:false},rows);
     } catch (e) {setExportError(e instanceof Error?e.message:"No se pudo descargar el informe.");}
     finally {setExporting(false);}
@@ -190,14 +192,15 @@ export default function Estadisticas() {
         )}
       </div>
 
-      <div className="admin-cards" style={{ marginTop: 24, alignItems: "stretch" }}>
-        <div className="admin-form" style={{ flex: 1, minWidth: 280 }}>
+      <p className="subtitle" style={{marginTop:24}}>El ranking incluye solicitudes recibidas y cotizaciones oficiales presenciales; excluye pruebas de la calculadora, mensajes de contacto y registros en la papelera. Cada producto cuenta una vez por solicitud.</p>
+      <div className="statistics-rankings">
+        <div className="admin-form statistics-ranking">
           <h3 style={{ marginBottom: 4, fontSize: 16 }}>
             <Package size={16} style={{ verticalAlign: "-3px", marginRight: 6 }} />
             Repuestos más cotizados
           </h3>
           <p className="subtitle" style={{ marginBottom: 14 }}>
-            Por unidades pedidas en todas las cotizaciones recibidas.
+            Ordenados por número de solicitudes. Las unidades desempatan.
           </p>
           {data.top_repuestos.length === 0 ? (
             <p>Todavía no hay suficientes datos.</p>
@@ -206,13 +209,13 @@ export default function Estadisticas() {
           )}
         </div>
 
-        <div className="admin-form" style={{ flex: 1, minWidth: 280 }}>
+        <div className="admin-form statistics-ranking">
           <h3 style={{ marginBottom: 4, fontSize: 16 }}>
             <Truck size={16} style={{ verticalAlign: "-3px", marginRight: 6 }} />
             Maquinaria más cotizada
           </h3>
           <p className="subtitle" style={{ marginBottom: 14 }}>
-            Por unidades pedidas en todas las cotizaciones recibidas.
+            Ordenados por número de solicitudes. Las unidades desempatan.
           </p>
           {data.top_maquinarias.length === 0 ? (
             <p>Todavía no hay suficientes datos.</p>
@@ -226,38 +229,5 @@ export default function Estadisticas() {
 }
 
 function RankingList({ items }: { items: RankingItem[] }) {
-  const max = Math.max(...items.map((i) => i.unidades), 1);
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      {items.map((item, i) => (
-        <div key={`${item.tipo}-${item.nombre}`}>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              fontSize: 13,
-              marginBottom: 4,
-            }}
-          >
-            <span>
-              <strong style={{ color: "#8a6d00" }}>#{i + 1}</strong> {item.nombre}
-            </span>
-            <span className="meta">
-              {item.unidades} unid. · {item.solicitudes} solicitud(es)
-            </span>
-          </div>
-          <div style={{ background: "#f2f2f0", borderRadius: 999, height: 8, overflow: "hidden" }}>
-            <div
-              style={{
-                width: `${Math.max(6, (item.unidades / max) * 100)}%`,
-                height: "100%",
-                background: "var(--yellow, #f4c20d)",
-                borderRadius: 999,
-              }}
-            />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
+  return <div className="admin-table-wrap"><table className="admin-table ranking-table"><thead><tr><th>Puesto</th><th>Producto</th><th>Solicitudes</th><th>Unidades</th></tr></thead><tbody>{items.map((item,i)=><tr key={`${item.tipo}-${item.producto_id??item.codigo??item.nombre}`}><td><span className={`ranking-position ${i<3?"ranking-leader":""}`}>#{i+1}</span></td><td><strong>{item.nombre}</strong>{item.codigo&&<small className="ranking-code">{item.codigo}</small>}</td><td><strong>{item.solicitudes}</strong></td><td>{item.unidades}</td></tr>)}</tbody></table></div>;
 }

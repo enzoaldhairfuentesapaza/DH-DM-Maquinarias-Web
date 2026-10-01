@@ -15,5 +15,5 @@ foreach ($tables as $table) {
         echo "PREPARE hdm_stmt FROM @hdm_sql; EXECUTE hdm_stmt; DEALLOCATE PREPARE hdm_stmt;\n";
     }
 }
-echo "ALTER TABLE usuarios MODIFY rol ENUM('cliente','admin','owner','cotizador') NOT NULL DEFAULT 'cliente';\n";
+echo "ALTER TABLE usuarios MODIFY rol VARCHAR(80) NOT NULL DEFAULT 'cliente';\n";
 echo "ALTER TABLE cotizaciones MODIFY canal_respuesta VARCHAR(60) DEFAULT NULL;\n";

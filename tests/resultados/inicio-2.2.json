@@ -1,0 +1,16 @@
+{
+  "passed": 11,
+  "checks": [
+    "welcome is first and autoplay enabled with reduced motion",
+    "welcome figures retained",
+    "welcome buttons retained",
+    "only featured news in board",
+    "carousel advances without pressing Play",
+    "explicit pause stops rotation",
+    "Play resumes rotation",
+    "home no mobile horizontal overflow",
+    "new Handok logo loads",
+    "unfeaturing in database updates public board",
+    "no browser runtime errors"
+  ]
+}

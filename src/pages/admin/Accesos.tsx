@@ -1,3 +1,5 @@
+import { sections } from "../../context/permissions";
+import RolesPanel, { type PanelRole } from "./RolesPanel";
 import { normalize } from "./excelFiles";
 import ExcelTools from "./ExcelTools";
 import { useEffect, useMemo, useState, FormEvent } from "react";
@@ -24,7 +26,7 @@ type EditForm = {
   numero_documento: string;
   razon_social: string;
   password: string;
-  rol: "cliente" | "admin" | "owner" | "cotizador";
+  rol: string;
 };
 
 const EMPTY_EDIT: EditForm = {
@@ -41,16 +43,17 @@ const EMPTY_EDIT: EditForm = {
 export default function Accesos() {
   const { user: currentUser } = useAuth();
   const feedback = useFeedback();
+  const [roles,setRoles]=useState<PanelRole[]>([]);
   const [items, setItems] = useState<Usuario[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [filtro, setFiltro] = useState<(typeof FILTROS)[number]>("todos");
+  const [filtro, setFiltro] = useState<string>("todos");
 
   const [showForm, setShowForm] = useState(false);
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [rol, setRol] = useState<"admin" | "owner" | "cotizador">("admin");
+  const [rol, setRol] = useState<string>("admin");
   const [saving, setSaving] = useState(false);
 
   // Edicion de un usuario existente (cualquier rol)
@@ -233,13 +236,15 @@ export default function Accesos() {
 
   return (
     <div>
+      <RolesPanel onChange={setRoles} />
       <ExcelTools entity="accesos" onImported={() => window.location.reload()} />
       <div className="admin-header-row">
         <h1>Administrar Accesos</h1>
         <button
           className="btn-admin yellow"
           onClick={() => setShowForm((s) => !s)}
-          data-tooltip="Crea un nuevo acceso de admin, owner o cotizador"
+          aria-label={showForm?"Cancelar":"+ Agregar acceso"}
+          data-tooltip="Crea una cuenta y asígnale uno de los roles disponibles"
         >
           {showForm ? "Cancelar" : "+ Agregar acceso"}
         </button>
@@ -265,14 +270,14 @@ export default function Accesos() {
           <label>
             Rol
             <select
+              aria-label="Rol"
               value={rol}
-              onChange={(e) => setRol(e.target.value as "admin" | "owner" | "cotizador")}
+              onChange={(e) => setRol(e.target.value)}
             >
-              <option value="admin">Admin</option>
-              <option value="owner">Owner</option>
-              <option value="cotizador">Cotizador</option>
+              {roles.filter(r=>r.clave!=="cliente").map(r=><option key={r.clave} value={r.clave}>{r.nombre}</option>)}
             </select>
           </label>
+          <p className="role-selection-summary">Acceso a: {roles.find(r=>r.clave===rol)?.permisos.map(p=>rol==="cotizador"&&p==="excel"?"Excel · solo descargar":sections[p]??p).join(", ")}</p>
           <div className="admin-form-actions">
             <button type="submit" className="btn-admin yellow" disabled={saving}>
               {saving ? "Creando..." : "Crear acceso"}
@@ -356,14 +361,12 @@ export default function Accesos() {
             <label>
               Rol
               <select
+                aria-label="Rol"
                 value={editForm.rol}
                 disabled={editandoId === currentUser?.id}
                 onChange={(e) => setEditForm((f) => ({ ...f, rol: e.target.value as EditForm["rol"] }))}
               >
-                <option value="cliente">Cliente</option>
-                <option value="cotizador">Cotizador</option>
-                <option value="admin">Admin</option>
-                <option value="owner">Owner</option>
+                {roles.map(r=><option key={r.clave} value={r.clave}>{r.nombre}</option>)}
               </select>
             </label>
             {editandoId === currentUser?.id && (
@@ -395,9 +398,9 @@ export default function Accesos() {
       </div>
 
       <div className="admin-tabs">
-        {FILTROS.map((f) => (
+        {[...FILTROS,...roles.filter(r=>!r.sistema).map(r=>r.clave)].map((f) => (
           <button key={f} className={filtro === f ? "active" : ""} onClick={() => setFiltro(f)}>
-            {FILTRO_LABEL[f]}
+            {FILTRO_LABEL[f as keyof typeof FILTRO_LABEL]??roles.find(r=>r.clave===f)?.nombre??f}
             {f !== "todos" && ` (${items.filter((u) => u.rol === f).length})`}
           </button>
         ))}
@@ -425,7 +428,7 @@ export default function Accesos() {
                   <td>{u.nombre}{items.filter(other => normalize(other.nombre) === normalize(u.nombre)).length > 1 && <span className="duplicate-tag">Ya existe un usuario con el mismo nombre</span>}</td>
                   <td>{u.email}</td>
                   <td>
-                    <span className={`rol-badge ${u.rol}`}>{u.rol}</span>
+                    <span className={`rol-badge ${["owner","admin","cotizador","cliente"].includes(u.rol)?u.rol:"admin"}`}>{u.rol_nombre??u.rol}</span>
                   </td>
                   <td>
                     <span className={`rol-badge ${u.activo ? "cliente" : "danger"}`}>

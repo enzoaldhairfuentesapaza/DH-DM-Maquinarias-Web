@@ -200,3 +200,5 @@ $pdo->exec('CREATE TABLE IF NOT EXISTS rate_limits (bucket VARCHAR(64) PRIMARY K
 echo "Tablas creadas correctamente en SQLite (hdm.db).\n";
 
 $pdo->exec("CREATE TABLE IF NOT EXISTS bienvenida (id INTEGER PRIMARY KEY, datos TEXT NOT NULL)");
+
+$pdo->exec("CREATE TABLE IF NOT EXISTS roles_panel (clave TEXT PRIMARY KEY,nombre TEXT NOT NULL UNIQUE,permisos TEXT NOT NULL)");

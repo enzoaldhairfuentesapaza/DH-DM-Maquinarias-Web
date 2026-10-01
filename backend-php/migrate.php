@@ -44,7 +44,7 @@ foreach ($tables as $table) {
     }
 }
 if ($driver === 'mysql') {
-    $pdo->exec("ALTER TABLE usuarios MODIFY rol ENUM('cliente','admin','owner','cotizador') NOT NULL DEFAULT 'cliente'");
+    $pdo->exec("ALTER TABLE usuarios MODIFY rol VARCHAR(80) NOT NULL DEFAULT 'cliente'");
     $pdo->exec('ALTER TABLE cotizaciones MODIFY canal_respuesta VARCHAR(60) DEFAULT NULL');
 }
 // Configuration inserts never replace values the business already customized.

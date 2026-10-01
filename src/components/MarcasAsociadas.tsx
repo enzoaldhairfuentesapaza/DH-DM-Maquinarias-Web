@@ -9,7 +9,7 @@ const marcaLogos: Record<string, string> = {
   CAT: "/marcas/CAT.jpg",
   CTP: "/marcas/CTP.jpg",
   IPD: "/marcas/IPD.png",
-  HANDOK: "/marcas/HANDOK.jpg",
+  HANDOK: "/marcas/HANDOK.png",
   NOK: "/marcas/NOK.png",
 };
 
@@ -19,7 +19,7 @@ const marcaLogos: Record<string, string> = {
 const marcaLogoAltura: Record<string, number> = {
   CTP: 58,
   IPD: 58,
-  HANDOK: 54,
+  HANDOK: 64,
   NOK: 46,
 };
 

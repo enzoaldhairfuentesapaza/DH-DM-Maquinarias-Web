@@ -1,3 +1,4 @@
+import { sections } from "../../context/permissions";
 import { useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
@@ -30,7 +31,7 @@ const ROL_LABELS: Record<string, string> = {
 };
 
 export default function AdminLayout() {
-  const { user, logout, isOwner, isCotizador } = useAuth();
+  const { user, logout, isOwner, can } = useAuth();
   const navigate = useNavigate();
   const [menuAbierto, setMenuAbierto] = useState(false);
   const [perfilAbierto, setPerfilAbierto] = useState(false);
@@ -52,26 +53,26 @@ export default function AdminLayout() {
         </div>
 
         <nav>
-          {/* El cotizador solo ve ventas/cotizaciones y estadísticas. */}
-          {!isCotizador && (
+          {user && !["owner","admin","cotizador"].includes(user.rol) && user.permisos.filter(p=>["bienvenida","novedades","blog","promociones","maquinaria","repuestos","categorias","ventas"].includes(p)).map(p=><NavLink key={p} to={p==="categorias"?"/admin/productos/categorias":`/admin/${p}`}><Package size={17}/>{sections[p]}</NavLink>)}
+          {["bienvenida","novedades","blog","promociones","maquinaria","repuestos","categorias"].some(can) && (
             <>
-              <NavLink to="/admin" end>
+              {["bienvenida","novedades","blog","promociones"].some(can)&&<NavLink to="/admin" end>
                 <LayoutDashboard size={17} /> Editar Página
-              </NavLink>
-              <NavLink to="/admin/productos">
+              </NavLink>}
+              {["maquinaria","repuestos","categorias"].some(can)&&<NavLink to="/admin/productos">
                 <Package size={17} /> Administrar Productos
-              </NavLink>
+              </NavLink>}
             </>
           )}
-          <NavLink to="/admin/ventas-cotizaciones">
+          {can("cotizaciones")&&<NavLink to="/admin/ventas-cotizaciones">
             <Receipt size={17} /> Cotizaciones
-          </NavLink>
-          {!isCotizador && <NavLink to="/admin/contactos"><Mail size={17} /> Mensajes de contacto</NavLink>}
-          <NavLink to="/admin/calculadora"><Calculator size={17} /> Calculadora</NavLink>
-          <NavLink to="/admin/estadisticas">
+          </NavLink>}
+          {can("contactos") && <NavLink to="/admin/contactos"><Mail size={17} /> Mensajes de contacto</NavLink>}
+          {can("calculadora")&&<NavLink to="/admin/calculadora"><Calculator size={17} /> Calculadora</NavLink>}
+          {can("estadisticas")&&<NavLink to="/admin/estadisticas">
             <BarChart3 size={17} /> Estadísticas
-          </NavLink>
-          {!isCotizador && (
+          </NavLink>}
+          {can("sugerencias") && (
             <NavLink to="/admin/sugerencias">
               <MessageSquare size={17} /> Sugerencias y reclamos
             </NavLink>
@@ -91,7 +92,7 @@ export default function AdminLayout() {
               <ScrollText size={17} /> Registro de actividad
             </NavLink>
           )}
-          <NavLink to="/admin/excel"><Receipt size={17} /> Importar / exportar Excel</NavLink>
+          {can("excel")&&<NavLink to="/admin/excel"><Receipt size={17} /> {user?.rol==="cotizador"?"Exportar Excel":"Importar / exportar Excel"}</NavLink>}
           <button onClick={handleLogout}>
             <LogOut size={17} /> Cerrar sesión
           </button>
@@ -100,7 +101,7 @@ export default function AdminLayout() {
         {user && (
           <div className="admin-sidebar-footer">
             <div className="user-name">{user.nombre}</div>
-            <div className="user-rol">{user.rol}</div>
+            <div className="user-rol">{user.rol_nombre??user.rol}</div>
           </div>
         )}
         <div className="admin-sidebar-version">v{APP_VERSION}</div>
@@ -138,7 +139,7 @@ export default function AdminLayout() {
             </a>
 
             <a
-              href="https://dh-dm-maquinarias.com:2003/sessnd8m1gaFmuNX5Tnd/mail/"
+              href="https://dh-dm-maquinarias.com:2003/"
               target="_blank"
               rel="noopener noreferrer"
               className="admin-fab-item"
@@ -179,7 +180,7 @@ export default function AdminLayout() {
             <div className="perfil-modal-avatar">{user.nombre.charAt(0).toUpperCase()}</div>
             <h3 style={{ marginBottom: 4 }}>{user.nombre}</h3>
             <p style={{ color: "#888", fontSize: 13, marginBottom: 16 }}>
-              {ROL_LABELS[user.rol] ?? user.rol}
+              {user.rol_nombre ?? ROL_LABELS[user.rol] ?? user.rol}
             </p>
 
             <div className="perfil-modal-row">

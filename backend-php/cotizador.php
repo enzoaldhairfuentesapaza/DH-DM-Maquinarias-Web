@@ -1,11 +1,11 @@
 <?php
 if (($segments[0] ?? null) !== 'cotizador') return;
-$user = require_ventas_access();
+$user = require_permission('calculadora');
 $id = $segments[1] ?? null;
 if ($method === 'GET') {
     $stmt = $id ? db()->prepare('SELECT * FROM cotizaciones_formales WHERE id = ?') : db()->prepare('SELECT * FROM cotizaciones_formales ORDER BY id DESC');
     $stmt->execute($id ? [$id] : []);
-    $rows=$stmt->fetchAll();
+    $rows=$stmt->fetchAll();if($user['rol']!=='owner'){$rows=array_values(array_filter($rows,fn($r)=>!machine_history($r)));}
     if ($id && !$rows) json_error('Cotizacion no encontrada',404);
     foreach ($rows as &$row) {$row['items']=json_decode($row['items'],true)??[];$row['oficial']=(bool)$row['oficial'];}
     json_response($id ? $rows[0] : $rows);
@@ -17,11 +17,12 @@ if ($method === 'POST' && $id === null) {
     $name=text_field($body,'cliente_nombre',150,true);
     $document=text_field($body,'cliente_documento',50);
     $address=text_field($body,'cliente_direccion',255);
-    $email=text_field($body,'cliente_email',150);
+    $email=text_field($body,'cliente_email',150)??'';
     if ($email!=='' && !filter_var($email,FILTER_VALIDATE_EMAIL))json_error('Correo invalido',422);
     $phone=text_field($body,'cliente_telefono',50);
     $key=text_field($body,'registro_clave',80);
     $official=to_bool($body['oficial']??false);
+    if($official)require_permission('cotizaciones');
     $currency=$body['moneda_mostrar']??'PEN';
     if(!in_array($currency,['PEN','USD'],true))json_error('Moneda invalida',422);
     $rate=(float)($body['tipo_cambio']??0);
@@ -46,11 +47,13 @@ if ($method === 'POST' && $id === null) {
         $item['precio_final']=floor($price+0.5);$total+=$item['precio_final']*$item['qty'];
     }
     unset($item);
+    if(isset($types['maquinaria']))require_owner();
     if(!is_finite($total)||$total>9999999999)json_error('Total fuera de rango',422);
     if($official&&count($types)>1)json_error('Registra maquinaria y repuestos en cotizaciones oficiales separadas',422);
     $source=($body['solicitud_id']??null)?(int)$body['solicitud_id']:null;
     $pdo=db();$sourceRow=null;
-    if($source){$q=$pdo->prepare("SELECT * FROM cotizaciones WHERE id=? AND origen <> 'contacto' AND eliminado_en IS NULL");$q->execute([$source]);$sourceRow=$q->fetch();if(!$sourceRow)json_error('Solicitud no encontrada',404);
+    if($source){require_permission('cotizaciones');$q=$pdo->prepare("SELECT * FROM cotizaciones WHERE id=? AND origen <> 'contacto' AND eliminado_en IS NULL");$q->execute([$source]);$sourceRow=$q->fetch();if(!$sourceRow)json_error('Solicitud no encontrada',404);
+        if(is_machine_quote($sourceRow))require_owner();
         $groups=quote_detail_groups(json_decode($sourceRow['detalle'],true)??[]);$type=array_key_first($types);if($official&&(count($groups)>1||($groups[0]['tipo_solicitud']??'repuesto')!==$type))json_error('Los productos deben corresponder al tipo de la solicitud',422);
     }
     if($official&&(!isset($_FILES['pdf'])||strtolower(pathinfo($_FILES['pdf']['name'],PATHINFO_EXTENSION))!=='pdf'))json_error('El registro oficial necesita su PDF',422);
@@ -81,6 +84,7 @@ if ($method === 'POST' && $id === null) {
 }
 if($method==='DELETE'&&$id){
     $q=db()->prepare('SELECT * FROM cotizaciones_formales WHERE id=?');$q->execute([$id]);$row=$q->fetch();if(!$row)json_error('No encontrada',404);
+    if(machine_history($row))require_owner();
     if($row['oficial'])json_error('Las cotizaciones oficiales se conservan. Gestiona su solicitud desde el panel',409);
     db()->prepare('DELETE FROM cotizaciones_formales WHERE id=?')->execute([$id]);json_response(['ok'=>true]);
 }

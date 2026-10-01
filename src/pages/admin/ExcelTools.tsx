@@ -1,3 +1,4 @@
+import { useAuth } from "../../context/AuthContext";
 import { useRef, useState } from "react";
 import { api } from "../../api/client";
 import { entities } from "./entityConfig";
@@ -5,6 +6,7 @@ import { batches, mapRows, normalize, readWorkbook, saveWorkbook, sectionNames, 
 import "./ExcelTools.css";
 interface Review { row:number; errors:string[]; warnings:string[]; skip:boolean; }
 export default function ExcelTools({ entity, onImported, scope }: {entity:string;onImported?:()=>void;scope?:"maquinaria"|"repuesto"}) {
+  const {can,isCotizador}=useAuth();
   const query = entity === "cotizaciones" && scope ? `?tipo=${scope}` : "";
   const [opened,setOpened]=useState(false);
   const [preparedRows,setPreparedRows]=useState<ExcelRow[]>([]);
@@ -74,10 +76,11 @@ export default function ExcelTools({ entity, onImported, scope }: {entity:string
     } catch(e) { setReview(null);setError(`${e instanceof Error?e.message:"Error de importación."} Se guardaron ${created} registros y ${updated} actualizaciones en los lotes anteriores. Revisa nuevamente; las claves ya existentes se omiten por defecto.`);setMessage("");onImported?.(); }
     finally {setBusy(false);}
   }
-  const readOnly=["auditoria","papelera","notificaciones"].includes(entity);
+  const readOnly=isCotizador||["auditoria","papelera","notificaciones","contactos"].includes(entity);
+  if(!can("excel"))return null;
   return <div className="excel-tools">
     <div className="excel-toolbar"><span>Excel · {sectionNames[entity]??entity}</span><button type="button" className="btn-admin small outline" disabled={busy} onClick={()=>download()}>Descargar todo (.xlsx)</button>{!readOnly && <><button type="button" className="btn-admin small outline" disabled={busy} onClick={()=>download(true)}>Plantilla</button><button type="button" className="btn-admin small yellow" disabled={busy} onClick={()=>input.current?.click()}>Subir Excel</button></>}<input ref={input} type="file" accept=".xlsx" hidden onChange={e=>{const f=e.target.files?.[0];if(f) void upload(f);}} /></div>
-    {readOnly && <p className="excel-help">Solo exportación: los registros de actividad y la papelera se generan desde sus operaciones del panel.</p>}
+    {readOnly && <p className="excel-help">{isCotizador?"Tu rol puede descargar estos registros. No tiene permiso para importar archivos.":"Solo exportación: estos registros se generan desde sus operaciones del panel."}</p>}
     {message && <p role="status" className="excel-status">{message}</p>}{error && !opened && <p role="alert" className="admin-error">{error}</p>}
     <dialog ref={dialog} className="excel-dialog" style={{colorScheme:"light"}} aria-labelledby={`excel-title-${entity}`} onCancel={e=>{if(busy)e.preventDefault();}} onClose={()=>setOpened(false)}>
       <div className="excel-dialog-head"><h2 id={`excel-title-${entity}`}>Importar {sectionNames[entity]??entity}</h2><button type="button" className="btn-admin small outline" disabled={busy} onClick={()=>dialog.current?.close()}>Cerrar</button></div>

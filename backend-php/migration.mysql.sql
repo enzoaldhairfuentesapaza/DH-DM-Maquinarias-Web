@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
     nombre VARCHAR(150) NOT NULL,
     email VARCHAR(150) NOT NULL UNIQUE,
     hashed_password VARCHAR(255) NOT NULL,
-    rol ENUM('cliente','admin','owner','cotizador') NOT NULL DEFAULT 'cliente',
+    rol VARCHAR(80) NOT NULL DEFAULT 'cliente',
     activo TINYINT(1) NOT NULL DEFAULT 1,
     token_version INT NOT NULL DEFAULT 0,
     telefono VARCHAR(30) NULL,
@@ -226,13 +226,19 @@ CREATE TABLE IF NOT EXISTS bienvenida (
     datos TEXT NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS roles_panel (
+    clave VARCHAR(80) PRIMARY KEY,
+    nombre VARCHAR(80) NOT NULL UNIQUE,
+    permisos TEXT NOT NULL
+);
+
 SET @hdm_sql = IF((SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'usuarios' AND COLUMN_NAME = 'nombre') > 0, 'SELECT 1', 'ALTER TABLE usuarios ADD COLUMN nombre VARCHAR(150) NOT NULL');
 PREPARE hdm_stmt FROM @hdm_sql; EXECUTE hdm_stmt; DEALLOCATE PREPARE hdm_stmt;
 SET @hdm_sql = IF((SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'usuarios' AND COLUMN_NAME = 'email') > 0, 'SELECT 1', 'ALTER TABLE usuarios ADD COLUMN email VARCHAR(150) NOT NULL UNIQUE');
 PREPARE hdm_stmt FROM @hdm_sql; EXECUTE hdm_stmt; DEALLOCATE PREPARE hdm_stmt;
 SET @hdm_sql = IF((SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'usuarios' AND COLUMN_NAME = 'hashed_password') > 0, 'SELECT 1', 'ALTER TABLE usuarios ADD COLUMN hashed_password VARCHAR(255) NOT NULL');
 PREPARE hdm_stmt FROM @hdm_sql; EXECUTE hdm_stmt; DEALLOCATE PREPARE hdm_stmt;
-SET @hdm_sql = IF((SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'usuarios' AND COLUMN_NAME = 'rol') > 0, 'SELECT 1', 'ALTER TABLE usuarios ADD COLUMN rol ENUM(''cliente'',''admin'',''owner'',''cotizador'') NOT NULL DEFAULT ''cliente''');
+SET @hdm_sql = IF((SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'usuarios' AND COLUMN_NAME = 'rol') > 0, 'SELECT 1', 'ALTER TABLE usuarios ADD COLUMN rol VARCHAR(80) NOT NULL DEFAULT ''cliente''');
 PREPARE hdm_stmt FROM @hdm_sql; EXECUTE hdm_stmt; DEALLOCATE PREPARE hdm_stmt;
 SET @hdm_sql = IF((SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'usuarios' AND COLUMN_NAME = 'activo') > 0, 'SELECT 1', 'ALTER TABLE usuarios ADD COLUMN activo TINYINT(1) NOT NULL DEFAULT 1');
 PREPARE hdm_stmt FROM @hdm_sql; EXECUTE hdm_stmt; DEALLOCATE PREPARE hdm_stmt;
@@ -524,5 +530,11 @@ SET @hdm_sql = IF((SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_S
 PREPARE hdm_stmt FROM @hdm_sql; EXECUTE hdm_stmt; DEALLOCATE PREPARE hdm_stmt;
 SET @hdm_sql = IF((SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'bienvenida' AND COLUMN_NAME = 'datos') > 0, 'SELECT 1', 'ALTER TABLE bienvenida ADD COLUMN datos TEXT NOT NULL');
 PREPARE hdm_stmt FROM @hdm_sql; EXECUTE hdm_stmt; DEALLOCATE PREPARE hdm_stmt;
-ALTER TABLE usuarios MODIFY rol ENUM('cliente','admin','owner','cotizador') NOT NULL DEFAULT 'cliente';
+SET @hdm_sql = IF((SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'roles_panel' AND COLUMN_NAME = 'clave') > 0, 'SELECT 1', 'ALTER TABLE roles_panel ADD COLUMN clave VARCHAR(80) PRIMARY KEY');
+PREPARE hdm_stmt FROM @hdm_sql; EXECUTE hdm_stmt; DEALLOCATE PREPARE hdm_stmt;
+SET @hdm_sql = IF((SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'roles_panel' AND COLUMN_NAME = 'nombre') > 0, 'SELECT 1', 'ALTER TABLE roles_panel ADD COLUMN nombre VARCHAR(80) NOT NULL UNIQUE');
+PREPARE hdm_stmt FROM @hdm_sql; EXECUTE hdm_stmt; DEALLOCATE PREPARE hdm_stmt;
+SET @hdm_sql = IF((SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'roles_panel' AND COLUMN_NAME = 'permisos') > 0, 'SELECT 1', 'ALTER TABLE roles_panel ADD COLUMN permisos TEXT NOT NULL');
+PREPARE hdm_stmt FROM @hdm_sql; EXECUTE hdm_stmt; DEALLOCATE PREPARE hdm_stmt;
+ALTER TABLE usuarios MODIFY rol VARCHAR(80) NOT NULL DEFAULT 'cliente';
 ALTER TABLE cotizaciones MODIFY canal_respuesta VARCHAR(60) DEFAULT NULL;

@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
     nombre VARCHAR(150) NOT NULL,
     email VARCHAR(150) NOT NULL UNIQUE,
     hashed_password VARCHAR(255) NOT NULL,
-    rol ENUM('cliente','admin','owner','cotizador') NOT NULL DEFAULT 'cliente',
+    rol VARCHAR(80) NOT NULL DEFAULT 'cliente',
     activo TINYINT(1) NOT NULL DEFAULT 1,
     token_version INT NOT NULL DEFAULT 0,
     telefono VARCHAR(30) NULL,
@@ -224,3 +224,9 @@ CREATE TABLE IF NOT EXISTS bienvenida (
     id INT PRIMARY KEY,
     datos TEXT NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS roles_panel (
+    clave VARCHAR(80) PRIMARY KEY,
+    nombre VARCHAR(80) NOT NULL UNIQUE,
+    permisos TEXT NOT NULL
+);

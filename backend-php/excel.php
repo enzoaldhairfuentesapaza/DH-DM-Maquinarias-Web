@@ -52,6 +52,8 @@ function excel_rows(array $def, array $user): array
             return false;
         }));
     }
+    if($user['rol']!=='owner' && $def['table']==='cotizaciones')$rows=array_values(array_filter($rows,fn($r)=>!is_machine_quote($r)));
+    if($user['rol']!=='owner' && $def['table']==='cotizaciones_formales')$rows=array_values(array_filter($rows,fn($r)=>!machine_history($r)));
     return $rows;
 }
 function excel_schema(string $key, array $def): array
@@ -60,7 +62,7 @@ function excel_schema(string $key, array $def): array
     $fields=[];
     foreach ($def['columns'] as $name) $fields[]=['name'=>$name, 'required'=>in_array($name,$def['required'],true),
         'type'=>in_array($name,$def['json_columns'],true)?'json':(in_array($name,$def['bool_columns'],true)?'boolean':(in_array($name,$numeric,true)?'number':'text'))];
-    return ['key'=>$key,'importable'=>empty($def['readonly']),'fields'=>$fields,'identity'=>$def['identity'] ?? [],'updates'=>$key==='configuracion'];
+    return ['key'=>$key,'importable'=>empty($def['readonly']) && current_user()['rol']!=='cotizador','fields'=>$fields,'identity'=>$def['identity'] ?? [],'updates'=>$key==='configuracion'];
 }
 function excel_validate(string $key, array &$row, array $def): void
 {
@@ -70,7 +72,7 @@ function excel_validate(string $key, array &$row, array $def): void
     foreach ($def['required'] as $field) if (!isset($row[$field]) || $row[$field]==='') json_error("Falta {$field}",422);
     if ($key==='accesos') {
         validate_account($row); $row['email']=strtolower($row['email']);
-        if (!in_array($row['rol'],['cliente','admin','owner','cotizador'],true)) json_error('Rol invalido',422);
+        if (!valid_role($row['rol'])) json_error('Rol invalido',422);
         return;
     }
     $limits=['tipo'=>30,'nombre'=>($key==='categorias'?100:150),'correo'=>150,'mensaje'=>5000,'nombre_cliente'=>150,'email_cliente'=>150,'telefono_cliente'=>50,'empresa'=>150,'origen'=>50,'numero'=>50,'cliente_nombre'=>150,'cliente_documento'=>50,'cliente_direccion'=>255,'moneda_mostrar'=>3,'clave'=>80,'valor'=>255];
@@ -81,6 +83,7 @@ function excel_validate(string $key, array &$row, array $def): void
         if (isset($row['correo'])) $row['correo']=email_field($row,'correo',false);
     }
     if ($key==='cotizaciones') {
+        if(current_user()['rol']!=='owner' && is_machine_quote($row))json_error('Solo el owner puede importar cotizaciones de maquinaria',403);
         if(($row['origen']??'')==='contacto')json_error('Los mensajes de contacto pertenecen a su propia bandeja',422);
         $row['email_cliente']=email_field($row,'email_cliente');
         if (!in_array($row['origen']??'web',['web','contacto','pagina','correo','whatsapp'],true)) json_error('Origen invalido',422);
@@ -92,6 +95,7 @@ function excel_validate(string $key, array &$row, array $def): void
         foreach ($products as $p) if (!is_array($p) || !is_string($p['nombre']??null) || !in_array($p['tipo']??null,['maquinaria','repuesto'],true) || !is_numeric($p['cantidad']??null) || $p['cantidad']<1 || $p['cantidad']>100000 || floor((float)$p['cantidad'])!=$p['cantidad']) json_error('Producto o cantidad invalida',422);
     }
     if ($key==='cotizador') {
+        if(current_user()['rol']!=='owner' && machine_history($row))json_error('Solo el owner puede importar cotizaciones de maquinaria',403);
         if (!in_array($row['moneda_mostrar']??'PEN',['PEN','USD'],true)) json_error('Moneda invalida',422);
         if (!is_array($row['items']) || !array_is_list($row['items']) || count($row['items'])===0 || count($row['items'])>200) json_error('items: lista de 1 a 200 productos',422);
         foreach ($row['items'] as $p) if (!is_array($p) || !is_numeric($p['qty']??null) || !is_finite((float)$p['qty']) || $p['qty']<=0 || !is_numeric($p['price']??null) || !is_finite((float)$p['price']) || $p['price']<0) json_error('Cantidad o precio invalido',422);
@@ -136,14 +140,15 @@ function excel_review(string $key,array $rows,array $def,array $existing,bool $d
 }
 function excel_handle(array $segments,string $method): void
 {
-    $user=require_panel_access(); $defs=excel_definitions();
+    $user=require_permission('excel'); $defs=excel_definitions();
     if (count($segments)===1 && $method==='GET') {
-        $schemas=[]; foreach ($defs as $key=>$def) if (in_array($user['rol'],$def['roles'],true)) $schemas[]=excel_schema($key,$def);
+        $schemas=[]; foreach ($defs as $key=>$def) if (excel_allowed($key,$def,$user)) $schemas[]=excel_schema($key,$def);
         json_response($schemas);
     }
     $key=$segments[1]??''; $action=$segments[2]??'';
     if (!isset($defs[$key]) || count($segments)!==3) json_error('Seccion Excel no encontrada',404);
-    $def=$defs[$key]; require_roles($def['roles']);
+    $def=$defs[$key]; if(!excel_allowed($key,$def,$user))json_error('No tienes acceso a esta sección Excel',403);
+    if($key==='cotizaciones' && ($_GET['tipo']??'')==='maquinaria')require_owner();
     if ($key==='cotizaciones' && isset($_GET['tipo']) && !in_array($_GET['tipo'],['maquinaria','repuesto'],true)) json_error('Grupo de cotizacion invalido',422);
     if ($method==='GET' && $action==='schema') json_response(excel_schema($key,$def));
     if ($method==='GET' && $action==='export') {
@@ -152,6 +157,7 @@ function excel_handle(array $segments,string $method): void
         json_response(['schema'=>excel_schema($key,$def),'rows'=>$rows]);
     }
     if ($method!=='POST' || !in_array($action,['preview','import'],true)) json_error('Ruta Excel no encontrada',404);
+    if($user['rol']==='cotizador')json_error('El cotizador puede descargar Excel, pero no importar archivos',403);
     if (!empty($def['readonly'])) json_error('Esta tabla es de solo lectura',403);
     $body=get_json_body(); $rows=$body['rows']??null;
     if (!is_array($rows) || !array_is_list($rows) || count($rows)<1 || count($rows)>500) json_error('Envía de 1 a 500 filas por lote',422);
@@ -199,4 +205,12 @@ function excel_handle(array $segments,string $method): void
         if ($mysqlLock) { $stmt=$pdo->prepare('SELECT RELEASE_LOCK(?)'); $stmt->execute(['hdm_excel_'.$key]); }
     }
     json_response(['inserted'=>$inserted,'updated'=>$updated,'skipped'=>$skipped]);
+}
+
+function excel_allowed(string $key,array $def,array $user): bool {
+    if(!has_permission($user,'excel'))return false;
+    if(isset(builtin_permissions()[$user['rol']]) && !in_array($user['rol'],$def['roles'],true))return false;
+    if(in_array($key,['accesos','configuracion','auditoria','papelera'],true))return $user['rol']==='owner';
+    $section=['cotizador'=>'calculadora','blog_posts'=>'blog','notificaciones'=>'cotizaciones'][$key]??$key;
+    return has_permission($user,$section);
 }

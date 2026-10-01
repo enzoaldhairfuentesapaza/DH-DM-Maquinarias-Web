@@ -117,9 +117,9 @@ function PublicLayout() {
  * entrar a "ventas"; el resto del contenido es de admin/owner.
  */
 function ContenidoRoute({ children }: { children: ReactNode }) {
-  const { isCotizador } = useAuth();
+  const { can } = useAuth();
   const { entityKey } = useParams<{ entityKey: string }>();
-  if (isCotizador && entityKey !== "ventas") {
+  if (!can(entityKey ?? "")) {
     return <Navigate to="/admin/ventas-cotizaciones" replace />;
   }
   return <>{children}</>;
@@ -130,8 +130,8 @@ function ContenidoRoute({ children }: { children: ReactNode }) {
  * el cotizador no tiene acceso ahí, así que va directo a sus secciones.
  */
 function AdminHome() {
-  const { isCotizador } = useAuth();
-  if (isCotizador) return <Navigate to="/admin/ventas-cotizaciones" replace />;
+  const { can, user } = useAuth();
+  if (!["bienvenida","novedades","blog","promociones"].some(can)) { const first=user?.permisos?.find(p=>!["accesos","papelera","cotizaciones_maquinaria"].includes(p)); return <Navigate to={`/admin/${first==="categorias"?"productos/categorias":first??"login"}`} replace />; }
   return <EditarPagina />;
 }
 
@@ -182,16 +182,16 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route path="ventas-cotizaciones" element={<VentasCotizacionesHub />} />
-          <Route path="excel" element={<ExcelCenter />} />
-          <Route path="estadisticas" element={<Estadisticas />} />
-          <Route path="calculadora" element={<Calculadora />} />
-          <Route path="calculadora/historial" element={<CalculadoraHistorial />} />
+          <Route path="ventas-cotizaciones" element={<ProtectedRoute allowedRoles={["admin","owner","cotizador"]}><VentasCotizacionesHub /></ProtectedRoute>} />
+          <Route path="excel" element={<ProtectedRoute allowedRoles={["admin","owner","cotizador"]}><ExcelCenter /></ProtectedRoute>} />
+          <Route path="estadisticas" element={<ProtectedRoute allowedRoles={["admin","owner","cotizador"]}><Estadisticas /></ProtectedRoute>} />
+          <Route path="calculadora" element={<ProtectedRoute allowedRoles={["admin","owner","cotizador"]}><Calculadora /></ProtectedRoute>} />
+          <Route path="calculadora/historial" element={<ProtectedRoute allowedRoles={["admin","owner","cotizador"]}><CalculadoraHistorial /></ProtectedRoute>} />
           <Route path="contactos" element={<ProtectedRoute allowedRoles={["admin","owner"]}><Cotizaciones contacto /></ProtectedRoute>} />
           <Route path="contactos/papelera" element={<ProtectedRoute allowedRoles={["owner"]}><Papelera contacto /></ProtectedRoute>} />
           <Route path="contactos/:id" element={<ProtectedRoute allowedRoles={["admin","owner"]}><CotizacionDetalle /></ProtectedRoute>} />
-          <Route path="cotizaciones" element={<Cotizaciones />} />
-          <Route path="cotizaciones/:id" element={<CotizacionDetalle />} />
+          <Route path="cotizaciones" element={<ProtectedRoute allowedRoles={["admin","owner","cotizador"]}><Cotizaciones /></ProtectedRoute>} />
+          <Route path="cotizaciones/:id" element={<ProtectedRoute allowedRoles={["admin","owner","cotizador"]}><CotizacionDetalle /></ProtectedRoute>} />
           <Route
             path=":entityKey"
             element={

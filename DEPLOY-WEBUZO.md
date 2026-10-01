@@ -1,4 +1,4 @@
-# Desplegar en Webuzo / Apache — 2.1.0
+# Desplegar en Webuzo / Apache — 2.2.0
 
 Dominio de esta entrega: https://dh-dm-maquinarias.com/. Frontend y API comparten dominio; la API se publica en public_html/api/. Los bloques powershell se ejecutan en Windows y los bloques bash solo en la terminal Linux del hosting.
 
@@ -133,12 +133,12 @@ Nunca subas owner.sql al directorio público. Si ya tienes un owner, usa esa cue
 
 ### Con SSH: utilidades fuera de public_html
 
-Sube el CONTENIDO de release/mantenimiento/ a una carpeta privada del usuario del hosting llamada hdm-mantenimiento-2.1.0, al lado de public_html. No publiques mantenimiento/ dentro de la web.
+Sube el CONTENIDO de release/mantenimiento/ a una carpeta privada del usuario del hosting llamada hdm-mantenimiento-2.2.0, al lado de public_html. No publiques mantenimiento/ dentro de la web.
 
 En la terminal Linux del hosting, con config.local.php de producción ya creado:
 
 ```bash
-cd "$HOME/hdm-mantenimiento-2.1.0/backend-php"
+cd "$HOME/hdm-mantenimiento-2.2.0/backend-php"
 php --version
 php -m
 read -r -p 'Ruta absoluta del public_html de este dominio: ' HDM_PUBLIC_HTML
@@ -272,8 +272,16 @@ Este comando no inserta maquinaria de ejemplo ni reemplaza fotos personalizadas.
 
 La carpeta `api/` debe incluir `excel.php` junto con el resto de la API de esta versión. La versión 2.1 añade la tabla bienvenida. Ejecuta migrate.php fuera de la web como indica esta guía, o importa migration.mysql.sql en phpMyAdmin después del respaldo. Conserva los datos existentes. Prueba exportar un Excel de repuestos, importar dos filas de prueba y borrarlas después, comprobar los avisos privados de nombres repetidos, abrir una vista previa ampliada y marcar al menos una promoción como destacada. La rotación de portada cambia cada seis segundos y puede pausarse. No publiques los Excel exportados de clientes dentro de public_html.
 
-### Campos nuevos de la calculadora en 2.1.0
+### Campos nuevos de la calculadora en 2.2.0
 
 Esta actualización requiere ejecutar la migración antes de iniciar la API: `php backend-php/migrate.php`. Si despliegas sin terminal, importa `backend-php/migration.mysql.sql` en la base de datos existente. Conserva `config.local.php`, archivos privados y cargas existentes. La migración conserva el historial previo y lo deja sin registro oficial automático.
 
 La calculadora está integrada en React (`/admin/calculadora`) y usa la misma API y sesión del panel. Los enlaces `/cotizador` y `/cotizador-app/index.html` siguen abriendo la nueva ruta; sus páginas antiguas solo redirigen.
+
+### Roles personalizados en 2.2.0 (migración obligatoria)
+
+La migración crea `roles_panel`. En MySQL cambia `usuarios.rol` a `VARCHAR(80)` para admitir los identificadores de roles personalizados; conserva las cuentas y sus roles actuales. Respaldar la base y ejecutar `php backend-php/migrate.php` antes de iniciar la API. En el hosting también puede importarse el SQL idempotente actualizado `migration.mysql.sql` en la base correcta. No ejecutar seed en una base existente.
+
+Prueba owner, admin, cotizador y un rol personalizado. El cotizador no puede entrar a estadísticas ni importar Excel; la maquinaria solo se cotiza/gestiona con owner. En Administrar Accesos, crea un rol, marca sus secciones y asígnalo a una cuenta. Excel requiere marcar además la sección a trabajar. Los permisos del owner permanecen exclusivos.
+
+Un rol con solo Calculadora puede preparar y guardar pruebas. Para registrar documentos oficiales o trabajar con una solicitud existente necesita además Cotizaciones de repuestos.

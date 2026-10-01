@@ -32,3 +32,9 @@ Los demás resultados corresponden a la revisión anterior y se conservan como r
 `workflows-2.1.py` comprueba bienvenida editable, preservación de la migración, permisos exclusivos del owner en contactos, separación de solicitudes y exportación/importación por bandeja. Ejecútalo con `py -3 .\tests\workflows-2.1.py` o `python tests/workflows-2.1.py` en la base temporal del test. Los resultados están en `resultados/workflows-2.1-*.json`. El recorrido de navegador incluye avance automático con el cursor encima, pausa, edición de bienvenida, filas de especificaciones, centrado de la vista previa, números de WhatsApp separados, conservación del otro carrito y botones de accesos accesibles.
 
 `PHP_BIN=php python tests/calculadora-contactos-2.1.py` comprueba la separación de Contacto, canales, historial no oficial, PDF privado, registro presencial, vínculo a solicitudes, reintentos sin duplicados, permisos y preservación mediante migración. Usa una base SQLite temporal por defecto. Para MariaDB, `HDM_TEST_CONFIG` debe apuntar a una configuración con `app_env=test` y una base desechable.
+
+## Permisos 2.2.0
+
+`python tests/permisos-2.2.py` usa una base SQLite temporal y requiere PHP CLI con PDO SQLite. Cubre roles personalizados y asignación, permisos actualizados con sesión abierta, rutas API, Excel, cotizaciones y PDF de maquinaria exclusivos del owner, acceso del cliente a su propia respuesta y migración repetida sin pérdida de roles/historial. Nunca apuntar estas pruebas a producción.
+
+`py -3 .\tests\ranking-2.2.py` comprueba el ranking completo, frecuencia por solicitud, unidades, productos con nombres iguales, compatibilidad con solicitudes antiguas y exclusión de contactos, pruebas y eliminados. Resultados SQLite y MariaDB en `resultados/ranking-2.2-*.json`. `resultados/inicio-2.2.json` registra la revisión del carrusel por defecto, pausa, bienvenida, tablón destacado, nuevo logo y adaptación móvil.

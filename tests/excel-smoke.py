@@ -55,7 +55,7 @@ with tempfile.TemporaryDirectory(prefix='hdm-test-') as directory:
         expect(call('/api/excel',token=customer)[0]==403,'customers denied Excel')
         schemas=call('/api/excel',token=owner)[1]
         expect(len(schemas)==16,'all 16 sections have Excel schemas including contacts')
-        expect({s['key'] for s in call('/api/excel',token=internal)[1]}=={'ventas','cotizaciones','cotizador'},'cotizador only allowed business tables')
+        expect({s['key'] for s in call('/api/excel',token=internal)[1]}=={'ventas','cotizaciones','cotizador'} and all(not s['importable'] for s in call('/api/excel',token=internal)[1]),'cotizador Excel is export-only for business sections')
         expect(call('/api/excel/accesos/export',token=admin)[0]==403,'admin denied account export')
         expect(call('/api/excel/repuestos/export',token=internal)[0]==403,'cotizador denied catalog export')
         expect(call('/api/excel/missing/export',token=owner)[0]==404,'unknown table cannot query arbitrary SQL')

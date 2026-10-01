@@ -28,7 +28,7 @@ export default function PromocionesDestacadas() {
   const destacadas = promociones.filter(p => p.destacado);
   const [welcome,setWelcome] = useState(welcomeDefaults);
   const [activo, setActivo] = useState(0);
-  const [paused, setPaused] = useState(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  const [paused, setPaused] = useState(false);
   const total = destacadas.length + 1;
   useEffect(() => { let live = true; api.get<WelcomeData>("/api/bienvenida").then(data => {if(live)setWelcome(data);}).catch(()=>{});return ()=>{live=false;}; }, []);
   useEffect(() => {

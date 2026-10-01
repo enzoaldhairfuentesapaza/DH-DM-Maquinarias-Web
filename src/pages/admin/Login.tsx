@@ -71,7 +71,7 @@ export default function AdminLogin() {
           </button>
         </form>
         <p style={{ textAlign: "center", marginTop: 22, fontSize: 13, color: "#999" }}>
-          Acceso exclusivo para administradores, owners y cotizadores
+          Acceso para cuentas con un rol autorizado en el panel
         </p>
       </div>
     </div>
