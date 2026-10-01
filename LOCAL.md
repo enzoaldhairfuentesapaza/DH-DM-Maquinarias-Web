@@ -1,6 +1,6 @@
 # Ejecutar localmente — Windows / PowerShell
 
-Versión 2.0.0. Todos los bloques marcados powershell se ejecutan en PowerShell. Usa la copia del repositorio que ya clonaste; no hace falta volver a clonarlo. La instalación inicial crea SQLite y un owner local; no se conecta a la base del hosting.
+Versión 2.1.0. Todos los bloques marcados powershell se ejecutan en PowerShell. Usa la copia del repositorio que ya clonaste; no hace falta volver a clonarlo. La instalación inicial crea SQLite y un owner local; no se conecta a la base del hosting.
 
 ## 1. Requisitos y carpeta
 
@@ -223,4 +223,6 @@ La reparación solo actualiza imágenes vacías y enlaces remotos antiguos conoc
 
 ## Versión 2: promociones y Excel
 
-Para actualizar una copia ya instalada conservando sus datos, usa **VERSION-2.md**. En Promociones, marca al menos dos como destacadas para activar la rotación de la portada. El menú del panel incluye el Centro de Excel; los formatos y pasos están en **EXCEL.md**.
+Para actualizar una copia ya instalada conservando sus datos, usa **VERSION-2.md**. En Promociones, marca al menos una como destacada para activar la rotación de la portada. El menú del panel incluye el Centro de Excel; los formatos y pasos están en **EXCEL.md**.
+
+La actualización 2.1 necesita ejecutar `php .\backend-php\migrate.php` antes de arrancar PHP. La bienvenida se edita en Editar Página > Bienvenida del inicio. Los teléfonos y el correo solo los modifica el owner.

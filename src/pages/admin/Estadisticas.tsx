@@ -97,7 +97,7 @@ export default function Estadisticas() {
         <div>
           <h1>Estadísticas</h1>
           <p className="subtitle">
-            Ventas y cotizaciones realizadas, por semana, mes o año.
+            Cotizaciones realizadas, por semana, mes o año.
           </p>
         </div>
       </div>

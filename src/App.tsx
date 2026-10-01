@@ -32,6 +32,7 @@ import ProtectedRoute from "./components/admin/ProtectedRoute";
 const AdminLogin = lazy(() => import("./pages/admin/Login"));
 const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
 const EditarPagina = lazy(() => import("./pages/admin/EditarPagina"));
+const Bienvenida = lazy(() => import("./pages/admin/Bienvenida"));
 const ConfiguracionSitio = lazy(() => import("./pages/admin/ConfiguracionSitio"));
 const ProductosHub = lazy(() => import("./pages/admin/ProductosHub"));
 const CategoriasAdmin = lazy(() => import("./pages/admin/CategoriasAdmin"));
@@ -161,7 +162,7 @@ function App() {
             </ProtectedRoute>
           }
         >
-          {/* El cotizador entra directo a Ventas y Cotizaciones */}
+          {/* El cotizador entra directo a Cotizaciones */}
           <Route index element={<AdminHome />} />
           <Route
             path="productos"
@@ -179,10 +180,11 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route path="bienvenida" element={<ProtectedRoute allowedRoles={["admin","owner"]}><Bienvenida /></ProtectedRoute>} />
           <Route
             path="configuracion"
             element={
-              <ProtectedRoute allowedRoles={["admin", "owner"]}>
+              <ProtectedRoute allowedRoles={["owner"]}>
                 <ConfiguracionSitio />
               </ProtectedRoute>
             }

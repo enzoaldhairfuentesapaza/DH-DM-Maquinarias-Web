@@ -19,7 +19,7 @@ function excel_definitions(): array
         'cotizaciones'=>['table'=>'cotizaciones','columns'=>['nombre_cliente','email_cliente','telefono_cliente','empresa','detalle','origen'],'required'=>['nombre_cliente','email_cliente','detalle'],'identity'=>['nombre_cliente','email_cliente','detalle'],'json_columns'=>['detalle'],'roles'=>['owner','admin','cotizador'],'where'=>'eliminado_en IS NULL'],
         'cotizador'=>['table'=>'cotizaciones_formales','columns'=>['numero','cliente_nombre','cliente_documento','cliente_direccion','items','tipo_cambio','moneda_mostrar','total'],'required'=>['numero','cliente_nombre','items','total'],'identity'=>['numero'],'json_columns'=>['items'],'roles'=>['owner','admin','cotizador']],
         'sugerencias'=>['table'=>'sugerencias','columns'=>['tipo','nombre','correo','mensaje'],'required'=>['tipo','nombre','mensaje'],'identity'=>['tipo','nombre','correo','mensaje']],
-        'configuracion'=>['table'=>'configuracion_sitio','columns'=>['clave','valor'],'required'=>['clave','valor'],'identity'=>['clave']],
+        'configuracion'=>['roles'=>['owner'],'table'=>'configuracion_sitio','columns'=>['clave','valor'],'required'=>['clave','valor'],'identity'=>['clave']],
         'auditoria'=>['table'=>'auditoria','columns'=>[],'roles'=>['owner'],'readonly'=>true],
         'papelera'=>['table'=>'cotizaciones','columns'=>[],'roles'=>['owner'],'readonly'=>true,'where'=>'eliminado_en IS NOT NULL','json_columns'=>['detalle']],
         'notificaciones'=>['table'=>'notificaciones','columns'=>[],'readonly'=>true,'where'=>'usuario_id = :current_user']
@@ -43,7 +43,15 @@ function excel_rows(array $def, array $user): array
     if (!empty($def['where'])) $sql .= ' WHERE '.$def['where'];
     $stmt=db()->prepare($sql);
     $stmt->execute(str_contains($sql, ':current_user') ? ['current_user'=>$user['id']] : []);
-    return array_map(fn($r)=>row_out($r,$def), $stmt->fetchAll());
+    $rows=array_map(fn($r)=>row_out($r,$def), $stmt->fetchAll());
+    if ($def['table']==='cotizaciones' && isset($_GET['tipo'])) {
+        $type=$_GET['tipo'];
+        $rows=array_values(array_filter($rows,function($row) use ($type) {
+            foreach (quote_detail_groups($row['detalle']) as $detail) if (($detail['tipo_solicitud']??'repuesto')===$type) return true;
+            return false;
+        }));
+    }
+    return $rows;
 }
 function excel_schema(string $key, array $def): array
 {
@@ -75,6 +83,8 @@ function excel_validate(string $key, array &$row, array $def): void
         $row['email_cliente']=email_field($row,'email_cliente');
         if (!in_array($row['origen']??'web',['web','contacto','pagina','correo','whatsapp'],true)) json_error('Origen invalido',422);
         if (!is_array($row['detalle']) || (array_is_list($row['detalle']) && $row['detalle']!==[])) json_error('detalle debe ser un objeto JSON',422);
+        if (isset($_GET['tipo']) && (quote_detail_groups($row['detalle'])[0]['tipo_solicitud']??'repuesto')!==$_GET['tipo']) json_error('La fila corresponde a otro grupo de cotización',422);
+        if (count(quote_detail_groups($row['detalle'])) > 1) json_error('Separa maquinaria y repuestos en dos filas de cotización',422);
         $products=$row['detalle']['productos'] ?? [];
         if (!is_array($products) || !array_is_list($products) || count($products)>200) json_error('Productos invalidos',422);
         foreach ($products as $p) if (!is_array($p) || !is_string($p['nombre']??null) || !in_array($p['tipo']??null,['maquinaria','repuesto'],true) || !is_numeric($p['cantidad']??null) || $p['cantidad']<1 || $p['cantidad']>100000 || floor((float)$p['cantidad'])!=$p['cantidad']) json_error('Producto o cantidad invalida',422);
@@ -132,6 +142,7 @@ function excel_handle(array $segments,string $method): void
     $key=$segments[1]??''; $action=$segments[2]??'';
     if (!isset($defs[$key]) || count($segments)!==3) json_error('Seccion Excel no encontrada',404);
     $def=$defs[$key]; require_roles($def['roles']);
+    if ($key==='cotizaciones' && isset($_GET['tipo']) && !in_array($_GET['tipo'],['maquinaria','repuesto'],true)) json_error('Grupo de cotizacion invalido',422);
     if ($method==='GET' && $action==='schema') json_response(excel_schema($key,$def));
     if ($method==='GET' && $action==='export') {
         $rows=excel_rows($def,$user);

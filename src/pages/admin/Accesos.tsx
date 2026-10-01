@@ -435,11 +435,12 @@ export default function Accesos() {
                   <td style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                     {esCuentaGenerada(u) ? (
                       <button
-                        className="btn-admin small"
+                        className="access-icon-action"
+                        aria-label={`Editar acceso de ${u.nombre}`} title="Editar datos, contraseña o rol"
                         onClick={() => abrirEdicion(u)}
                         data-tooltip="Edita los datos, la contraseña o el rol de esta cuenta"
                       >
-                        <Pencil size={13} /> Editar
+                        <Pencil size={15} />
                       </button>
                     ) : (
                       <span
@@ -452,7 +453,8 @@ export default function Accesos() {
 
                     {u.id !== currentUser?.id && (
                       <button
-                        className="btn-admin small"
+                        className="access-icon-action"
+                        aria-label={`${u.activo ? "Quitar" : "Restaurar"} acceso de ${u.nombre}`} title={u.activo ? "Quitar acceso" : "Restaurar acceso"}
                         onClick={() => handleToggleAcceso(u)}
                         data-tooltip={
                           u.activo
@@ -460,28 +462,29 @@ export default function Accesos() {
                             : "Vuelve a permitirle el ingreso a este usuario"
                         }
                       >
-                        {u.activo ? <Ban size={13} /> : <ShieldCheck size={13} />}{" "}
-                        {u.activo ? "Quitar acceso" : "Restaurar acceso"}
+                        {u.activo ? <Ban size={15} /> : <ShieldCheck size={15} />}
                       </button>
                     )}
 
                     {u.rol !== "cliente" && u.id !== currentUser?.id && (
                       <button
-                        className="btn-admin small danger"
+                        className="access-icon-action danger"
+                        aria-label={`Revocar rol de ${u.nombre}`} title="Revocar rol administrativo"
                         onClick={() => handleRevocarRol(u.id)}
                         data-tooltip="Quita el rol administrativo y lo deja como cliente (no borra la cuenta)"
                       >
-                        <ShieldOff size={13} /> Revocar rol
+                        <ShieldOff size={15} />
                       </button>
                     )}
 
                     {esCuentaGenerada(u) && u.id !== currentUser?.id && (
                       <button
-                        className="btn-admin small danger"
+                        className="access-icon-action danger"
+                        aria-label={`Eliminar cuenta de ${u.nombre}`} title="Eliminar cuenta permanentemente"
                         onClick={() => handleEliminar(u)}
                         data-tooltip="Borra la cuenta para siempre; no se puede deshacer"
                       >
-                        <Trash2 size={13} /> Eliminar
+                        <Trash2 size={15} />
                       </button>
                     )}
                   </td>

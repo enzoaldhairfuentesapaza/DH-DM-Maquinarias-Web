@@ -4,6 +4,8 @@ import { Link } from "react-router-dom";
 import { ArrowRight, ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import { usePromociones } from "../hooks/useApiData";
 import Hero from "./Hero";
+import { api } from "../api/client";
+import { welcomeDefaults, type WelcomeData } from "./welcomeData";
 
 export interface PromotionSlide { titulo: string; descripcion: string; vigencia: string; imagen?: string; }
 export function PromotionFeature({ promo }: { promo: PromotionSlide }) {
@@ -22,33 +24,25 @@ export function PromotionFeature({ promo }: { promo: PromotionSlide }) {
   </div>;
 }
 export default function PromocionesDestacadas() {
-  const { data: promociones, loading } = usePromociones();
+  const { data: promociones } = usePromociones();
   const destacadas = promociones.filter(p => p.destacado);
+  const [welcome,setWelcome] = useState(welcomeDefaults);
   const [activo, setActivo] = useState(0);
-  const [paused, setPaused] = useState(false);
-  const [hovered, setHovered] = useState(false);
-  const [reduced, setReduced] = useState(false);
+  const [paused, setPaused] = useState(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  const total = destacadas.length + 1;
+  useEffect(() => { let live = true; api.get<WelcomeData>("/api/bienvenida").then(data => {if(live)setWelcome(data);}).catch(()=>{});return ()=>{live=false;}; }, []);
   useEffect(() => {
-    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const update = () => setReduced(query.matches);
-    update(); query.addEventListener("change", update);
-    return () => query.removeEventListener("change", update);
-  }, []);
-  useEffect(() => {
-    if (destacadas.length < 2 || paused || hovered || reduced) return;
-    const timer = window.setInterval(() => setActivo(a => (a + 1) % destacadas.length), 6000);
+    if (total < 2 || paused) return;
+    const timer = window.setInterval(() => setActivo(a => (a + 1) % total), 6000);
     return () => window.clearInterval(timer);
-  }, [destacadas.length, activo, paused, hovered, reduced]);
-  const index = activo % Math.max(1, destacadas.length);
-  if (loading || !destacadas.length) return <Hero />;
-  return <section className="promotion-hero" aria-label="Promociones destacadas" aria-roledescription="carrusel"
-    onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
-    onFocusCapture={() => setHovered(true)} onBlurCapture={e => { if (!e.currentTarget.contains(e.relatedTarget)) setHovered(false); }}>
-    <PromotionFeature key={destacadas[index].id} promo={destacadas[index]} />
+  }, [total, activo, paused]);
+  const index = activo % total;
+  return <section className="promotion-hero" aria-label="Bienvenida y promociones" aria-roledescription="carrusel">
+    {index === 0 ? <Hero data={welcome} /> : <PromotionFeature key={destacadas[index-1].id} promo={destacadas[index-1]} />}
     <div className="promotion-bottom">
-      <span className="promotion-counter">{String(index + 1).padStart(2, "0")} <span>/ {String(destacadas.length).padStart(2, "0")}</span></span>
-      <div className="promotion-tabs">{destacadas.map((p, i) => <button key={p.id} type="button" aria-label={`Ver promoción: ${p.titulo}`} aria-pressed={i === index} className={i === index ? "active" : ""} onClick={() => setActivo(i)}><span>{String(i + 1).padStart(2, "0")}</span>{p.titulo}</button>)}</div>
-      {destacadas.length > 1 && <div className="promotion-controls"><button aria-label="Promoción anterior" onClick={() => setActivo((index - 1 + destacadas.length) % destacadas.length)}><ChevronLeft /></button><button aria-label={paused ? "Reanudar promociones" : "Pausar promociones"} aria-pressed={paused} onClick={() => setPaused(p => !p)}>{paused || reduced ? <Play size={17} /> : <Pause size={17} />}</button><button aria-label="Siguiente promoción" onClick={() => setActivo((index + 1) % destacadas.length)}><ChevronRight /></button></div>}
+      <span className="promotion-counter">{String(index + 1).padStart(2, "0")} <span>/ {String(total).padStart(2, "0")}</span></span>
+      <div className="promotion-tabs"><button type="button" aria-label="Ver bienvenida" aria-pressed={index===0} className={index===0?"active":""} onClick={()=>setActivo(0)}><span>01</span>Bienvenidos a DH & DM</button>{destacadas.map((p, i) => <button key={p.id} type="button" aria-label={`Ver promoción: ${p.titulo}`} aria-pressed={i+1 === index} className={i+1 === index ? "active" : ""} onClick={() => setActivo(i+1)}><span>{String(i + 2).padStart(2, "0")}</span>{p.titulo}</button>)}</div>
+      {total > 1 && <div className="promotion-controls"><button type="button" aria-label="Tarjeta anterior" onClick={() => setActivo((index - 1 + total) % total)}><ChevronLeft /></button><button type="button" aria-label={paused ? "Reanudar carrusel" : "Pausar carrusel"} aria-pressed={paused} onClick={() => setPaused(p => !p)}>{paused ? <Play size={17} /> : <Pause size={17} />}</button><button type="button" aria-label="Siguiente tarjeta" onClick={() => setActivo((index + 1) % total)}><ChevronRight /></button></div>}
     </div>
   </section>;
 }

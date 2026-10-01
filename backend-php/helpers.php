@@ -417,3 +417,19 @@ function quote_for_client(array $row): array
     unset($row['eliminado_por'], $row['eliminado_por_nombre'], $row['motivo_eliminacion']);
     return $row;
 }
+
+/** One request per business channel. Old mixed requests can still be read. */
+function quote_detail_groups(array $detail): array
+{
+    $groups=[];
+    foreach (($detail['productos'] ?? []) as $product) {
+        $type=($product['tipo'] ?? '')==='maquinaria'?'maquinaria':'repuesto';
+        $groups[$type][]=$product;
+    }
+    if (!$groups) { $detail['tipo_solicitud']='repuesto'; return [$detail]; }
+    $result=[];
+    foreach ($groups as $type=>$products) {
+        $copy=$detail; $copy['productos']=$products; $copy['tipo_solicitud']=$type; $result[]=$copy;
+    }
+    return $result;
+}

@@ -191,3 +191,5 @@ require __DIR__ . '/migrate_sugerencias.php';
 $pdo->exec('CREATE TABLE IF NOT EXISTS rate_limits (bucket VARCHAR(64) PRIMARY KEY, hits INT NOT NULL, expires_at BIGINT NOT NULL)');
 
 echo "Tablas creadas correctamente en SQLite (hdm.db).\n";
+
+$pdo->exec("CREATE TABLE IF NOT EXISTS bienvenida (id INTEGER PRIMARY KEY, datos TEXT NOT NULL)");

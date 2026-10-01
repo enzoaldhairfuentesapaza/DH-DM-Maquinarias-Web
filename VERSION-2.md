@@ -1,21 +1,23 @@
-# DH & DM Maquinarias — versión 2.0.0
+# DH & DM Maquinarias — versión 2.1.0
 
 ## Cambios de esta versión
 
+Bienvenida editable en el panel; bandejas y carritos separados para repuestos/maquinaria; formularios de especificaciones con botones +/−; vista previa centrada; contactos exclusivos del owner; acciones de accesos con iconos.
+
 - El globo de sugerencias/reclamos está encima del de Mi cotización, sin superponerse, también en móvil.
-- Las promociones destacadas son la portada del inicio: imagen grande, título, vigencia, botones y selector de promociones.
-- La portada cambia cada **6 segundos** cuando hay al menos dos promociones destacadas. Tiene controles anterior/siguiente y pausa; se detiene al pasar el cursor o usar el teclado dentro del carrusel. Respeta la preferencia de movimiento reducido del dispositivo.
+- La bienvenida siempre es la primera tarjeta. Las promociones destacadas la acompañan en la portada: imagen grande, título, vigencia, botones y selector de promociones.
+- La portada cambia cada **6 segundos** cuando hay al menos una promoción destacada. Tiene controles anterior/siguiente y pausa; solo se pausa con su botón de pausa. Respeta la preferencia de movimiento reducido del dispositivo.
 - Se retiró la promoción secundaria que acompañaba al tablón de anuncios.
 - La edición de contenidos tiene **Ampliar · tamaño real**, con vistas de escritorio (1200 px) y móvil (390 px), sin guardar el borrador. Usa los estilos públicos a escala 1:1; omite encabezado, pie y elementos relacionados. En promociones usa el mismo componente de la portada.
 - Importación, plantillas y exportación **.xlsx** para las tablas editables, con vista previa, asignación de columnas, validación y omisión de duplicados. Auditoría, papelera y notificaciones tienen exportación. Estadísticas permite descargar el informe calculado.
 - Tags privados de nombres repetidos en las listas y formularios del panel. Dos repuestos con distinto código pueden conservar el mismo nombre.
-- Versión del panel y del paquete: **2.0.0**.
+- Versión del panel y del paquete: **2.1.0**.
 
 Esta entrega modifica los archivos del proyecto. No publica automáticamente el dominio ni modifica tu repositorio remoto.
 
 ## Actualizar tu copia local — PowerShell
 
-Detén las terminales de Vite y PHP con **Ctrl+C**. Descarga `DH-DM-fuentes-2.0.0.zip` a Descargas. Los archivos del ZIP están en la raíz, sin carpeta adicional.
+Detén las terminales de Vite y PHP con **Ctrl+C**. Descarga `DH-DM-actualizacion-2.1.0.zip` a Descargas. Los archivos del ZIP están en la raíz, sin carpeta adicional.
 
 ### 1. Respaldar
 
@@ -40,7 +42,7 @@ if ($LASTEXITCODE -ne 0) { throw 'No se creó la rama. Revisa si version-2 ya ex
 El paquete excluye `.git`, entornos privados, `config.local.php`, bases de datos, archivos de clientes y dependencias. Copiarlo sobre el proyecto conserva esos datos existentes. No borres la carpeta del proyecto ni el backend para hacer la actualización.
 
 ```powershell
-$zipV2 = Join-Path $env:USERPROFILE 'Downloads\DH-DM-fuentes-2.0.0.zip'
+$zipV2 = Join-Path $env:USERPROFILE 'Downloads\DH-DM-actualizacion-2.1.0.zip'
 if (-not (Test-Path -LiteralPath $zipV2)) { throw ('No se encontró: ' + $zipV2) }
 $extraccionV2 = Join-Path $env:TEMP ('DH-DM-v2-' + [guid]::NewGuid().ToString('N'))
 Expand-Archive -LiteralPath $zipV2 -DestinationPath $extraccionV2 -ErrorAction Stop
@@ -56,7 +58,14 @@ npm run typecheck
 if ($LASTEXITCODE -ne 0) { throw 'TypeScript encontró errores.' }
 ```
 
-La versión 2 no añade tablas ni necesita borrar o volver a sembrar tu base. Si vienes de la instalación 1.6.1 ya preparada, conserva la base y el owner actuales. Para instalar desde cero, sigue **LOCAL.md**.
+Esta actualización añade una tabla de bienvenida. Después de copiar las fuentes y antes de arrancar los servidores, ejecuta:
+
+```powershell
+php .\backend-php\migrate.php
+if ($LASTEXITCODE -ne 0) { throw 'Falló la migración.' }
+```
+
+La migración es aditiva y conserva tus datos. No borres ni vuelvas a sembrar la base. Si vienes de la instalación 1.6.1 ya preparada, conserva la base y el owner actuales. Para instalar desde cero, sigue **LOCAL.md**.
 
 ### 3. Arrancar localmente
 
@@ -78,7 +87,7 @@ Abre **http://localhost:5173/**. El archivo `.env.development.local` debe indica
 
 ### 4. Comprobar y subir a GitHub
 
-En el panel, marca al menos **dos promociones como destacadas** para ver la rotación. Si no hay ninguna destacada, el inicio utiliza la presentación de la empresa. No se cambia automáticamente el estado de tus promociones existentes.
+En el panel, marca al menos **una promoción como destacada** para ver la rotación. Si no hay ninguna destacada, se mantiene la bienvenida editable. No se cambia automáticamente el estado de tus promociones existentes. Las solicitudes antiguas mixtas se conservan en ambas bandejas; las nuevas se envían y guardan por separado.
 
 Prueba la vista ampliada y la carga de un Excel pequeño con la plantilla de Repuestos. Revisa **EXCEL.md** para el resto de las tablas.
 

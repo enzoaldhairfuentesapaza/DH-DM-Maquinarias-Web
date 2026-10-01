@@ -1537,3 +1537,5 @@
 @media (max-width: 640px) {
   .catalog-search-inline { width: 100%; }
 }
+
+.quote-group-tabs { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:14px; }.quote-group-tabs button { display:flex; align-items:center; gap:8px; padding:12px 16px; border:1px solid #ddd; border-radius:9px; background:#fff; font-weight:700; cursor:pointer; }.quote-group-tabs button.active { background:#fff0ad; border-color:#dcae00; }.quote-routing-note { margin-bottom:24px; color:#58615d; font-size:14px; line-height:1.6; }

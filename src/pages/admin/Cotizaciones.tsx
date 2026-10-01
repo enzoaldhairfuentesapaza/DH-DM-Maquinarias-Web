@@ -1,7 +1,7 @@
 import ExcelTools from "./ExcelTools";
 import type { QuoteDetail, QuoteProduct } from "../../types/content";
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Trash2, Eye, Package, Truck, MessageCircle, Search } from "lucide-react";
 import { api } from "../../api/client";
 import { useFeedback } from "../../context/FeedbackContext";
@@ -24,7 +24,6 @@ interface Cotizacion {
 
 const FILTROS = ["todas", "pendiente", "respondida", "denegada"] as const;
 const TIPOS = ["todas", "productos", "contacto"] as const;
-const CONTENIDOS = ["todas", "solo_repuestos", "solo_maquinaria", "ambos"] as const;
 
 const ORIGEN_LABELS: Record<string, string> = {
   whatsapp: "WhatsApp",
@@ -65,12 +64,13 @@ function resumenTipos(c: Cotizacion): { repuestos: number; maquinarias: number }
 
 export default function Cotizaciones() {
   const feedback = useFeedback();
+  const [params,setParams] = useSearchParams();
+  const grupo = params.get("tipo") === "maquinaria" ? "maquinaria" : "repuesto";
   const [items, setItems] = useState<Cotizacion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filtro, setFiltro] = useState<(typeof FILTROS)[number]>("todas");
   const [tipo, setTipo] = useState<(typeof TIPOS)[number]>("todas");
-  const [contenido, setContenido] = useState<(typeof CONTENIDOS)[number]>("todas");
   const [busqueda, setBusqueda] = useState("");
 
   useEffect(() => {
@@ -108,20 +108,17 @@ export default function Cotizaciones() {
     }
   }
 
+  const groupItems = useMemo(() => items.filter(i => {
+    const types = resumenTipos(i);
+    return grupo === "maquinaria" ? !!types && types.maquinarias > 0 : !types || types.repuestos > 0 || types.maquinarias === 0;
+  }), [items,grupo]);
+
   const visibles = useMemo(() => {
     const texto = busqueda.trim().toLowerCase();
-    return items.filter((i) => {
+    return groupItems.filter((i) => {
       if (filtro !== "todas" && i.estado !== filtro) return false;
       if (tipo === "productos" && i.origen === "contacto") return false;
       if (tipo === "contacto" && i.origen !== "contacto") return false;
-      if (contenido !== "todas") {
-        const tipos = resumenTipos(i);
-        const tieneRep = !!tipos && tipos.repuestos > 0;
-        const tieneMaq = !!tipos && tipos.maquinarias > 0;
-        if (contenido === "solo_repuestos" && !(tieneRep && !tieneMaq)) return false;
-        if (contenido === "solo_maquinaria" && !(tieneMaq && !tieneRep)) return false;
-        if (contenido === "ambos" && !(tieneRep && tieneMaq)) return false;
-      }
       if (!texto) return true;
       return (
         i.nombre_cliente?.toLowerCase().includes(texto) ||
@@ -131,17 +128,17 @@ export default function Cotizaciones() {
         String(i.id).includes(texto)
       );
     });
-  }, [items, filtro, tipo, contenido, busqueda]);
+  }, [groupItems, filtro, tipo, busqueda]);
 
-  const totalContacto = items.filter((i) => i.origen === "contacto").length;
-  const totalProductos = items.length - totalContacto;
+  const totalContacto = groupItems.filter((i) => i.origen === "contacto").length;
+  const totalProductos = groupItems.length - totalContacto;
 
   return (
     <div>
-      <ExcelTools entity="cotizaciones" onImported={() => window.location.reload()} />
+      <ExcelTools key={grupo} scope={grupo} entity="cotizaciones" onImported={() => window.location.reload()} />
       <div className="admin-header-row">
         <div>
-          <h1>Cotizaciones recibidas</h1>
+          <h1>Cotizaciones de {grupo === "maquinaria" ? "maquinaria" : "repuestos"}</h1>
           <p className="subtitle">
             Solicitudes de cotización (WhatsApp / correo / página) y consultas del formulario de contacto.
           </p>
@@ -151,6 +148,7 @@ export default function Cotizaciones() {
         </Link>
       </div>
 
+      <div className="quote-group-tabs"><button className={grupo==="repuesto"?"active":""} onClick={()=>setParams({tipo:"repuesto"})}><Package size={17}/>Repuestos y otros</button><button className={grupo==="maquinaria"?"active":""} onClick={()=>setParams({tipo:"maquinaria"})}><Truck size={17}/>Maquinaria</button></div>
       <div className="admin-search-bar">
         <Search size={16} />
         <input
@@ -167,7 +165,7 @@ export default function Cotizaciones() {
       >
         {TIPOS.map((t) => (
           <button key={t} className={tipo === t ? "active" : ""} onClick={() => setTipo(t)}>
-            {t === "todas" && `Todas (${items.length})`}
+            {t === "todas" && `Todas (${groupItems.length})`}
             {t === "productos" && (
               <>
                 <Package size={13} style={{ verticalAlign: "-2px", marginRight: 4 }} />
@@ -188,36 +186,10 @@ export default function Cotizaciones() {
         {FILTROS.map((f) => (
           <button key={f} className={filtro === f ? "active" : ""} onClick={() => setFiltro(f)}>
             {f === "todas" ? "Todas" : f.charAt(0).toUpperCase() + f.slice(1)}
-            {f !== "todas" && ` (${items.filter((i) => i.estado === f).length})`}
+            {f !== "todas" && ` (${groupItems.filter((i) => i.estado === f).length})`}
           </button>
         ))}
       </div>
-
-      {tipo !== "contacto" && (
-        <div
-          className="admin-tabs"
-          data-tooltip="Filtra según si la solicitud trae solo repuestos, solo maquinaria o ambos"
-        >
-          {CONTENIDOS.map((c) => (
-            <button key={c} className={contenido === c ? "active" : ""} onClick={() => setContenido(c)}>
-              {c === "todas" && "Cualquier contenido"}
-              {c === "solo_repuestos" && (
-                <>
-                  <Package size={13} style={{ verticalAlign: "-2px", marginRight: 4 }} />
-                  Solo repuestos
-                </>
-              )}
-              {c === "solo_maquinaria" && (
-                <>
-                  <Truck size={13} style={{ verticalAlign: "-2px", marginRight: 4 }} />
-                  Solo maquinaria
-                </>
-              )}
-              {c === "ambos" && "Repuestos + maquinaria"}
-            </button>
-          ))}
-        </div>
-      )}
 
       {error && <div className="admin-error">{error}</div>}
       {loading ? (
@@ -249,6 +221,7 @@ export default function Cotizaciones() {
                   <span className="meta">{new Date(c.creado_en).toLocaleString("es-PE")}</span>
                 </div>
                 <div className="cotizacion-resumen-tags">
+                  {tipos && tipos.repuestos > 0 && tipos.maquinarias > 0 && <span className="duplicate-tag">Solicitud antigua mixta · visible en ambas bandejas</span>}
                   <span className="rol-badge admin">{ORIGEN_LABELS[c.origen] ?? c.origen}</span>
                   {esContacto ? (
                     <span className="rol-badge cliente">

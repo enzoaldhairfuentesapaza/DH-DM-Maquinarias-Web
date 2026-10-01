@@ -4,7 +4,8 @@ import { entities } from "./entityConfig";
 import { batches, mapRows, normalize, readWorkbook, saveWorkbook, sectionNames, type ExcelRow, type ExcelSchema } from "./excelFiles";
 import "./ExcelTools.css";
 interface Review { row:number; errors:string[]; warnings:string[]; skip:boolean; }
-export default function ExcelTools({ entity, onImported }: {entity:string;onImported?:()=>void}) {
+export default function ExcelTools({ entity, onImported, scope }: {entity:string;onImported?:()=>void;scope?:"maquinaria"|"repuesto"}) {
+  const query = entity === "cotizaciones" && scope ? `?tipo=${scope}` : "";
   const [opened,setOpened]=useState(false);
   const [preparedRows,setPreparedRows]=useState<ExcelRow[]>([]);
   const [reviewPage,setReviewPage]=useState(0);
@@ -18,12 +19,12 @@ export default function ExcelTools({ entity, onImported }: {entity:string;onImpo
   const [error,setError]=useState("");
   const input=useRef<HTMLInputElement>(null);
   const dialog=useRef<HTMLDialogElement>(null);
-  async function getSchema() { const result=await api.get<ExcelSchema>(`/api/excel/${entity}/schema`); setSchema(result); return result; }
+  async function getSchema() { const result=await api.get<ExcelSchema>(`/api/excel/${entity}/schema${query}`); setSchema(result); return result; }
   async function download(template=false) {
     setBusy(true); setError(""); setMessage("");
     try {
       if(template) await saveWorkbook(await getSchema(),[],true);
-      else { const result=await api.get<{schema:ExcelSchema;rows:ExcelRow[]}>(`/api/excel/${entity}/export`); await saveWorkbook(result.schema,result.rows); }
+      else { const result=await api.get<{schema:ExcelSchema;rows:ExcelRow[]}>(`/api/excel/${entity}/export${query}`); await saveWorkbook(result.schema,result.rows); }
       setMessage(template?"Plantilla descargada.":"Excel descargado con todos los registros de la sección.");
     } catch(e) { setError(e instanceof Error?e.message:"No se pudo descargar."); } finally {setBusy(false);}
   }
@@ -45,7 +46,7 @@ export default function ExcelTools({ entity, onImported }: {entity:string;onImpo
       const data=mapRows(file.rows,mapping,schema,file.rowNumbers); setPreparedRows(data); const chunks=batches(data); const checks:Review[]=[];let offset=0;
       for(const chunk of chunks) {
         setMessage(`Revisando ${offset+1}–${offset+chunk.length} de ${data.length} filas…`);
-        const r=await api.post<{rows:Review[]}>(`/api/excel/${entity}/preview`,{rows:chunk,allow_duplicates:duplicates});
+        const r=await api.post<{rows:Review[]}>(`/api/excel/${entity}/preview${query}`,{rows:chunk,allow_duplicates:duplicates});
         checks.push(...r.rows.map((row,i)=>({...row,row:file.rowNumbers[offset+i]})));offset+=chunk.length;
       }
       // Duplicates inside the file can span server batches.
@@ -65,7 +66,7 @@ export default function ExcelTools({ entity, onImported }: {entity:string;onImpo
       const data=mapRows(file.rows,mapping,schema,file.rowNumbers);const chunks=batches(data);let done=0;
       for(const chunk of chunks) {
         setMessage(`Importando ${done+1}–${done+chunk.length} de ${data.length} filas…`);
-        const r=await api.post<{inserted:number;updated:number;skipped:number}>(`/api/excel/${entity}/import`,{rows:chunk,allow_duplicates:duplicates});
+        const r=await api.post<{inserted:number;updated:number;skipped:number}>(`/api/excel/${entity}/import${query}`,{rows:chunk,allow_duplicates:duplicates});
         created+=r.inserted;updated+=r.updated;skipped+=r.skipped;done+=chunk.length;
       }
       setMessage(`Importación completada: ${created} creados, ${updated} actualizados, ${skipped} omitidos.`);

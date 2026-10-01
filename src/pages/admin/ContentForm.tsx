@@ -297,23 +297,11 @@ export default function ContentForm() {
     if (f.type === "tabular") {
       const cols = f.tabularColumns ?? [];
       const fieldValue = form[f.name];
-      const value = Array.isArray(fieldValue)
-        ? fieldValue.map((row) => typeof row === "string" ? row : cols.map((c) => row[c] ?? "").join(" | ")).join("\n")
-        : String(fieldValue ?? "");
-      return (
-        <label key={f.name} className="full-width">
-          {f.label}
-          <span className="hint">
-            Un elemento por línea, separando columnas con &quot;|&quot;. Formato: {cols.join(" | ")}
-          </span>
-          <textarea
-            style={{ minHeight: 130, fontFamily: "monospace", fontSize: 13 }}
-            placeholder={cols.map((c) => `ejemplo-${c}`).join(" | ")}
-            value={value}
-            onChange={(e) => updateField(f.name, e.target.value)}
-          />
-        </label>
-      );
+      const rows: Record<string,string>[] = Array.isArray(fieldValue)
+        ? fieldValue.filter((row): row is Record<string,string> => typeof row === "object")
+        : String(fieldValue ?? "").split("\n").filter(Boolean).map(line => {const values=line.split("|");return Object.fromEntries(cols.map((col,i)=>[col,values[i]?.trim()??""]));});
+      const titles: Record<string,string> = {label:"Especificación",valor:"Valor",nombre:"Producto",cantidad:"Cantidad",precio:"Precio"};
+      return <fieldset key={f.name} className="tabular-editor full-width"><legend>{f.label}</legend><p className="hint">Añade una fila y completa sus campos. Puedes quitar las filas que no necesites.</p>{rows.map((row,index)=><div className="tabular-editor-row" key={index}>{cols.map(col=><label key={col}>{titles[col]??col}<input aria-label={`${titles[col]??col} ${index+1}`} value={row[col]??""} required onChange={e=>updateField(f.name,rows.map((r,i)=>i===index?{...r,[col]:e.target.value}:r))}/></label>)}<button type="button" className="btn-admin small danger" title={`Quitar fila ${index+1}`} aria-label={`Quitar fila ${index+1}`} onClick={()=>updateField(f.name,rows.filter((_,i)=>i!==index))}>−</button></div>)}<button type="button" className="btn-admin small outline" onClick={()=>updateField(f.name,[...rows,Object.fromEntries(cols.map(col=>[col,""]))])}>+ {f.name==="especificaciones"?"Añadir especificación":"Añadir producto"}</button></fieldset>;
     }
     return null;
   }

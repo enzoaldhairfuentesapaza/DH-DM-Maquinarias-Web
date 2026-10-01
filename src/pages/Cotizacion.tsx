@@ -20,14 +20,6 @@ import QtyInput from "../components/QtyInput";
 import { abrirGmailCompose } from "../utils/email";
 import { useConfiguracionSitio } from "../hooks/useApiData";
 
-// Número de pruebas, oculto: solo visible para el administrador principal
-// (ignora la selección automática de número, para poder probar sin
-// mezclar solicitudes reales con las de prueba).
-const WHATSAPP_OCULTO = {
-  numero: "51953770220",
-  correoPermitido: "administrador_principal@dhydm.com",
-};
-
 interface DatosCliente {
   nombre: string;
   telefono: string;
@@ -38,12 +30,15 @@ interface DatosCliente {
 }
 
 export default function Cotizacion() {
-  const { items, quitarItem, actualizarCantidad, vaciarCarrito } =
+  const { items: todosItems, quitarItem, actualizarCantidad } =
     useCotizacion();
   const { user } = useAuth();
   const { openLogin } = useAuthModal();
   const { data: config } = useConfiguracionSitio();
 
+  const [grupo,setGrupo] = useState<"repuesto"|"maquinaria">(() => todosItems.some(i=>i.tipo!=="maquinaria") || !todosItems.length ? "repuesto" : "maquinaria");
+  const items = todosItems.filter(i => grupo === "maquinaria" ? i.tipo === "maquinaria" : i.tipo !== "maquinaria");
+  const vaciarCarrito = () => items.forEach(i=>quitarItem(i.uid));
   const [datos, setDatos] = useState<DatosCliente>({
     nombre: "",
     telefono: "",
@@ -59,15 +54,7 @@ export default function Cotizacion() {
   const [confirmandoWhatsapp, setConfirmandoWhatsapp] = useState(false);
   const [confirmandoCorreo, setConfirmandoCorreo] = useState(false);
 
-  // Elige el número de WhatsApp según lo que haya en el carrito: solo
-  // repuestos -> primario, solo maquinaria -> secundario, ambos -> primario.
-  const numeroDestino = (): string => {
-    if (user?.email === WHATSAPP_OCULTO.correoPermitido) return WHATSAPP_OCULTO.numero;
-    const tieneRepuesto = items.some((i) => i.tipo === "repuesto");
-    const tieneMaquinaria = items.some((i) => i.tipo === "maquinaria");
-    if (tieneMaquinaria && !tieneRepuesto) return config.whatsapp_secundario;
-    return config.whatsapp_primario; // solo repuestos, o ambos
-  };
+  const numeroDestino = () => grupo === "maquinaria" ? config.whatsapp_secundario : config.whatsapp_primario;
 
   const datosCompletos = () => {
     if (user) return true;
@@ -83,7 +70,7 @@ export default function Cotizacion() {
   };
 
   const construirMensajeWhatsapp = (): string => {
-    let msg = `*Solicitud de Cotización - DH & DM Maquinarias SAC.*\n\n`;
+    let msg = `*Solicitud de Cotización de ${grupo === "maquinaria" ? "Maquinaria" : "Repuestos"} - DH & DM Maquinarias SAC.*\n\n`;
     if (user) {
       msg += `*Cliente:* ${user.nombre}\n`;
       msg += `*Correo:* ${user.email}\n`;
@@ -155,7 +142,7 @@ export default function Cotizacion() {
       return;
     }
     setErrorEnvio("");
-    const asunto = "Solicitud de cotización - DH & DM Maquinarias";
+    const asunto = `Cotización de ${grupo === "maquinaria" ? "maquinaria" : "repuestos"} - DH & DM Maquinarias`;
     const cuerpo = construirMensajeWhatsapp();
     // Abrimos Gmail en una pestaña nueva con el mensaje ya armado (mailto:
     // no abre nada si no hay un programa de correo de escritorio instalado).
@@ -248,7 +235,7 @@ export default function Cotizacion() {
             <h3>¿Se logró enviar la solicitud por WhatsApp con éxito?</h3>
             <p>
               Si el mensaje se envió correctamente en WhatsApp, confirma aquí
-              para vaciar tu carrito de cotización.
+              para vaciar únicamente este grupo de cotización.
             </p>
             <div className="whatsapp-confirm-actions">
               <button
@@ -279,7 +266,7 @@ export default function Cotizacion() {
             <h3>¿Se abrió tu programa de correo correctamente?</h3>
             <p>
               Si tu correo se abrió con el mensaje ya redactado y lo enviaste,
-              confirma aquí para vaciar tu carrito de cotización.
+              confirma aquí para vaciar únicamente este grupo de cotización.
             </p>
             <div className="whatsapp-confirm-actions">
               <button
@@ -305,6 +292,8 @@ export default function Cotizacion() {
       )}
 
       <div className="page-body">
+        <div className="quote-group-tabs"><button disabled={enviando!==null||confirmandoWhatsapp||confirmandoCorreo} className={grupo==="repuesto"?"active":""} onClick={()=>{setGrupo("repuesto");setEnviado(null);setErrorEnvio("");}}><Package size={18}/> Repuestos y otros ({todosItems.filter(i=>i.tipo!=="maquinaria").length})</button><button disabled={enviando!==null||confirmandoWhatsapp||confirmandoCorreo} className={grupo==="maquinaria"?"active":""} onClick={()=>{setGrupo("maquinaria");setEnviado(null);setErrorEnvio("");}}><Truck size={18}/> Maquinaria ({todosItems.filter(i=>i.tipo==="maquinaria").length})</button></div>
+        <p className="quote-routing-note">Las solicitudes se envían por separado. {grupo==="maquinaria"?"Maquinaria: WhatsApp secundario":"Repuestos y otros: WhatsApp primario"} · +{numeroDestino()}. Los productos del otro grupo se conservan.</p>
         <div className="cotizacion-layout">
           <div>
             {items.length === 0 ? (
@@ -329,7 +318,7 @@ export default function Cotizacion() {
                 <div className="cart-toolbar">
                   <strong>{items.length} producto(s) en tu cotización</strong>
                   <button className="cart-clear-btn" onClick={vaciarCarrito}>
-                    Vaciar carrito
+                    Vaciar este grupo
                   </button>
                 </div>
 
@@ -397,7 +386,7 @@ export default function Cotizacion() {
           </div>
 
           <div className="quote-form-box">
-            <h3>Solicitar cotización</h3>
+            <h3>Cotizar {grupo === "maquinaria" ? "maquinaria" : "repuestos"}</h3>
             <p>
               {user
                 ? "Elige cómo quieres enviar tu solicitud y un asesor te contactará a la brevedad."

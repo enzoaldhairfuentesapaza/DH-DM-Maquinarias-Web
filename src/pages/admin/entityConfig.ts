@@ -229,7 +229,7 @@ export const entities: Record<string, EntityConfig> = {
   ventas: {
     key: "ventas",
     apiPath: "/api/ventas",
-    parentHub: { to: "/admin/ventas-cotizaciones", label: "Ventas y Cotizaciones" },
+    parentHub: { to: "/admin/ventas-cotizaciones", label: "Cotizaciones" },
     singular: "Venta",
     plural: "Ventas / Boletas",
     listColumns: [

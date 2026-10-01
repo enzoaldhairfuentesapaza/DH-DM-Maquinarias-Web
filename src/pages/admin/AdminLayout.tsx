@@ -64,7 +64,7 @@ export default function AdminLayout() {
             </>
           )}
           <NavLink to="/admin/ventas-cotizaciones">
-            <Receipt size={17} /> Ventas y Cotizaciones
+            <Receipt size={17} /> Cotizaciones
           </NavLink>
           <NavLink to="/admin/estadisticas">
             <BarChart3 size={17} /> Estadísticas

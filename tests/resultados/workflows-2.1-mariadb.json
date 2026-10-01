@@ -1,0 +1,25 @@
+{
+  "passed": 20,
+  "checks": [
+    "public welcome defaults preserve original title",
+    "welcome preserves original business statistics",
+    "client cannot edit welcome",
+    "admin can edit welcome independently of promotions",
+    "welcome draft persisted",
+    "repeatable migration preserves edited welcome",
+    "welcome links reject unsafe protocols",
+    "welcome route is exact",
+    "admin cannot change contact numbers",
+    "denied contact edit leaves values intact",
+    "Excel cannot bypass owner-only contacts",
+    "admin Excel center hides contacts",
+    "owner can change secondary phone",
+    "mixed request produces two distinct quotes atomically",
+    "each quote has a separate business channel",
+    "each quote contains only its product group",
+    "client history preserves both independent requests",
+    "splitting preserves shared request details",
+    "Excel cannot reintroduce mixed channel quotes",
+    "single-group response remains compatible"
+  ]
+}

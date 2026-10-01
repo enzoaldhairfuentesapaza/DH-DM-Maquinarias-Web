@@ -269,9 +269,15 @@
   }
 }
 
-.content-preview-dialog { width:min(1400px,96vw); max-height:94dvh; border:0; border-radius:16px; padding:20px; overflow:auto; }
+.content-preview-dialog { position:fixed; inset:0; margin:auto; box-sizing:border-box; width:min(1400px,96vw); max-height:94dvh; border:0; border-radius:16px; padding:20px; overflow:auto; }
 .content-preview-dialog::backdrop { background:#101820aa; }
 .content-preview-controls { display:flex; flex-wrap:wrap; align-items:center; gap:10px; }.content-preview-controls strong { margin-right:auto; font-size:14px; }.content-preview-controls button[aria-pressed="true"] { background:#fff2bf; border-color:#f4c20d; }
 .content-preview-dialog>p { font-size:12px; color:#63716c; margin:12px 0; }
-.content-preview-scroll { overflow:auto; background:#e1e6e3; padding:12px; border-radius:8px; }
-.content-preview-scroll iframe { display:block; margin:0 auto; border:0; background:#fff; max-width:none; flex-shrink:0; }
+.content-preview-scroll { display:flex; justify-content:center; overflow:auto; background:#e1e6e3; padding:12px; border-radius:8px; }
+.content-preview-scroll iframe { display:block; margin:0; border:0; background:#fff; max-width:none; flex-shrink:0; }
+
+@media(max-width:1280px) { .content-preview-scroll:has(iframe[style*="1200px"]) { justify-content:flex-start; } }
+
+.content-preview-dialog[open] { left:0; right:0; top:0; bottom:0; margin:auto; height:fit-content; }
+.content-preview-scroll { display:block; }
+.content-preview-scroll iframe { margin:0 auto; }

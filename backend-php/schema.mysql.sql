@@ -212,3 +212,8 @@ CREATE TABLE IF NOT EXISTS rate_limits (
     expires_at BIGINT NOT NULL,
     INDEX (expires_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS bienvenida (
+    id INT PRIMARY KEY,
+    datos TEXT NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

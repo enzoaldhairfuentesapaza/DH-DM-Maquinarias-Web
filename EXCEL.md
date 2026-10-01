@@ -1,4 +1,4 @@
-# Excel en el panel — versión 2.0.0
+# Excel en el panel — versión 2.1.0
 
 ## Qué permite
 
@@ -11,7 +11,7 @@ La descarga incluye todos los registros de la sección, incluso si tienes un fil
 | Repuestos, maquinaria, categorías, promociones, blog y novedades | Sí, agregar registros | Sí | Admin / owner |
 | Ventas, solicitudes y cotizaciones formales | Sí, agregar registros | Sí | Cotizador / admin / owner |
 | Sugerencias y reclamos | Sí, agregar registros | Sí | Admin / owner |
-| Contactos del sitio | Sí, actualizar por `clave` | Sí | Admin / owner |
+| Contactos del sitio | Sí, actualizar por `clave` | Sí | Solo owner |
 | Accesos | Sí, crear cuentas con contraseña nueva | Sí, sin contraseñas ni hashes | Owner |
 | Auditoría y papelera | No, se generan con las operaciones del panel | Sí | Owner |
 | Mis notificaciones | No, se generan con las respuestas | Sí, únicamente las propias | Admin / owner |
@@ -74,3 +74,7 @@ Por defecto se omiten las claves existentes tanto en la base como dentro del arc
 La comparación ignora mayúsculas, espacios repetidos y tildes habituales. Puedes permitir claves repetidas en tablas que lo admiten; correos y categorías únicas siempre se omiten.
 
 **Mismo nombre no equivale necesariamente a mismo repuesto.** Dos repuestos con nombres iguales y códigos diferentes se importan. En el panel aparece un tag de aviso. Los tags también aparecen en las listas y formularios de maquinaria, promociones, blog, novedades, categorías y usuarios; no se muestran en la web pública ni bloquean por sí solos una edición.
+
+## Cotizaciones separadas desde 2.1
+
+En las bandejas de repuestos o maquinaria, Descargar todo exporta únicamente el grupo de esa bandeja. El Centro de Excel puede exportar todas las solicitudes. No se importan solicitudes mixtas: usa dos filas, una con productos de tipo `repuesto` y otra con productos de tipo `maquinaria`. Importar en una bandeja también comprueba que la fila corresponda a ese grupo. Los contactos del sitio ahora son exclusivos del owner.

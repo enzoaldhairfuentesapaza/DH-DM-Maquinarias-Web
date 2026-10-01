@@ -1,6 +1,6 @@
 # DH & DM Maquinarias
 
-Sitio corporativo y sistema de gestión de maquinaria, repuestos y cotizaciones. Versión **2.0.0**. Desarrollado con React, TypeScript y Vite, con una API PHP. SQLite se usa para desarrollo; MySQL/MariaDB para producción.
+Sitio corporativo y sistema de gestión de maquinaria, repuestos y cotizaciones. Versión **2.1.0**. Desarrollado con React, TypeScript y Vite, con una API PHP. SQLite se usa para desarrollo; MySQL/MariaDB para producción.
 
 Sitio de producción configurado: https://dh-dm-maquinarias.com/. La configuración del proyecto no confirma que esta versión esté publicada en el hosting.
 
@@ -48,13 +48,15 @@ El panel se abre en `/admin`; el acceso está en `/admin/login`. Los permisos se
 
 El cotizador formal permite agregar productos, aplicar ajustes por marca, trabajar con PEN/USD y tipo de cambio, generar PDF y consultar historial. `/cotizador` abre esa herramienta y `/cotizador/historial` abre su historial. Sus archivos están en **public/cotizador-app/**. Guardar una cotización recuperada del historial crea una copia. Los PDF mantienen el redondeo de precios a enteros de la regla comercial existente.
 
-## Novedades de 2.0.0
+## Novedades de 2.1.0
 
-Portada de promociones destacadas con rotación cada seis segundos, controles y pausa; se retira la promoción duplicada junto al tablón. Los globos de sugerencias y cotización ya no se superponen.
+La bienvenida original vuelve a ser la primera tarjeta del inicio, con sus cifras y botones. Tiene una edición independiente en `/admin/bienvenida`. El carrusel rota cada seis segundos entre la bienvenida y las promociones destacadas, incluso con el cursor encima; conserva controles y pausa explícita.
 
-El panel incorpora vistas previas ampliadas a escala real en escritorio/móvil, avisos de nombres repetidos y un Centro de Excel: plantillas, importación con revisión y exportación completa de las tablas. Los registros de auditoría, papelera y notificaciones se exportan; las estadísticas se descargan desde su página. Los permisos existentes se mantienen también en la API.
+El módulo **Cotizaciones** tiene bandejas separadas para repuestos y maquinaria. El carrito público también separa los grupos: repuestos y otros productos van al WhatsApp primario, maquinaria al secundario. Enviar un grupo conserva los productos del otro. Las solicitudes mixtas recibidas por la API se guardan como dos solicitudes independientes. Las antiguas mixtas se conservan y pueden consultarse desde ambas bandejas.
 
-Para actualizar una copia ya instalada, comienza por **VERSION-2.md**; para instalar desde cero, usa **LOCAL.md**. Marca varias promociones como destacadas en el panel para activar la rotación.
+Las especificaciones técnicas y tablas de productos del formulario se editan con filas de campos y botones para añadir/quitar. La vista previa ampliada queda centrada. Los cambios de teléfonos y correo son exclusivos del owner, incluso mediante Excel. Las acciones de accesos usan iconos compactos con descripciones al pasar el cursor.
+
+Se mantienen las funciones de Excel de la versión 2, los avisos privados de duplicados y la corrección de los globos flotantes. **Después de copiar estos archivos, ejecuta `php .\backend-php\migrate.php` una vez antes de arrancar los servidores**: crea la tabla de bienvenida y conserva el resto de tus datos. No vuelvas a sembrar la base.
 
 ## Correcciones previas de 1.6.1
 

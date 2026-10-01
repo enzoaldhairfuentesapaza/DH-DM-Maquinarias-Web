@@ -26,3 +26,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Falló la compilación.' }
 `resultados/version-2-navegador.json` registra el recorrido de desarrollo de la nueva portada, controles, globos, borradores a tamaño real, exportación de los 4802 repuestos de muestra, importación de dos filas, ceros iniciales, tags privados y rechazo de fórmulas/stock negativo. `resultados/version-2-apache-navegador.json` registra el recorrido sobre la aplicación compilada, servida por Apache/PHP, incluyendo descarga de estadísticas. Estos recorridos se ejecutaron con Chromium automatizado durante la preparación de la entrega; no requieren instalar un navegador de pruebas para ejecutar las pruebas Python.
 
 Los demás resultados corresponden a la revisión anterior y se conservan como referencia. Los datos de los tests son ficticios y las cuentas de prueba se crean solamente en sus bases desechables.
+
+## Actualización 2.1
+
+`workflows-2.1.py` comprueba bienvenida editable, preservación de la migración, permisos exclusivos del owner en contactos, separación de solicitudes y exportación/importación por bandeja. Ejecútalo con `py -3 .\tests\workflows-2.1.py` o `python tests/workflows-2.1.py` en la base temporal del test. Los resultados están en `resultados/workflows-2.1-*.json`. El recorrido de navegador incluye avance automático con el cursor encima, pausa, edición de bienvenida, filas de especificaciones, centrado de la vista previa, números de WhatsApp separados, conservación del otro carrito y botones de accesos accesibles.

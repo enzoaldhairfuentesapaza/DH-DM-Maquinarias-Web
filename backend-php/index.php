@@ -6,6 +6,7 @@ error_reporting(E_ALL);
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/crud.php';
 require_once __DIR__ . '/excel.php';
+require_once __DIR__ . '/bienvenida.php';
 
 // Cualquier excepcion no controlada (ej. error de base de datos) se responde
 // como JSON limpio en vez de romper la pagina con un stack trace.
@@ -42,6 +43,8 @@ if ($path === '/api' || str_starts_with($path, '/api/')) {
     $path = substr($path, 4);
 }
 $segments = array_values(array_filter(explode('/', $path)));
+
+if ($segments === ['bienvenida']) bienvenida_handle($method);
 
 if (($segments[0] ?? null) === 'excel') excel_handle($segments, $method);
 
@@ -336,26 +339,16 @@ if (($segments[0] ?? null) === 'cotizaciones') {
             json_error('Falta informacion del cliente (nombre y correo son obligatorios)', 400);
         }
 
-        $stmt = db()->prepare(
-            'INSERT INTO cotizaciones
-             (nombre_cliente, email_cliente, telefono_cliente, empresa, detalle, origen, usuario_id)
-             VALUES (?, ?, ?, ?, ?, ?, ?)'
-        );
-        $stmt->execute([
-            $nombreCliente,
-            $emailCliente,
-            $body['telefono_cliente'] ?? null,
-            $body['empresa'] ?? null,
-            json_encode($body['detalle'] ?? [], JSON_UNESCAPED_UNICODE),
-            $body['origen'] ?? 'web',
-            $user['id'] ?? null,
-        ]);
-        $newId = db()->lastInsertId();
-        $stmt = db()->prepare('SELECT * FROM cotizaciones WHERE id = ?');
-        $stmt->execute([$newId]);
-        $row = $stmt->fetch();
-        $row['detalle'] = json_decode($row['detalle'], true) ?? [];
-        json_response($row, 201);
+        $pdo=db();$saved=[];$pdo->beginTransaction();
+        try {
+            $stmt=$pdo->prepare('INSERT INTO cotizaciones (nombre_cliente,email_cliente,telefono_cliente,empresa,detalle,origen,usuario_id) VALUES (?,?,?,?,?,?,?)');
+            foreach (quote_detail_groups($body['detalle']) as $detail) {
+                $stmt->execute([$nombreCliente,$emailCliente,$body['telefono_cliente']??null,$body['empresa']??null,json_encode($detail,JSON_UNESCAPED_UNICODE),$body['origen']??'web',$user['id']??null]);
+                $select=$pdo->prepare('SELECT * FROM cotizaciones WHERE id = ?');$select->execute([$pdo->lastInsertId()]);$row=$select->fetch();$row['detalle']=$detail;$saved[]=$row;
+            }
+            $pdo->commit();
+        } catch (Throwable $e) {if($pdo->inTransaction())$pdo->rollBack();throw $e;}
+        json_response(count($saved)===1?$saved[0]:['solicitudes'=>$saved],201);
     }
 
     if ($method === 'GET' && ($segments[1] ?? null) === null) {
@@ -758,7 +751,7 @@ if (($segments[0] ?? null) === 'configuracion') {
     }
 
     if ($method === 'PUT') {
-        require_admin_or_owner();
+        require_owner();
         $body = get_json_body();
         if (!is_array($body) || empty($body)) {
             json_error('Debes enviar al menos un valor para actualizar', 400);

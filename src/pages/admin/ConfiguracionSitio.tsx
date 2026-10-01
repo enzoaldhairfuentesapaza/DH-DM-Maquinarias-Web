@@ -62,18 +62,14 @@ export default function ConfiguracionSitio() {
           <HelpCircle size={17} /> ¿Cómo se usan el primario y el secundario?
         </div>
         <p style={{ margin: 0, fontSize: 12.5, color: "#6b6b6b", lineHeight: 1.5 }}>
-          Cuando un cliente cotiza <strong>solo repuestos</strong>, su mensaje de
-          WhatsApp se envía al <strong>número primario</strong>. Cuando cotiza{" "}
-          <strong>solo maquinaria</strong>, se envía al{" "}
-          <strong>número secundario</strong>. Si su carrito tiene{" "}
-          <strong>ambos</strong>, se envía al primario.
+          Las cotizaciones de <strong>repuestos y otros productos</strong> se envían al número primario; las de <strong>maquinaria</strong>, al secundario. El carrito separa ambos grupos. Solo el owner puede cambiar estos números y el correo.
         </p>
       </div>
 
       <form onSubmit={handleGuardar} className="admin-form" style={{ maxWidth: 480 }}>
         <label>
           <Phone size={14} style={{ verticalAlign: "-2px", marginRight: 6 }} />
-          WhatsApp primario (repuestos, o repuestos + maquinaria)
+          WhatsApp primario (repuestos y otros productos)
           <input
             type="text"
             value={primario}
@@ -85,7 +81,7 @@ export default function ConfiguracionSitio() {
 
         <label>
           <Phone size={14} style={{ verticalAlign: "-2px", marginRight: 6 }} />
-          WhatsApp secundario (solo maquinaria)
+          WhatsApp secundario (maquinaria)
           <input
             type="text"
             value={secundario}

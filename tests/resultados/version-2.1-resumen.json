@@ -1,0 +1,13 @@
+{
+  "version": "2.1.0",
+  "lint": "passed",
+  "typecheck": "passed",
+  "release": "passed",
+  "checks": {
+    "api_sqlite": 61,
+    "excel_sqlite": 71,
+    "workflows_sqlite": 24,
+    "workflows_mariadb": 20,
+    "browser": 26
+  }
+}

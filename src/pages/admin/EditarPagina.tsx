@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
 import { Megaphone, FileText, Tag, Phone } from "lucide-react";
 import "./admin.css";
+import { useAuth } from "../../context/AuthContext";
 
 const secciones = [
+  {to:"/admin/bienvenida",titulo:"Bienvenida del inicio",desc:"Edita el mensaje inicial, sus cifras, imagen y botones.",icon:<Megaphone size={20}/>},
   {
     to: "/admin/novedades",
     titulo: "Novedades",
@@ -30,6 +32,7 @@ const secciones = [
 ];
 
 export default function EditarPagina() {
+  const { isOwner } = useAuth();
   return (
     <div>
       <div className="admin-header-row">
@@ -41,7 +44,7 @@ export default function EditarPagina() {
 
       <p className="admin-section-title">Contenido del sitio</p>
       <div className="admin-cards">
-        {secciones.map((s) => (
+        {secciones.filter(s => isOwner || s.to !== "/admin/configuracion").map((s) => (
           <Link to={s.to} key={s.to} className="admin-card">
             <div className="icon-badge">{s.icon}</div>
             <h3>{s.titulo}</h3>

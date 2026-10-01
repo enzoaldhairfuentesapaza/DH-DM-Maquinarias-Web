@@ -498,3 +498,8 @@ SET @hdm_sql = IF((SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_S
 PREPARE hdm_stmt FROM @hdm_sql; EXECUTE hdm_stmt; DEALLOCATE PREPARE hdm_stmt;
 ALTER TABLE usuarios MODIFY rol ENUM('cliente','admin','owner','cotizador') NOT NULL DEFAULT 'cliente';
 ALTER TABLE cotizaciones MODIFY canal_respuesta VARCHAR(60) DEFAULT NULL;
+
+CREATE TABLE IF NOT EXISTS bienvenida (
+    id INT PRIMARY KEY,
+    datos TEXT NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

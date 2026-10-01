@@ -1,0 +1,32 @@
+{
+  "passed": 26,
+  "checks": [
+    "welcome is always the first slide",
+    "welcome statistics and catalogue buttons restored",
+    "carousel advances automatically with mouse over the slide and one featured promotion",
+    "explicit pause holds welcome slide",
+    "welcome editor saves separate content",
+    "edited welcome is visible on initial home card",
+    "plus and minus edit specification rows without delimiter syntax",
+    "large preview dialog is centered in viewport",
+    "mobile preview canvas is centered inside dialog",
+    "specifications save literal labels and values correctly",
+    "public cart shows only selected parts group",
+    "parts WhatsApp uses primary number",
+    "parts WhatsApp excludes machinery",
+    "sending parts keeps machinery in cart",
+    "machinery has an independent cart view",
+    "machinery WhatsApp uses secondary number",
+    "machinery message excludes parts",
+    "public sends create two independent requests",
+    "admin hub has two quotation inboxes",
+    "machinery inbox excludes parts request",
+    "parts inbox excludes machinery request",
+    "access actions use compact labelled icons with hover descriptions",
+    "contact settings hidden from admin",
+    "direct admin contact settings route is denied",
+    "welcome carousel fits mobile viewport",
+    "no browser runtime errors: "
+  ],
+  "errors": []
+}

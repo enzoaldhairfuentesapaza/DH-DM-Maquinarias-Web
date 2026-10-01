@@ -2,46 +2,47 @@ import "./Hero.css";
 import { Link } from "react-router-dom";
 import { ShieldCheck, Truck, Wrench } from "lucide-react";
 
-export default function Hero() {
+import { welcomeDefaults, type WelcomeData } from "./welcomeData";
+import { resolveApiAsset } from "../api/client";
+
+export default function Hero({ data = welcomeDefaults }: { data?: WelcomeData }) {
   return (
-    <section className="hero">
+    <section className="hero" style={{backgroundImage: data.imagen ? `url(${resolveApiAsset(data.imagen)})` : "none"}}>
       <div className="hero-overlay" />
       <div className="hero-content">
-        <span className="hero-tag hero-anim hero-anim-1">Repuestos y maquinaria pesada</span>
+        <span className="hero-tag hero-anim hero-anim-1">{data.tag}</span>
         <h1 className="hero-anim hero-anim-2">
-          Maquinaria pesada y <span>repuestos originales</span> en un solo lugar
+          {data.titulo_antes} <span>{data.titulo_destacado}</span> {data.titulo_despues}
         </h1>
         <p className="hero-anim hero-anim-3">
-          Más de 10 años abasteciendo a la construcción, transporte e industria,
-          vendiendo tanto maquinaria pesada como los repuestos que la mantienen
-          funcionando, con stock permanente y atención técnica especializada.
+          {data.descripcion}
         </p>
 
         <div className="hero-actions hero-anim hero-anim-4">
-          <Link to="/repuestos" className="btn-primary">Ver catálogo de repuestos</Link>
-          <Link to="/maquinaria" className="btn-secondary">Ver catálogo de maquinaria</Link>
+          <Link to={data.boton_repuestos_url} className="btn-primary">{data.boton_repuestos}</Link>
+          <Link to={data.boton_maquinaria_url} className="btn-secondary">{data.boton_maquinaria}</Link>
         </div>
 
         <div className="hero-stats hero-anim hero-anim-5">
           <div className="stat">
             <Truck size={26} />
             <div>
-              <strong>+2000</strong>
-              <span>Despachos anuales</span>
+              <strong>{data.despachos_valor}</strong>
+              <span>{data.despachos_label}</span>
             </div>
           </div>
           <div className="stat">
             <Wrench size={26} />
             <div>
-              <strong>+5000</strong>
-              <span>Repuestos en stock</span>
+              <strong>{data.stock_valor}</strong>
+              <span>{data.stock_label}</span>
             </div>
           </div>
           <div className="stat">
             <ShieldCheck size={26} />
             <div>
-              <strong>100%</strong>
-              <span>Garantía de calidad</span>
+              <strong>{data.garantia_valor}</strong>
+              <span>{data.garantia_label}</span>
             </div>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ClipboardList, Receipt, BarChart3 } from "lucide-react";
+import { Package, Truck, Receipt, BarChart3 } from "lucide-react";
 import "./admin.css";
 
 export default function VentasCotizacionesHub() {
@@ -7,21 +7,16 @@ export default function VentasCotizacionesHub() {
     <div>
       <div className="admin-header-row">
         <div>
-          <h1>Ventas y Cotizaciones</h1>
+          <h1>Cotizaciones</h1>
           <p className="subtitle">
-            Solicitudes de cotización de clientes y registro de ventas realizadas.
+            Cotizaciones separadas por repuestos y maquinaria.
           </p>
         </div>
       </div>
 
       <div className="admin-cards">
-        <Link to="/admin/cotizaciones" className="admin-card">
-          <div className="icon-badge">
-            <ClipboardList size={20} />
-          </div>
-          <h3>Cotizaciones recibidas</h3>
-          <p>Revisa las solicitudes de cotización de la web y responde, deniega o déjalas pendientes.</p>
-        </Link>
+        <Link to="/admin/cotizaciones?tipo=repuesto" className="admin-card"><div className="icon-badge"><Package size={20}/></div><h3>Cotizaciones de repuestos</h3><p>Repuestos y otros productos. Atención por el WhatsApp primario.</p></Link>
+        <Link to="/admin/cotizaciones?tipo=maquinaria" className="admin-card"><div className="icon-badge"><Truck size={20}/></div><h3>Cotizaciones de maquinaria</h3><p>Maquinaria pesada. Atención por el WhatsApp secundario.</p></Link>
 
         <Link to="/admin/ventas" className="admin-card">
           <div className="icon-badge">
