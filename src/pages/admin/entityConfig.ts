@@ -120,6 +120,7 @@ export const entities: Record<string, EntityConfig> = {
       { name: "marca", label: "Marca" },
       { name: "categoria", label: "Categoría" },
       { name: "condicion", label: "Condición" },
+      { name: "destacado", label: "Destacada" },
       { name: "stock_disponible", label: "En stock" },
       { name: "stock_cantidad", label: "Cantidad" },
     ],

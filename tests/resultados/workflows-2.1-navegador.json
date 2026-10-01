@@ -1,5 +1,5 @@
 {
-  "passed": 33,
+  "passed": 36,
   "checks": [
     "empty database shows empty news state without fixed adverts",
     "non-featured database news appears in bulletin",
@@ -14,9 +14,12 @@
     "welcome form fits mobile viewport",
     "welcome editor saves separate content",
     "edited welcome is visible on initial home card",
+    "specification inputs use full-size styled fields",
+    "image chooser button uses shared designed style",
     "plus and minus edit specification rows without delimiter syntax",
     "large preview dialog is centered in viewport",
     "mobile preview canvas is centered inside dialog",
+    "machinery list includes featured state badges",
     "specifications save literal labels and values correctly",
     "public cart shows only selected parts group",
     "parts WhatsApp uses primary number",

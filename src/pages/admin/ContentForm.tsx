@@ -226,7 +226,7 @@ export default function ContentForm() {
       return (
         <label key={f.name}>
           {f.label}
-          <input type="file" accept="image/*" onChange={handleImageUpload} />
+          <input type="file" className="admin-image-upload" aria-label="Seleccionar imagen" accept="image/png,image/jpeg,image/webp,image/gif" disabled={uploading} onChange={handleImageUpload} />
           {uploading && <span> Subiendo...</span>}
           <input
             type="text"
@@ -301,7 +301,7 @@ export default function ContentForm() {
         ? fieldValue.filter((row): row is Record<string,string> => typeof row === "object")
         : String(fieldValue ?? "").split("\n").filter(Boolean).map(line => {const values=line.split("|");return Object.fromEntries(cols.map((col,i)=>[col,values[i]?.trim()??""]));});
       const titles: Record<string,string> = {label:"Especificación",valor:"Valor",nombre:"Producto",cantidad:"Cantidad",precio:"Precio"};
-      return <fieldset key={f.name} className="tabular-editor full-width"><legend>{f.label}</legend><p className="hint">Añade una fila y completa sus campos. Puedes quitar las filas que no necesites.</p>{rows.map((row,index)=><div className="tabular-editor-row" key={index}>{cols.map(col=><label key={col}>{titles[col]??col}<input aria-label={`${titles[col]??col} ${index+1}`} value={row[col]??""} required onChange={e=>updateField(f.name,rows.map((r,i)=>i===index?{...r,[col]:e.target.value}:r))}/></label>)}<button type="button" className="btn-admin small danger" title={`Quitar fila ${index+1}`} aria-label={`Quitar fila ${index+1}`} onClick={()=>updateField(f.name,rows.filter((_,i)=>i!==index))}>−</button></div>)}<button type="button" className="btn-admin small outline" onClick={()=>updateField(f.name,[...rows,Object.fromEntries(cols.map(col=>[col,""]))])}>+ {f.name==="especificaciones"?"Añadir especificación":"Añadir producto"}</button></fieldset>;
+      return <fieldset key={f.name} className="tabular-editor full-width"><legend>{f.label}</legend><p className="hint">Añade una fila y completa sus campos. Puedes quitar las filas que no necesites.</p>{rows.map((row,index)=><div className="tabular-editor-row" key={index}>{cols.map(col=><label key={col}>{titles[col]??col}<input type="text" aria-label={`${titles[col]??col} ${index+1}`} value={row[col]??""} required onChange={e=>updateField(f.name,rows.map((r,i)=>i===index?{...r,[col]:e.target.value}:r))}/></label>)}<button type="button" className="btn-admin small danger" title={`Quitar fila ${index+1}`} aria-label={`Quitar fila ${index+1}`} onClick={()=>updateField(f.name,rows.filter((_,i)=>i!==index))}>−</button></div>)}<button type="button" className="btn-admin small outline" onClick={()=>updateField(f.name,[...rows,Object.fromEntries(cols.map(col=>[col,""]))])}>+ {f.name==="especificaciones"?"Añadir especificación":"Añadir producto"}</button></fieldset>;
     }
     return null;
   }

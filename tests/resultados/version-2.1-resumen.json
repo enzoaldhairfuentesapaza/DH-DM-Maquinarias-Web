@@ -8,7 +8,7 @@
     "excel_sqlite": 71,
     "workflows_sqlite": 24,
     "workflows_mariadb": 20,
-    "browser": 33
+    "browser": 36
   },
   "refinements": [
     "Grouped welcome editor",

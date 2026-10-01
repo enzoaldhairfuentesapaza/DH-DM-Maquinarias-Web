@@ -360,6 +360,7 @@
   margin-top: 2px;
 }
 
+.admin-form input:not([type]),
 .admin-form input[type="text"],
 .admin-form input[type="email"],
 .admin-form input[type="password"],
@@ -1502,3 +1503,18 @@
 .quote-origin-help { color:#66736b; font-size:13px; line-height:1.7; margin:10px 0 20px; max-width:950px; }
 @media(max-width:700px) { .welcome-title-fields,.welcome-stats-fields { grid-template-columns:1fr; gap:0; } .welcome-save { align-items:stretch; flex-direction:column; } .welcome-editor-form { padding:20px; } }
 .welcome-admin-preview .hero-anim { animation:none; opacity:1; transform:none; }
+
+/* Campos sin tipo explícito también son de texto; excluir archivos y controles. */
+.tabular-editor { background:#fafbf9; border-color:#e5e8e4; }
+.tabular-editor-row { align-items:flex-end; gap:14px; }
+.tabular-editor-row label { margin-bottom:0; font-size:12px; color:#5a685f; }
+.tabular-editor-row button { margin-bottom:0; background:transparent; border:1px solid #e5e8e4; color:#7b5751; }
+.tabular-editor-row button:hover { background:#fff0ed; color:#b32e22; }
+.admin-image-upload { display:block; width:100%; box-sizing:border-box; margin:10px 0; padding:12px; border:1px dashed #cbd3cd; border-radius:9px; background:#f8faf8; color:#657169; font:inherit; font-size:13px; }
+.admin-image-upload::file-selector-button { margin-right:12px; padding:9px 13px; border:1px solid #d6ddd7; border-radius:7px; background:#fff; color:#263e2d; font:inherit; font-weight:600; cursor:pointer; }
+.admin-image-upload::file-selector-button:hover { background:#fff4c8; border-color:#d9ba46; }
+.admin-image-upload:focus-visible { outline:2px solid #d9ba46; outline-offset:3px; }
+.featured-status { display:inline-block; white-space:nowrap; padding:5px 9px; border-radius:6px; font-size:12px; color:#69746c; background:#f0f2f0; }
+.featured-status.is-featured { color:#745500; background:#fff2ba; }
+.admin-form label.admin-checkbox-field { display:flex!important; align-items:center; gap:10px; }
+.admin-checkbox-field input[type="checkbox"] { flex-shrink:0; margin:0; accent-color:#d4ac18; width:16px; height:16px; }

@@ -201,7 +201,7 @@ export default function ContentList() {
               <tr key={item.id}>
                 {config.listColumns.map((c) => (
                   <td key={c.name}>
-                    {typeof item[c.name] === "boolean"
+                    {c.name === "destacado" ? <span className={`featured-status ${item[c.name] === true || item[c.name] === 1 || item[c.name] === "1" ? "is-featured" : ""}`}>{item[c.name] === true || item[c.name] === 1 || item[c.name] === "1" ? "Sí · destacada" : "No destacada"}</span> : typeof item[c.name] === "boolean"
                       ? item[c.name]
                         ? "Sí"
                         : "No"

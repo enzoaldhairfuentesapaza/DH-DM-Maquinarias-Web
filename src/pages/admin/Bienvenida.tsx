@@ -30,7 +30,7 @@ export default function Bienvenida() {
       </fieldset>
       <fieldset><legend>2. Imagen de fondo</legend>
         <p className="welcome-help">Sube una imagen horizontal. También puedes indicar una imagen existente en las opciones avanzadas.</p>
-        <label className="welcome-upload">Seleccionar imagen<input type="file" accept="image/png,image/jpeg,image/webp,image/gif" aria-label="Subir imagen de bienvenida" disabled={busy} onChange={e=>{const file=e.target.files?.[0];if(file)void upload(file);}}/></label>
+        <label className="welcome-upload">Seleccionar imagen<input type="file" className="admin-image-upload" accept="image/png,image/jpeg,image/webp,image/gif" aria-label="Subir imagen de bienvenida" disabled={busy} onChange={e=>{const file=e.target.files?.[0];if(file)void upload(file);}}/></label>
         <details><summary>Usar una ruta o URL de imagen</summary>{field("imagen")}</details>
       </fieldset>
       <fieldset><legend>3. Botones del catálogo</legend><div className="admin-form-grid">

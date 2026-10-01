@@ -120,3 +120,5 @@ Los resultados de las pruebas están en `tests/resultados/`. Se verificaron perm
 - Bienvenida organizada en cuatro grupos: mensaje, imagen, botones y cifras, con campos amplios y vista previa en vivo.
 - El tablón muestra exclusivamente novedades guardadas en la base de datos, con destacadas primero. Sin novedades o ante un error se muestra un mensaje, sin anuncios fijos de respaldo.
 - Los filtros de cotizaciones identifican el origen: Desde el carrito y Desde Contacto. Las consultas generales de Contacto se conservan en Repuestos y otros.
+
+- Lista de maquinaria con estado de destacada; especificaciones con campos estilizados, controles compactos y selector de imágenes compartido.
