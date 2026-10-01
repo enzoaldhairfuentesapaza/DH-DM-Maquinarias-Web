@@ -3,7 +3,7 @@
   "checks": [
     "Excel requires authentication",
     "customers denied Excel",
-    "all 15 sections have Excel schemas",
+    "all 16 sections have Excel schemas including contacts",
     "cotizador only allowed business tables",
     "admin denied account export",
     "cotizador denied catalog export",

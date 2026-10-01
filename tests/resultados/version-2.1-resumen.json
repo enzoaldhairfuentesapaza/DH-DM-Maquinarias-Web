@@ -4,15 +4,19 @@
   "typecheck": "passed",
   "release": "passed",
   "checks": {
-    "api_sqlite": 61,
-    "excel_sqlite": 71,
-    "workflows_sqlite": 24,
-    "workflows_mariadb": 20,
-    "browser": 36
+    "api-2.1-sqlite": 61,
+    "excel-2.1-sqlite": 71,
+    "workflows-2.1-sqlite": 24,
+    "workflows-2.1-navegador": 36,
+    "calculadora-contactos-2.1-sqlite": 40,
+    "calculadora-contactos-2.1-mariadb": 40,
+    "calculadora-contactos-2.1-navegador": 32
   },
-  "refinements": [
-    "Grouped welcome editor",
-    "Database-only news bulletin",
-    "Quotation origin explanation"
-  ]
+  "pdf": {
+    "products": 50,
+    "pages": 4,
+    "currency": "USD",
+    "total": 5000,
+    "visual_review": "passed"
+  }
 }

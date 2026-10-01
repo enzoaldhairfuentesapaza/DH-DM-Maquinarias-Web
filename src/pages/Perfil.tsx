@@ -11,7 +11,7 @@ interface CotizacionCliente {
   archivo_respuesta: string | null;
   origen: string;
   creado_en: string;
-  detalle: { productos?: { nombre: string; codigo?: string; cantidad: number; tipo: string }[] };
+  detalle: { asunto?: string; mensaje?: string; canal?: string; productos?: { nombre: string; codigo?: string; cantidad: number; tipo: string }[] };
 }
 
 const ESTADO_LABEL: Record<string, string> = {
@@ -34,15 +34,16 @@ export default function Perfil() {
   const [error, setError] = useState("");
   const [ok, setOk] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [tab, setTab] = useState<"datos" | "cotizaciones">("datos");
+  const [tab, setTab] = useState<"datos" | "cotizaciones" | "contactos">("datos");
   const [cotizaciones, setCotizaciones] = useState<CotizacionCliente[]>([]);
   const [loadingCotizaciones, setLoadingCotizaciones] = useState(false);
 
   useEffect(() => {
-    if (tab !== "cotizaciones" || !user) return;
+    if (tab === "datos" || !user) return;
+    setCotizaciones([]);
     setLoadingCotizaciones(true);
     api
-      .get<CotizacionCliente[]>("/api/cotizaciones/mias")
+      .get<CotizacionCliente[]>(tab === "contactos" ? "/api/contactos/mias" : "/api/cotizaciones/mias")
       .then(setCotizaciones)
       .catch(() => setCotizaciones([]))
       .finally(() => setLoadingCotizaciones(false));
@@ -81,7 +82,7 @@ export default function Perfil() {
           cotización.
         </p>
 
-        <div className="perfil-tabs" style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+        <div className="perfil-tabs" style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
           <button
             type="button"
             onClick={() => setTab("datos")}
@@ -114,6 +115,7 @@ export default function Perfil() {
           >
             Mis cotizaciones
           </button>
+          <button type="button" className={`perfil-tab-btn ${tab === "contactos" ? "active" : ""}`} onClick={()=>setTab("contactos")}>Mis mensajes de contacto</button>
         </div>
 
         {tab === "datos" && (
@@ -216,12 +218,12 @@ export default function Perfil() {
           </>
         )}
 
-        {tab === "cotizaciones" && (
+        {tab !== "datos" && (
           <div className="perfil-historial">
             {loadingCotizaciones ? (
               <p>Cargando historial...</p>
             ) : cotizaciones.length === 0 ? (
-              <p>Aún no has realizado ninguna cotización.</p>
+              <p>{tab === "contactos" ? "Aún no has enviado mensajes de contacto." : "Aún no has realizado ninguna cotización."}</p>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 {cotizaciones.map((c) => {
@@ -249,7 +251,7 @@ export default function Perfil() {
                           marginBottom: 8,
                         }}
                       >
-                        <strong>Cotización #{c.id}</strong>
+                        <strong>{tab === "contactos" ? "Mensaje" : "Cotización"} #{c.id}</strong>
                         <span className={`stock-badge ${estadoClase}`}>
                           {ESTADO_LABEL[c.estado] ?? c.estado}
                         </span>
@@ -257,6 +259,7 @@ export default function Perfil() {
                       <p style={{ fontSize: 12.5, color: "#888", marginBottom: 8 }}>
                         {new Date(c.creado_en).toLocaleString("es-PE")}
                       </p>
+                      {tab === "contactos" && <p><strong>{c.detalle.asunto}</strong><br/>{c.detalle.mensaje}<br/><small>Canal: {c.detalle.canal ?? "página"}</small></p>}
                       {productos.length > 0 && (
                         <ul style={{ margin: "0 0 8px", paddingLeft: 18, fontSize: 13.5 }}>
                           {productos.map((p, i) => (
@@ -280,7 +283,7 @@ export default function Perfil() {
                         <a href="#" onClick={(event) => { event.preventDefault(); event.stopPropagation(); void downloadApiFile(c.archivo_respuesta!).catch((error: unknown) => window.alert(error instanceof Error ? error.message : "No se pudo descargar.")); }}
                           style={{ fontSize: 13.5, fontWeight: 600 }}
                         >
-                          Ver archivo de la cotización →
+                          {tab === "contactos" ? "Ver archivo de la respuesta →" : "Ver archivo de la cotización →"}
                         </a>
                       )}
                     </div>

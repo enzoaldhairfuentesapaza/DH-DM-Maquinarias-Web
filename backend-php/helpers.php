@@ -181,6 +181,7 @@ function crear_notificacion_cotizacion(array $cotizacion, string $estado, ?strin
         return;
     }
 
+    $nombreSolicitud = ($cotizacion['origen'] ?? '') === 'contacto' ? 'consulta de contacto' : 'cotización';
     $accion = $estado === 'respondida' ? 'respondida' : 'denegada';
     $canales = array_filter(array_map('trim', explode(',', (string) $canal)));
     $etiquetas = [
@@ -195,9 +196,9 @@ function crear_notificacion_cotizacion(array $cotizacion, string $estado, ?strin
             implode(', ', array_slice($nombresCanales, 0, -1)),
             end($nombresCanales),
         ]));
-        $mensaje = "Tu cotización #{$cotizacion['id']} ha sido {$accion}. También te contactamos por {$listado}.";
+        $mensaje = "Tu {$nombreSolicitud} #{$cotizacion['id']} ha sido {$accion}. También te contactamos por {$listado}.";
     } else {
-        $mensaje = "Tu cotización #{$cotizacion['id']} ha sido {$accion}. Revisa los detalles aquí en tu buzón.";
+        $mensaje = "Tu {$nombreSolicitud} #{$cotizacion['id']} ha sido {$accion}. Revisa los detalles aquí en tu buzón.";
     }
 
     $stmt = db()->prepare(

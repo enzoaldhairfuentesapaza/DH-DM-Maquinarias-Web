@@ -271,3 +271,9 @@ Este comando no inserta maquinaria de ejemplo ni reemplaza fotos personalizadas.
 ## Comprobaciones de la versión 2
 
 La carpeta `api/` debe incluir `excel.php` junto con el resto de la API de esta versión. La versión 2.1 añade la tabla bienvenida. Ejecuta migrate.php fuera de la web como indica esta guía, o importa migration.mysql.sql en phpMyAdmin después del respaldo. Conserva los datos existentes. Prueba exportar un Excel de repuestos, importar dos filas de prueba y borrarlas después, comprobar los avisos privados de nombres repetidos, abrir una vista previa ampliada y marcar al menos una promoción como destacada. La rotación de portada cambia cada seis segundos y puede pausarse. No publiques los Excel exportados de clientes dentro de public_html.
+
+### Campos nuevos de la calculadora en 2.1.0
+
+Esta actualización requiere ejecutar la migración antes de iniciar la API: `php backend-php/migrate.php`. Si despliegas sin terminal, importa `backend-php/migration.mysql.sql` en la base de datos existente. Conserva `config.local.php`, archivos privados y cargas existentes. La migración conserva el historial previo y lo deja sin registro oficial automático.
+
+La calculadora está integrada en React (`/admin/calculadora`) y usa la misma API y sesión del panel. Los enlaces `/cotizador` y `/cotizador-app/index.html` siguen abriendo la nueva ruta; sus páginas antiguas solo redirigen.

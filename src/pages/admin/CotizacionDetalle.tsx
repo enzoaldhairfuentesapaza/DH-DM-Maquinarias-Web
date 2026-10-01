@@ -1,6 +1,6 @@
 import type { QuoteDetail, QuoteProduct } from "../../types/content";
 import { useEffect, useState } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom";
+import { Link, useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   ArrowLeft,
   Package,
@@ -50,6 +50,7 @@ const ORIGEN_LABELS: Record<string, string> = {
   correo: "Correo",
   pagina: "Por la página",
   contacto: "Formulario de contacto",
+  presencial: "Presencial · calculadora",
   web: "Web",
 };
 
@@ -57,6 +58,10 @@ const ORIGEN_LABELS: Record<string, string> = {
 const AYUDA_KEY = "hdm_ayuda_evaluar_cotizacion_oculta";
 
 export default function CotizacionDetalle() {
+  const location = useLocation();
+  const contacto = location.pathname.includes("/contactos/");
+  const basePath = contacto ? "/admin/contactos" : "/admin/cotizaciones";
+  const apiPath = contacto ? "/api/contactos" : "/api/cotizaciones";
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: maquinarias } = useMaquinarias();
@@ -76,27 +81,23 @@ export default function CotizacionDetalle() {
   const [canales, setCanales] = useState<Set<"whatsapp" | "correo" | "pagina">>(new Set());
   // Por defecto SI se notifica en la página; si la cotización ya fue
   // respondida/denegada antes, respetamos lo que quedó guardado.
-  const [mostrarEnPagina, setMostrarEnPagina] = useState(true);
+
   // Toggle rojo: al activarlo se bloquea el formulario normal y se pide el motivo.
   const [denegando, setDenegando] = useState(false);
 
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  }, [id,contacto]);
 
   async function load() {
     setLoading(true);
     try {
-      const data = await api.get<Cotizacion>(`/api/cotizaciones/${id}`);
+      const data = await api.get<Cotizacion>(`${apiPath}/${id}`);
       setC(data);
       setRespuesta(data.respuesta ?? "");
       setMotivo(data.motivo_denegacion ?? "");
-      // Si ya se respondió/denegó antes, respeta lo que quedó guardado.
-      // Si sigue pendiente, se deja el valor por defecto (activado).
-      if (data.estado !== "pendiente") {
-        setMostrarEnPagina(!!data.mostrar_en_pagina);
-      }
+
       setDenegando(data.estado === "denegada");
       const canalesGuardados = (data.canal_respuesta ?? "")
         .split(",")
@@ -161,10 +162,6 @@ export default function CotizacionDetalle() {
 
   function handleClickCanal(canal: "whatsapp" | "correo" | "pagina") {
     toggleCanal(canal);
-    // Ademas de marcar el canal, abrimos la herramienta correspondiente para
-    // redactar/enviar el mensaje. Ninguno de los tres saca de la pantalla.
-    if (canal === "whatsapp") abrirWhatsapp();
-    if (canal === "correo") abrirCorreo();
   }
 
   async function guardar(estadoFinal: "pendiente" | "respondida" | "denegada") {
@@ -178,12 +175,13 @@ export default function CotizacionDetalle() {
       } else {
         form.append("respuesta", respuesta);
       }
-      if (canales.size > 0) form.append("canal", Array.from(canales).join(","));
-      form.append("mostrar_en_pagina", mostrarEnPagina && c.usuario_id ? "1" : "");
+      form.append("canal", Array.from(new Set([...canales,...(c.usuario_id ? ["pagina"] : [])])).join(","));
+      form.append("mostrar_en_pagina", c.usuario_id ? "1" : "");
       if (archivo) form.append("archivo", archivo);
-      const updated = await api.post<Cotizacion>(`/api/cotizaciones/${c.id}/responder`, form);
+      const updated = await api.post<Cotizacion>(`${apiPath}/${c.id}/responder`, form);
       setC(updated);
       setArchivo(null);
+      if(estadoFinal!=="pendiente"){if(canales.has("whatsapp"))abrirWhatsapp();if(canales.has("correo"))void abrirCorreo();}
       if (estadoFinal === "pendiente") {
         feedback.info("La solicitud volvió a estar pendiente de respuesta.", "Estado actualizado");
       } else if (estadoFinal === "denegada") {
@@ -230,9 +228,9 @@ export default function CotizacionDetalle() {
     });
     if (motivoEliminacion === null) return; // canceló
     try {
-      await api.delete(`/api/cotizaciones/${c.id}`, { motivo: motivoEliminacion });
+      await api.delete(`${apiPath}/${c.id}`, { motivo: motivoEliminacion });
       feedback.success("La solicitud se movió a la papelera.");
-      navigate("/admin/cotizaciones");
+      navigate(basePath);
     } catch (err) {
       feedback.error(err instanceof Error ? err.message : "Error al eliminar la solicitud.");
     }
@@ -258,11 +256,12 @@ export default function CotizacionDetalle() {
       <div className="admin-header-row">
         <div>
           <p className="subtitle" style={{ marginBottom: 4 }}>
-            <Link to="/admin/cotizaciones" style={{ color: "#999" }}>
+            <Link to={basePath} style={{ color: "#999" }}>
               Cotizaciones recibidas
             </Link>{" "}
             / #{c.id}
           </p>
+          {!esContacto && <Link className="btn-admin yellow" to={`/admin/calculadora?solicitud=${c.id}`}>Hacer cotización</Link>}
           <h1>{esContacto ? "Consulta de contacto" : "Solicitud de cotización"}</h1>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
@@ -277,7 +276,7 @@ export default function CotizacionDetalle() {
             </button>
           )}
           <Link
-            to="/admin/cotizaciones"
+            to={basePath}
             className="btn-admin outline"
             data-tooltip="Regresa a la lista de cotizaciones recibidas"
           >
@@ -371,7 +370,7 @@ export default function CotizacionDetalle() {
               </p>
             )}
             <p className="detalle-info-row meta">
-              Canal de solicitud: {ORIGEN_LABELS[c.origen] ?? c.origen} · {new Date(c.creado_en).toLocaleString("es-PE")}
+              Canal de solicitud: {ORIGEN_LABELS[esContacto ? c.detalle.canal ?? "pagina" : c.origen] ?? c.origen} · {new Date(c.creado_en).toLocaleString("es-PE")}
             </p>
           </div>
 
@@ -471,32 +470,7 @@ export default function CotizacionDetalle() {
               </p>
             )}
 
-            {/* ---- Flag: notificar al cliente en su buzón de la página ---- */}
-            <div
-              className="switch-row"
-              data-tooltip={!c.usuario_id ? "Bloqueado: este cliente no tiene cuenta en la web." : "Actívalo para que la respuesta le llegue también a su buzón de notificaciones"}
-            >
-              <button
-                type="button"
-                role="switch"
-                aria-checked={mostrarEnPagina && !!c.usuario_id}
-                className={`toggle-switch ${mostrarEnPagina && c.usuario_id ? "on" : ""}`}
-                disabled={!c.usuario_id}
-                onClick={() => setMostrarEnPagina((v) => !v)}
-              >
-                <span className="toggle-switch-knob" />
-              </button>
-              <div className="switch-row-text">
-                <strong>Avisarle al cliente en la página</strong>
-                <span>
-                  {!c.usuario_id
-                    ? "Bloqueado: este cliente no tiene una cuenta en la web."
-                    : mostrarEnPagina
-                      ? "Activado: le va a llegar una notificación a su buzón con esta respuesta."
-                      : "Desactivado: no verá nada en su buzón, solo por los canales que marques abajo."}
-                </span>
-              </div>
-            </div>
+            <p className="quote-origin-help">La respuesta se guarda siempre en el panel. {c.usuario_id ? "También se publicará en la cuenta del cliente, independientemente del canal externo." : "Este visitante no tiene cuenta; conserva su correo o teléfono para responderle."}</p>
 
             {/* ---- Los 3 canales de envío: no son excluyentes ---- */}
             <p style={{ fontSize: 12.5, fontWeight: 700, color: "#666", margin: "16px 0 8px" }}>
@@ -536,6 +510,7 @@ export default function CotizacionDetalle() {
                 <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginTop: 18, marginBottom: 16 }}>
                   Adjuntar archivo de la cotización (PDF u otro)
                   <input
+                    className="admin-image-upload"
                     type="file"
                     accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx"
                     onChange={(e) => setArchivo(e.target.files?.[0] ?? null)}

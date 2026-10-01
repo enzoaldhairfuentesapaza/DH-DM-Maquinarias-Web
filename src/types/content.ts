@@ -5,5 +5,5 @@ export type ContentRecord = Record<string, ContentField> & {
   stock_disponible?: boolean; codigo?: string; titulo?: string; fecha?: string;
   resumen?: string; descripcion?: string; vigencia?: string;
 };
-export interface QuoteProduct { tipo?: string; nombre: string; codigo?: string; cantidad?: number; imagen?: string; }
-export interface QuoteDetail { productos?: QuoteProduct[]; razon_social?: string; tipo_documento?: string; numero_documento?: string; asunto?: string; mensaje?: string; }
+export interface QuoteProduct { id?: number; marca?: string; tipo?: string; nombre: string; codigo?: string; cantidad?: number; imagen?: string; }
+export interface QuoteDetail { canal?: string; productos?: QuoteProduct[]; razon_social?: string; tipo_documento?: string; numero_documento?: string; asunto?: string; mensaje?: string; }

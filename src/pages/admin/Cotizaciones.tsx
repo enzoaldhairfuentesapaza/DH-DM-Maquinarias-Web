@@ -3,6 +3,7 @@ import type { QuoteDetail, QuoteProduct } from "../../types/content";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Trash2, Eye, Package, Truck, MessageCircle, Search } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
 import { api } from "../../api/client";
 import { useFeedback } from "../../context/FeedbackContext";
 import "./admin.css";
@@ -23,13 +24,14 @@ interface Cotizacion {
 }
 
 const FILTROS = ["todas", "pendiente", "respondida", "denegada"] as const;
-const TIPOS = ["todas", "productos", "contacto"] as const;
+
 
 const ORIGEN_LABELS: Record<string, string> = {
   whatsapp: "WhatsApp",
   correo: "Correo",
   pagina: "Por la página",
   contacto: "Formulario de contacto",
+  presencial: "Presencial · calculadora",
   web: "Web",
 };
 
@@ -62,25 +64,27 @@ function resumenTipos(c: Cotizacion): { repuestos: number; maquinarias: number }
   return { repuestos, maquinarias };
 }
 
-export default function Cotizaciones() {
+export default function Cotizaciones({ contacto = false }: { contacto?: boolean }) {
   const feedback = useFeedback();
+  const {isOwner}=useAuth();
   const [params,setParams] = useSearchParams();
   const grupo = params.get("tipo") === "maquinaria" ? "maquinaria" : "repuesto";
   const [items, setItems] = useState<Cotizacion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filtro, setFiltro] = useState<(typeof FILTROS)[number]>("todas");
-  const [tipo, setTipo] = useState<(typeof TIPOS)[number]>("todas");
+
   const [busqueda, setBusqueda] = useState("");
 
   useEffect(() => {
     load();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contacto]);
 
   async function load() {
     setLoading(true);
     try {
-      const data = await api.get<Cotizacion[]>("/api/cotizaciones");
+      const data = await api.get<Cotizacion[]>(contacto ? "/api/contactos" : "/api/cotizaciones");
       setItems(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al cargar");
@@ -100,7 +104,7 @@ export default function Cotizaciones() {
     });
     if (motivo === null) return; // canceló
     try {
-      await api.delete(`/api/cotizaciones/${id}`, { motivo });
+      await api.delete(`/api/${contacto ? "contactos" : "cotizaciones"}/${id}`, { motivo });
       setItems((prev) => prev.filter((i) => i.id !== id));
       feedback.success("La solicitud se movió a la papelera.");
     } catch (err) {
@@ -109,16 +113,16 @@ export default function Cotizaciones() {
   }
 
   const groupItems = useMemo(() => items.filter(i => {
+    if(contacto)return i.origen === "contacto";
+    if(i.origen === "contacto")return false;
     const types = resumenTipos(i);
     return grupo === "maquinaria" ? !!types && types.maquinarias > 0 : !types || types.repuestos > 0 || types.maquinarias === 0;
-  }), [items,grupo]);
+  }), [items,grupo,contacto]);
 
   const visibles = useMemo(() => {
     const texto = busqueda.trim().toLowerCase();
     return groupItems.filter((i) => {
       if (filtro !== "todas" && i.estado !== filtro) return false;
-      if (tipo === "productos" && i.origen === "contacto") return false;
-      if (tipo === "contacto" && i.origen !== "contacto") return false;
       if (!texto) return true;
       return (
         i.nombre_cliente?.toLowerCase().includes(texto) ||
@@ -128,27 +132,25 @@ export default function Cotizaciones() {
         String(i.id).includes(texto)
       );
     });
-  }, [groupItems, filtro, tipo, busqueda]);
-
-  const totalContacto = groupItems.filter((i) => i.origen === "contacto").length;
-  const totalProductos = groupItems.length - totalContacto;
+  }, [groupItems, filtro, busqueda]);
 
   return (
     <div>
-      <ExcelTools key={grupo} scope={grupo} entity="cotizaciones" onImported={() => window.location.reload()} />
+      <ExcelTools key={contacto ? "contactos" : grupo} scope={contacto ? undefined : grupo} entity={contacto ? "contactos" : "cotizaciones"} onImported={() => window.location.reload()} />
       <div className="admin-header-row">
         <div>
-          <h1>Cotizaciones de {grupo === "maquinaria" ? "maquinaria" : "repuestos"}</h1>
+          <h1>{contacto ? "Mensajes de contacto" : `Cotizaciones de ${grupo === "maquinaria" ? "maquinaria" : "repuestos"}`}</h1>
           <p className="subtitle">
-            Solicitudes de cotización (WhatsApp / correo / página) y consultas del formulario de contacto.
+            {contacto ? "Consultas generales recibidas desde Contacto, con el canal elegido por cada persona." : "Solicitudes y cotizaciones oficiales, con su canal de recepción."}
           </p>
         </div>
+        {contacto&&isOwner&&<Link to="/admin/contactos/papelera" className="btn-admin outline">Papelera de contacto</Link>}
         <Link to="/admin/ventas-cotizaciones" className="btn-admin outline">
           Volver
         </Link>
       </div>
 
-      <div className="quote-group-tabs"><button className={grupo==="repuesto"?"active":""} onClick={()=>setParams({tipo:"repuesto"})}><Package size={17}/>Repuestos y otros</button><button className={grupo==="maquinaria"?"active":""} onClick={()=>setParams({tipo:"maquinaria"})}><Truck size={17}/>Maquinaria</button></div>
+      {!contacto && <div className="quote-group-tabs"><button className={grupo==="repuesto"?"active":""} onClick={()=>setParams({tipo:"repuesto"})}><Package size={17}/>Repuestos y otros</button><button className={grupo==="maquinaria"?"active":""} onClick={()=>setParams({tipo:"maquinaria"})}><Truck size={17}/>Maquinaria</button></div>}
       <div className="admin-search-bar">
         <Search size={16} />
         <input
@@ -158,31 +160,6 @@ export default function Cotizaciones() {
           onChange={(e) => setBusqueda(e.target.value)}
         />
       </div>
-
-      <div
-        className="admin-tabs"
-        data-tooltip="Separa las cotizaciones de productos (carrito) de las consultas generales (formulario de contacto)"
-      >
-        {TIPOS.map((t) => (
-          <button key={t} className={tipo === t ? "active" : ""} onClick={() => setTipo(t)}>
-            {t === "todas" && `Todas (${groupItems.length})`}
-            {t === "productos" && (
-              <>
-                <Package size={13} style={{ verticalAlign: "-2px", marginRight: 4 }} />
-                Desde el carrito ({totalProductos})
-              </>
-            )}
-            {t === "contacto" && (
-              <>
-                <MessageCircle size={13} style={{ verticalAlign: "-2px", marginRight: 4 }} />
-                Desde Contacto ({totalContacto})
-              </>
-            )}
-          </button>
-        ))}
-      </div>
-
-      <p className="quote-origin-help"><strong>Origen de la solicitud:</strong> “Desde el carrito” reúne los productos seleccionados para cotizar por WhatsApp, correo o la página. “Desde Contacto” reúne las consultas generales del formulario de Contacto; aparecen en Repuestos y otros.</p>
 
       <div className="admin-tabs">
         {FILTROS.map((f) => (
@@ -224,7 +201,7 @@ export default function Cotizaciones() {
                 </div>
                 <div className="cotizacion-resumen-tags">
                   {tipos && tipos.repuestos > 0 && tipos.maquinarias > 0 && <span className="duplicate-tag">Solicitud antigua mixta · visible en ambas bandejas</span>}
-                  <span className="rol-badge admin">{ORIGEN_LABELS[c.origen] ?? c.origen}</span>
+                  <span className="rol-badge admin">{ORIGEN_LABELS[c.origen === "contacto" ? c.detalle.canal ?? "pagina" : c.origen] ?? c.origen}</span>
                   {esContacto ? (
                     <span className="rol-badge cliente">
                       <MessageCircle size={12} style={{ verticalAlign: "-2px" }} /> Consulta general
@@ -278,7 +255,7 @@ export default function Cotizaciones() {
               {/* Aceptar/Rechazar solo se hacen dentro del detalle, con motivo si aplica. */}
               <div className="cotizacion-resumen-actions">
                 <Link
-                  to={`/admin/cotizaciones/${c.id}`}
+                  to={`/admin/${contacto ? "contactos" : "cotizaciones"}/${c.id}`}
                   className="btn-admin small"
                   data-tooltip="Abre el detalle para revisar, responder o denegar esta solicitud"
                 >

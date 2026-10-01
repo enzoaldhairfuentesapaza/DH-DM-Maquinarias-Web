@@ -16,8 +16,9 @@ import { useCotizacion } from "../context/CotizacionContext";
 import { useAuth } from "../context/AuthContext";
 import { useAuthModal } from "../context/AuthModalContext";
 import { api } from "../api/client";
+import { registerAndOpen } from "../utils/externalSubmission";
 import QtyInput from "../components/QtyInput";
-import { abrirGmailCompose } from "../utils/email";
+import { gmailComposeUrl } from "../utils/email";
 import { useConfiguracionSitio } from "../hooks/useApiData";
 
 interface DatosCliente {
@@ -51,8 +52,6 @@ export default function Cotizacion() {
   const [enviado, setEnviado] = useState<null | "whatsapp" | "pagina" | "correo">(null);
   const [enviando, setEnviando] = useState<null | "whatsapp" | "pagina" | "correo">(null);
   const [errorEnvio, setErrorEnvio] = useState("");
-  const [confirmandoWhatsapp, setConfirmandoWhatsapp] = useState(false);
-  const [confirmandoCorreo, setConfirmandoCorreo] = useState(false);
 
   const numeroDestino = () => grupo === "maquinaria" ? config.whatsapp_secundario : config.whatsapp_primario;
 
@@ -94,19 +93,15 @@ export default function Cotizacion() {
 
   const construirDetalleParaGuardar = () => ({
     productos: items.map((i) => ({
+      id: i.id,
       nombre: i.nombre,
       codigo: i.codigo,
       tipo: i.tipo,
       cantidad: i.cantidad,
     })),
-    ...(user
-      ? {}
-      : {
-          tipo_documento: datos.tipoDocumento,
-          numero_documento: datos.numeroDocumento,
-          razon_social:
-            datos.tipoDocumento === "ruc" ? datos.razonSocial : undefined,
-        }),
+    tipo_documento: user ? user.tipo_documento : datos.tipoDocumento,
+    numero_documento: user ? user.numero_documento : datos.numeroDocumento,
+    razon_social: user ? user.razon_social : datos.tipoDocumento === "ruc" ? datos.razonSocial : undefined,
   });
 
   const guardarSolicitud = async (origen: "whatsapp" | "pagina" | "correo") => {
@@ -119,76 +114,16 @@ export default function Cotizacion() {
     });
   };
 
-  const handleEnviarWhatsapp = () => {
-    if (items.length === 0) return;
-    if (!datosCompletos()) {
-      setErrorEnvio(
-        "Completa tu nombre, teléfono, correo y documento (marcados con *) antes de enviar la solicitud.",
-      );
-      return;
-    }
-    setErrorEnvio("");
-    const url = `https://wa.me/${numeroDestino()}?text=${encodeURIComponent(construirMensajeWhatsapp())}`;
-    window.open(url, "_blank", "noopener,noreferrer");
-    setConfirmandoWhatsapp(true);
+  const enviarExterno = async (canal: "whatsapp" | "correo", url:string) => {
+    if(enviando) return;
+    if(!datosCompletos()){setErrorEnvio("Completa los datos obligatorios antes de enviar.");return;}
+    setEnviando(canal);setErrorEnvio("");
+    try{await registerAndOpen(url,()=>guardarSolicitud(canal));setEnviado(canal);vaciarCarrito();}
+    catch(error){setErrorEnvio(error instanceof Error ? error.message : "No se pudo registrar en la página. Intenta nuevamente.");}
+    finally{setEnviando(null);}
   };
-
-  const handleEnviarCorreo = () => {
-    if (items.length === 0) return;
-    if (!datosCompletos()) {
-      setErrorEnvio(
-        "Completa tu nombre, teléfono, correo y documento (marcados con *) antes de enviar la solicitud.",
-      );
-      return;
-    }
-    setErrorEnvio("");
-    const asunto = `Cotización de ${grupo === "maquinaria" ? "maquinaria" : "repuestos"} - DH & DM Maquinarias`;
-    const cuerpo = construirMensajeWhatsapp();
-    // Abrimos Gmail en una pestaña nueva con el mensaje ya armado (mailto:
-    // no abre nada si no hay un programa de correo de escritorio instalado).
-    abrirGmailCompose({ to: config.correo_contacto, subject: asunto, body: cuerpo });
-    setConfirmandoCorreo(true);
-  };
-
-  const confirmarCorreoExitoso = async (exitoso: boolean) => {
-    setConfirmandoCorreo(false);
-    if (!exitoso) return;
-    setEnviando("correo");
-    setErrorEnvio("");
-    try {
-      await guardarSolicitud("correo");
-      setEnviado("correo");
-      vaciarCarrito();
-    } catch (err) {
-      setErrorEnvio(
-        err instanceof Error
-          ? err.message
-          : "No se pudo registrar la solicitud",
-      );
-    } finally {
-      setEnviando(null);
-    }
-  };
-
-  const confirmarWhatsappExitoso = async (exitoso: boolean) => {
-    setConfirmandoWhatsapp(false);
-    if (!exitoso) return; // "Probar de nuevo": se mantiene el carrito y los datos tal cual
-    setEnviando("whatsapp");
-    setErrorEnvio("");
-    try {
-      await guardarSolicitud("whatsapp");
-      setEnviado("whatsapp");
-      vaciarCarrito();
-    } catch (err) {
-      setErrorEnvio(
-        err instanceof Error
-          ? err.message
-          : "No se pudo registrar la solicitud",
-      );
-    } finally {
-      setEnviando(null);
-    }
-  };
+  const handleEnviarWhatsapp = () => enviarExterno("whatsapp",`https://wa.me/${numeroDestino()}?text=${encodeURIComponent(construirMensajeWhatsapp())}`);
+  const handleEnviarCorreo = () => enviarExterno("correo",gmailComposeUrl({to:config.correo_contacto,subject:`Cotización de ${grupo === "maquinaria" ? "maquinaria" : "repuestos"} - DH & DM Maquinarias`,body:construirMensajeWhatsapp()}));
 
   const handleEnviarPorPagina = async () => {
     if (!user) {
@@ -229,70 +164,8 @@ export default function Cotizacion() {
         </div>
       </div>
 
-      {confirmandoWhatsapp && (
-        <div className="whatsapp-confirm-overlay">
-          <div className="whatsapp-confirm-box">
-            <h3>¿Se logró enviar la solicitud por WhatsApp con éxito?</h3>
-            <p>
-              Si el mensaje se envió correctamente en WhatsApp, confirma aquí
-              para vaciar únicamente este grupo de cotización.
-            </p>
-            <div className="whatsapp-confirm-actions">
-              <button
-                className="submit-quote-btn"
-                onClick={() => confirmarWhatsappExitoso(true)}
-              >
-                Sí, se envió
-              </button>
-              <button
-                className="submit-quote-btn"
-                style={{
-                  background: "#fff",
-                  color: "#121212",
-                  border: "1.5px solid #121212",
-                }}
-                onClick={() => confirmarWhatsappExitoso(false)}
-              >
-                Probar de nuevo
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {confirmandoCorreo && (
-        <div className="whatsapp-confirm-overlay">
-          <div className="whatsapp-confirm-box">
-            <h3>¿Se abrió tu programa de correo correctamente?</h3>
-            <p>
-              Si tu correo se abrió con el mensaje ya redactado y lo enviaste,
-              confirma aquí para vaciar únicamente este grupo de cotización.
-            </p>
-            <div className="whatsapp-confirm-actions">
-              <button
-                className="submit-quote-btn"
-                onClick={() => confirmarCorreoExitoso(true)}
-              >
-                Sí, se envió
-              </button>
-              <button
-                className="submit-quote-btn"
-                style={{
-                  background: "#fff",
-                  color: "#121212",
-                  border: "1.5px solid #121212",
-                }}
-                onClick={() => confirmarCorreoExitoso(false)}
-              >
-                Probar de nuevo
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       <div className="page-body">
-        <div className="quote-group-tabs"><button disabled={enviando!==null||confirmandoWhatsapp||confirmandoCorreo} className={grupo==="repuesto"?"active":""} onClick={()=>{setGrupo("repuesto");setEnviado(null);setErrorEnvio("");}}><Package size={18}/> Repuestos y otros ({todosItems.filter(i=>i.tipo!=="maquinaria").length})</button><button disabled={enviando!==null||confirmandoWhatsapp||confirmandoCorreo} className={grupo==="maquinaria"?"active":""} onClick={()=>{setGrupo("maquinaria");setEnviado(null);setErrorEnvio("");}}><Truck size={18}/> Maquinaria ({todosItems.filter(i=>i.tipo==="maquinaria").length})</button></div>
+        <div className="quote-group-tabs"><button disabled={enviando!==null} className={grupo==="repuesto"?"active":""} onClick={()=>{setGrupo("repuesto");setEnviado(null);setErrorEnvio("");}}><Package size={18}/> Repuestos y otros ({todosItems.filter(i=>i.tipo!=="maquinaria").length})</button><button disabled={enviando!==null} className={grupo==="maquinaria"?"active":""} onClick={()=>{setGrupo("maquinaria");setEnviado(null);setErrorEnvio("");}}><Truck size={18}/> Maquinaria ({todosItems.filter(i=>i.tipo==="maquinaria").length})</button></div>
         <p className="quote-routing-note">Las solicitudes se envían por separado. {grupo==="maquinaria"?"Maquinaria: WhatsApp secundario":"Repuestos y otros: WhatsApp primario"} · +{numeroDestino()}. Los productos del otro grupo se conservan.</p>
         <div className="cotizacion-layout">
           <div>
@@ -398,16 +271,16 @@ export default function Cotizacion() {
                 <CheckCircle2 size={40} className="quote-success-icon" />
                 <h4>
                   {enviado === "whatsapp"
-                    ? "¡Solicitud enviada por WhatsApp!"
+                    ? "¡Solicitud registrada!"
                     : enviado === "correo"
-                      ? "¡Solicitud enviada por correo!"
+                      ? "¡Solicitud registrada!"
                       : "¡Solicitud enviada con éxito!"}
                 </h4>
                 <p>
                   {enviado === "whatsapp"
-                    ? "Nuestro equipo se pondrá en contacto contigo pronto por ese medio."
+                    ? "Quedó registrada en la página con el canal WhatsApp. Completa el envío en la ventana de WhatsApp."
                     : enviado === "correo"
-                      ? "Nuestro equipo revisará tu correo y te responderá a la brevedad."
+                      ? "Quedó registrada en la página con el canal correo. Completa el envío en la ventana de correo."
                       : "Quedó registrada en nuestro sistema; un asesor te contactará pronto para confirmar precios y disponibilidad."}
                 </p>
                 <button

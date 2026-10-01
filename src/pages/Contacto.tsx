@@ -12,9 +12,10 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { api } from "../api/client";
+import { registerAndOpen } from "../utils/externalSubmission";
 import { useAuth } from "../context/AuthContext";
 import { useAuthModal } from "../context/AuthModalContext";
-import { abrirGmailCompose } from "../utils/email";
+import { gmailComposeUrl } from "../utils/email";
 import { useConfiguracionSitio } from "../hooks/useApiData";
 
 const ASUNTOS = [
@@ -42,8 +43,6 @@ export default function Contacto() {
   const [enviado, setEnviado] = useState<null | "whatsapp" | "pagina" | "correo">(null);
   const [enviando, setEnviando] = useState<null | "whatsapp" | "pagina" | "correo">(null);
   const [errorEnvio, setErrorEnvio] = useState("");
-  const [confirmandoWhatsapp, setConfirmandoWhatsapp] = useState(false);
-  const [confirmandoCorreo, setConfirmandoCorreo] = useState(false);
 
   const datosCompletos = () => {
     if (!datos.mensaje.trim()) return false;
@@ -52,7 +51,7 @@ export default function Contacto() {
   };
 
   const guardarSolicitud = async (canal: "whatsapp" | "pagina" | "correo") => {
-    await api.post("/api/cotizaciones", {
+    await api.post("/api/contactos", {
       nombre_cliente: user ? user.nombre : datos.nombre,
       email_cliente: user ? user.email : datos.correo,
       telefono_cliente: user ? (user.telefono ?? "") : datos.telefono,
@@ -89,71 +88,16 @@ export default function Contacto() {
     return msg;
   };
 
-  const handleEnviarWhatsapp = () => {
-    if (!datosCompletos()) {
-      setErrorEnvio(
-        "Completa tu nombre, correo y el mensaje (marcados con *) antes de enviar.",
-      );
-      return;
-    }
-    setErrorEnvio("");
-    const url = `https://wa.me/${config.whatsapp_primario}?text=${encodeURIComponent(construirMensajeWhatsapp())}`;
-    window.open(url, "_blank", "noopener,noreferrer");
-    setConfirmandoWhatsapp(true);
+  const enviarExterno = async (canal: "whatsapp" | "correo", url:string) => {
+    if(enviando) return;
+    if(!datosCompletos()){setErrorEnvio("Completa los datos obligatorios antes de enviar.");return;}
+    setEnviando(canal);setErrorEnvio("");
+    try{await registerAndOpen(url,()=>guardarSolicitud(canal));setEnviado(canal);}
+    catch(error){setErrorEnvio(error instanceof Error ? error.message : "No se pudo registrar en la página. Intenta nuevamente.");}
+    finally{setEnviando(null);}
   };
-  const confirmarWhatsappExitoso = async (exitoso: boolean) => {
-    setConfirmandoWhatsapp(false);
-    if (!exitoso) return; // se mantiene el formulario tal cual para reintentar
-    setEnviando("whatsapp");
-    setErrorEnvio("");
-    try {
-      await guardarSolicitud("whatsapp");
-      setEnviado("whatsapp");
-    } catch (err) {
-      setErrorEnvio(
-        err instanceof Error
-          ? err.message
-          : "No se pudo registrar tu solicitud",
-      );
-    } finally {
-      setEnviando(null);
-    }
-  };
-
-  const handleEnviarCorreo = () => {
-    if (!datosCompletos()) {
-      setErrorEnvio(
-        "Completa tu nombre, correo y el mensaje (marcados con *) antes de enviar.",
-      );
-      return;
-    }
-    setErrorEnvio("");
-    // Abrimos Gmail en una pestaña nueva con el mensaje ya armado (mailto:
-    // no abre nada si no hay un programa de correo de escritorio instalado).
-    abrirGmailCompose({
-      to: config.correo_contacto,
-      subject: `Contacto (${datos.asunto}) - ${user ? user.nombre : datos.nombre}`,
-      body: construirMensajePlano(),
-    });
-    setConfirmandoCorreo(true);
-  };
-
-  const confirmarCorreoExitoso = async (exitoso: boolean) => {
-    setConfirmandoCorreo(false);
-    if (!exitoso) return;
-    setEnviando("correo");
-    setErrorEnvio("");
-    try {
-      await guardarSolicitud("correo");
-      setEnviado("correo");
-    } catch (err) {
-      setErrorEnvio(
-        err instanceof Error ? err.message : "No se pudo registrar tu solicitud",
-      );
-    } finally {
-      setEnviando(null);
-    }
-  };
+  const handleEnviarWhatsapp = () => enviarExterno("whatsapp",`https://wa.me/${config.whatsapp_primario}?text=${encodeURIComponent(construirMensajeWhatsapp())}`);
+  const handleEnviarCorreo = () => enviarExterno("correo",gmailComposeUrl({to:config.correo_contacto,subject:`Contacto (${datos.asunto}) - ${user ? user.nombre : datos.nombre}`,body:construirMensajePlano()}));
 
   const handleEnviarPorPagina = async () => {
     if (!user) {
@@ -188,65 +132,6 @@ export default function Contacto() {
           <p>Nuestro equipo comercial y técnico está listo para ayudarte.</p>
         </div>
       </div>
-
-      {confirmandoWhatsapp && (
-        <div className="whatsapp-confirm-overlay">
-          <div className="whatsapp-confirm-box">
-            <h3>¿Se logró enviar el mensaje por WhatsApp con éxito?</h3>
-            <p>Confirma si el mensaje se envió correctamente en WhatsApp.</p>
-            <div className="whatsapp-confirm-actions">
-              <button
-                className="submit-quote-btn"
-                onClick={() => confirmarWhatsappExitoso(true)}
-              >
-                Sí, se envió
-              </button>
-              <button
-                className="submit-quote-btn"
-                style={{
-                  background: "#fff",
-                  color: "#121212",
-                  border: "1.5px solid #121212",
-                }}
-                onClick={() => confirmarWhatsappExitoso(false)}
-              >
-                Probar de nuevo
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {confirmandoCorreo && (
-        <div className="whatsapp-confirm-overlay">
-          <div className="whatsapp-confirm-box">
-            <h3>¿Se abrió tu correo correctamente?</h3>
-            <p>
-              Si Gmail se abrió con el mensaje ya redactado y lo enviaste,
-              confirma aquí para registrar tu solicitud.
-            </p>
-            <div className="whatsapp-confirm-actions">
-              <button
-                className="submit-quote-btn"
-                onClick={() => confirmarCorreoExitoso(true)}
-              >
-                Sí, se envió
-              </button>
-              <button
-                className="submit-quote-btn"
-                style={{
-                  background: "#fff",
-                  color: "#121212",
-                  border: "1.5px solid #121212",
-                }}
-                onClick={() => confirmarCorreoExitoso(false)}
-              >
-                Probar de nuevo
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       <div className="page-body">
         <div className="contacto-layout">
@@ -308,13 +193,13 @@ export default function Contacto() {
                 <CheckCircle2 size={40} className="quote-success-icon" />
                 <h4>
                   {enviado === "whatsapp"
-                    ? "¡Mensaje enviado por WhatsApp!"
-                    : "¡Mensaje enviado con éxito!"}
+                    ? "¡Mensaje registrado!"
+                    : "¡Mensaje registrado!"}
                 </h4>
                 <p>
                   {enviado === "whatsapp"
-                    ? "Nuestro equipo se pondrá en contacto contigo pronto por ese medio."
-                    : "Quedó registrado en nuestro sistema; un asesor te contactará pronto."}
+                    ? "Quedó registrada en la página con el canal WhatsApp. Completa el envío en la ventana de WhatsApp."
+                    : enviado === "correo" ? "Quedó registrado en la página con el canal correo. Completa el envío en la ventana de correo." : "Quedó registrado en nuestro sistema; un asesor te contactará pronto."}
                 </p>
                 <button
                   className="clear-filters"

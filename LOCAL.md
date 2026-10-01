@@ -226,3 +226,9 @@ La reparación solo actualiza imágenes vacías y enlaces remotos antiguos conoc
 Para actualizar una copia ya instalada conservando sus datos, usa **VERSION-2.md**. En Promociones, marca al menos una como destacada para activar la rotación de la portada. El menú del panel incluye el Centro de Excel; los formatos y pasos están en **EXCEL.md**.
 
 La actualización 2.1 necesita ejecutar `php .\backend-php\migrate.php` antes de arrancar PHP. La bienvenida se edita en Editar Página > Bienvenida del inicio. Los teléfonos y el correo solo los modifica el owner.
+
+### Campos nuevos de la calculadora en 2.1.0
+
+Esta actualización requiere ejecutar la migración antes de iniciar la API: `php backend-php/migrate.php`. Si despliegas sin terminal, importa `backend-php/migration.mysql.sql` en la base de datos existente. Conserva `config.local.php`, archivos privados y cargas existentes. La migración conserva el historial previo y lo deja sin registro oficial automático.
+
+La calculadora está integrada en React (`/admin/calculadora`) y usa la misma API y sesión del panel. Los enlaces `/cotizador` y `/cotizador-app/index.html` siguen abriendo la nueva ruta; sus páginas antiguas solo redirigen.

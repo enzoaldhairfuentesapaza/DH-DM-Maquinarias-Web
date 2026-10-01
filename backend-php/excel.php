@@ -16,12 +16,13 @@ function excel_definitions(): array
     $extra = [
         'categorias'=>['table'=>'categorias_productos','columns'=>['tipo','nombre'],'required'=>['tipo','nombre'],'identity'=>['tipo','nombre']],
         'accesos'=>['table'=>'usuarios','columns'=>['nombre','email','password','rol','telefono','tipo_documento','numero_documento','razon_social'],'required'=>['nombre','email','password','rol'],'identity'=>['email'],'roles'=>['owner']],
-        'cotizaciones'=>['table'=>'cotizaciones','columns'=>['nombre_cliente','email_cliente','telefono_cliente','empresa','detalle','origen'],'required'=>['nombre_cliente','email_cliente','detalle'],'identity'=>['nombre_cliente','email_cliente','detalle'],'json_columns'=>['detalle'],'roles'=>['owner','admin','cotizador'],'where'=>'eliminado_en IS NULL'],
+        'cotizaciones'=>['table'=>'cotizaciones','columns'=>['nombre_cliente','email_cliente','telefono_cliente','empresa','detalle','origen'],'required'=>['nombre_cliente','email_cliente','detalle'],'identity'=>['nombre_cliente','email_cliente','detalle'],'json_columns'=>['detalle'],'roles'=>['owner','admin','cotizador'],'where'=>"eliminado_en IS NULL AND origen <> 'contacto'"],
+        'contactos'=>['table'=>'cotizaciones','columns'=>[],'readonly'=>true,'json_columns'=>['detalle'],'roles'=>['owner','admin'],'where'=>"eliminado_en IS NULL AND origen = 'contacto'"],
         'cotizador'=>['table'=>'cotizaciones_formales','columns'=>['numero','cliente_nombre','cliente_documento','cliente_direccion','items','tipo_cambio','moneda_mostrar','total'],'required'=>['numero','cliente_nombre','items','total'],'identity'=>['numero'],'json_columns'=>['items'],'roles'=>['owner','admin','cotizador']],
         'sugerencias'=>['table'=>'sugerencias','columns'=>['tipo','nombre','correo','mensaje'],'required'=>['tipo','nombre','mensaje'],'identity'=>['tipo','nombre','correo','mensaje']],
         'configuracion'=>['roles'=>['owner'],'table'=>'configuracion_sitio','columns'=>['clave','valor'],'required'=>['clave','valor'],'identity'=>['clave']],
         'auditoria'=>['table'=>'auditoria','columns'=>[],'roles'=>['owner'],'readonly'=>true],
-        'papelera'=>['table'=>'cotizaciones','columns'=>[],'roles'=>['owner'],'readonly'=>true,'where'=>'eliminado_en IS NOT NULL','json_columns'=>['detalle']],
+        'papelera'=>['table'=>'cotizaciones','columns'=>[],'roles'=>['owner'],'readonly'=>true,'where'=>"eliminado_en IS NOT NULL AND origen <> 'contacto'",'json_columns'=>['detalle']],
         'notificaciones'=>['table'=>'notificaciones','columns'=>[],'readonly'=>true,'where'=>'usuario_id = :current_user']
     ];
     foreach ($extra as $key=>$def) $defs[$key] = $def + ['roles'=>['owner','admin'],'json_columns'=>[],'bool_columns'=>[],'required'=>[],'identity'=>[]];
@@ -80,6 +81,7 @@ function excel_validate(string $key, array &$row, array $def): void
         if (isset($row['correo'])) $row['correo']=email_field($row,'correo',false);
     }
     if ($key==='cotizaciones') {
+        if(($row['origen']??'')==='contacto')json_error('Los mensajes de contacto pertenecen a su propia bandeja',422);
         $row['email_cliente']=email_field($row,'email_cliente');
         if (!in_array($row['origen']??'web',['web','contacto','pagina','correo','whatsapp'],true)) json_error('Origen invalido',422);
         if (!is_array($row['detalle']) || (array_is_list($row['detalle']) && $row['detalle']!==[])) json_error('detalle debe ser un objeto JSON',422);

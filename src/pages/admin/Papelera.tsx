@@ -18,7 +18,7 @@ interface CotizacionEliminada {
   creado_en: string;
 }
 
-export default function Papelera() {
+export default function Papelera({contacto=false}:{contacto?:boolean}) {
   const feedback = useFeedback();
   const [items, setItems] = useState<CotizacionEliminada[]>([]);
   const [loading, setLoading] = useState(true);
@@ -27,12 +27,13 @@ export default function Papelera() {
 
   useEffect(() => {
     load();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contacto]);
 
   async function load() {
     setLoading(true);
     try {
-      const data = await api.get<CotizacionEliminada[]>("/api/cotizaciones/papelera");
+      const data = await api.get<CotizacionEliminada[]>(contacto ? "/api/contactos/papelera" : "/api/cotizaciones/papelera");
       setItems(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al cargar la papelera");
@@ -44,12 +45,12 @@ export default function Papelera() {
   async function handleRestaurar(id: number) {
     const ok = await feedback.confirm({
       title: "Restaurar solicitud",
-      message: "Volverá a aparecer en la lista de cotizaciones.",
+      message: contacto ? "Volverá a la bandeja de mensajes de Contacto." : "Volverá a aparecer en la lista de cotizaciones.",
       confirmLabel: "Sí, restaurar",
     });
     if (!ok) return;
     try {
-      await api.put(`/api/cotizaciones/${id}/restaurar`, {});
+      await api.put(`/api/${contacto?"contactos":"cotizaciones"}/${id}/restaurar`, {});
       setItems((prev) => prev.filter((i) => i.id !== id));
       feedback.success("La solicitud se restauró.");
     } catch (err) {
@@ -71,15 +72,15 @@ export default function Papelera() {
 
   return (
     <div>
-      <ExcelTools entity="papelera"  />
+      {!contacto&&<ExcelTools entity="papelera" />}
       <div className="admin-header-row">
         <div>
-          <h1>Papelera de cotizaciones</h1>
+          <h1>Papelera de {contacto ? "contacto" : "cotizaciones"}</h1>
           <p className="subtitle">
             Solicitudes eliminadas por el equipo. Solo el owner puede ver esta lista.
           </p>
         </div>
-        <Link to="/admin/cotizaciones" className="btn-admin outline">
+        <Link to={contacto ? "/admin/contactos" : "/admin/cotizaciones"} className="btn-admin outline">
           <ArrowLeft size={16} /> Volver
         </Link>
       </div>

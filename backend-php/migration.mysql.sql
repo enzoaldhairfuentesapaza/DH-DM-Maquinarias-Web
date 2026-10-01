@@ -172,6 +172,13 @@ CREATE TABLE IF NOT EXISTS cotizaciones_formales (
     moneda_mostrar ENUM('PEN','USD') NOT NULL DEFAULT 'PEN',
     total DECIMAL(12,2) NOT NULL DEFAULT 0,
     usuario_id INT DEFAULT NULL,
+    oficial TINYINT(1) NOT NULL DEFAULT 0,
+    solicitud_id INT DEFAULT NULL,
+    cotizacion_id INT DEFAULT NULL,
+    archivo_pdf VARCHAR(500) DEFAULT NULL,
+    cliente_email VARCHAR(150) DEFAULT NULL,
+    cliente_telefono VARCHAR(50) DEFAULT NULL,
+    registro_clave VARCHAR(80) DEFAULT NULL,
     creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     actualizado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -212,6 +219,11 @@ CREATE TABLE IF NOT EXISTS rate_limits (
     hits INT NOT NULL DEFAULT 1,
     expires_at BIGINT NOT NULL,
     INDEX (expires_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS bienvenida (
+    id INT PRIMARY KEY,
+    datos TEXT NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 SET @hdm_sql = IF((SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'usuarios' AND COLUMN_NAME = 'nombre') > 0, 'SELECT 1', 'ALTER TABLE usuarios ADD COLUMN nombre VARCHAR(150) NOT NULL');
@@ -460,6 +472,20 @@ SET @hdm_sql = IF((SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_S
 PREPARE hdm_stmt FROM @hdm_sql; EXECUTE hdm_stmt; DEALLOCATE PREPARE hdm_stmt;
 SET @hdm_sql = IF((SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'cotizaciones_formales' AND COLUMN_NAME = 'usuario_id') > 0, 'SELECT 1', 'ALTER TABLE cotizaciones_formales ADD COLUMN usuario_id INT DEFAULT NULL');
 PREPARE hdm_stmt FROM @hdm_sql; EXECUTE hdm_stmt; DEALLOCATE PREPARE hdm_stmt;
+SET @hdm_sql = IF((SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'cotizaciones_formales' AND COLUMN_NAME = 'oficial') > 0, 'SELECT 1', 'ALTER TABLE cotizaciones_formales ADD COLUMN oficial TINYINT(1) NOT NULL DEFAULT 0');
+PREPARE hdm_stmt FROM @hdm_sql; EXECUTE hdm_stmt; DEALLOCATE PREPARE hdm_stmt;
+SET @hdm_sql = IF((SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'cotizaciones_formales' AND COLUMN_NAME = 'solicitud_id') > 0, 'SELECT 1', 'ALTER TABLE cotizaciones_formales ADD COLUMN solicitud_id INT DEFAULT NULL');
+PREPARE hdm_stmt FROM @hdm_sql; EXECUTE hdm_stmt; DEALLOCATE PREPARE hdm_stmt;
+SET @hdm_sql = IF((SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'cotizaciones_formales' AND COLUMN_NAME = 'cotizacion_id') > 0, 'SELECT 1', 'ALTER TABLE cotizaciones_formales ADD COLUMN cotizacion_id INT DEFAULT NULL');
+PREPARE hdm_stmt FROM @hdm_sql; EXECUTE hdm_stmt; DEALLOCATE PREPARE hdm_stmt;
+SET @hdm_sql = IF((SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'cotizaciones_formales' AND COLUMN_NAME = 'archivo_pdf') > 0, 'SELECT 1', 'ALTER TABLE cotizaciones_formales ADD COLUMN archivo_pdf VARCHAR(500) DEFAULT NULL');
+PREPARE hdm_stmt FROM @hdm_sql; EXECUTE hdm_stmt; DEALLOCATE PREPARE hdm_stmt;
+SET @hdm_sql = IF((SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'cotizaciones_formales' AND COLUMN_NAME = 'cliente_email') > 0, 'SELECT 1', 'ALTER TABLE cotizaciones_formales ADD COLUMN cliente_email VARCHAR(150) DEFAULT NULL');
+PREPARE hdm_stmt FROM @hdm_sql; EXECUTE hdm_stmt; DEALLOCATE PREPARE hdm_stmt;
+SET @hdm_sql = IF((SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'cotizaciones_formales' AND COLUMN_NAME = 'cliente_telefono') > 0, 'SELECT 1', 'ALTER TABLE cotizaciones_formales ADD COLUMN cliente_telefono VARCHAR(50) DEFAULT NULL');
+PREPARE hdm_stmt FROM @hdm_sql; EXECUTE hdm_stmt; DEALLOCATE PREPARE hdm_stmt;
+SET @hdm_sql = IF((SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'cotizaciones_formales' AND COLUMN_NAME = 'registro_clave') > 0, 'SELECT 1', 'ALTER TABLE cotizaciones_formales ADD COLUMN registro_clave VARCHAR(80) DEFAULT NULL');
+PREPARE hdm_stmt FROM @hdm_sql; EXECUTE hdm_stmt; DEALLOCATE PREPARE hdm_stmt;
 SET @hdm_sql = IF((SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'cotizaciones_formales' AND COLUMN_NAME = 'creado_en') > 0, 'SELECT 1', 'ALTER TABLE cotizaciones_formales ADD COLUMN creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP');
 PREPARE hdm_stmt FROM @hdm_sql; EXECUTE hdm_stmt; DEALLOCATE PREPARE hdm_stmt;
 SET @hdm_sql = IF((SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'cotizaciones_formales' AND COLUMN_NAME = 'actualizado_en') > 0, 'SELECT 1', 'ALTER TABLE cotizaciones_formales ADD COLUMN actualizado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP');
@@ -496,10 +522,7 @@ SET @hdm_sql = IF((SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_S
 PREPARE hdm_stmt FROM @hdm_sql; EXECUTE hdm_stmt; DEALLOCATE PREPARE hdm_stmt;
 SET @hdm_sql = IF((SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'rate_limits' AND COLUMN_NAME = 'expires_at') > 0, 'SELECT 1', 'ALTER TABLE rate_limits ADD COLUMN expires_at BIGINT NOT NULL');
 PREPARE hdm_stmt FROM @hdm_sql; EXECUTE hdm_stmt; DEALLOCATE PREPARE hdm_stmt;
+SET @hdm_sql = IF((SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'bienvenida' AND COLUMN_NAME = 'datos') > 0, 'SELECT 1', 'ALTER TABLE bienvenida ADD COLUMN datos TEXT NOT NULL');
+PREPARE hdm_stmt FROM @hdm_sql; EXECUTE hdm_stmt; DEALLOCATE PREPARE hdm_stmt;
 ALTER TABLE usuarios MODIFY rol ENUM('cliente','admin','owner','cotizador') NOT NULL DEFAULT 'cliente';
 ALTER TABLE cotizaciones MODIFY canal_respuesta VARCHAR(60) DEFAULT NULL;
-
-CREATE TABLE IF NOT EXISTS bienvenida (
-    id INT PRIMARY KEY,
-    datos TEXT NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

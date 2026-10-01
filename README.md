@@ -135,3 +135,11 @@ Pendientes para una etapa posterior: paginación/filtros desde la API, optimizac
 ### Imágenes iniciales
 
 El blog y la maquinaria de muestra ya tienen rutas locales; las fotos externas de referencia están incluidas y acreditadas en /creditos-imagenes.html. build comprueba que los archivos iniciales existan. Los repuestos sin foto original conservan su estado sin fotografía; no se les asignan fotos de otros productos.
+
+### Calculadora integrada y Contacto en 2.1.0
+
+Contacto tiene una bandeja independiente en el panel y una pestaña propia en el perfil del cliente. Elegir WhatsApp o correo registra primero el mensaje en la página y después abre la aplicación externa. El canal registrado es el elegido para el envío; no confirma la entrega externa.
+
+La calculadora está en `/admin/calculadora`, hecha con React y TypeScript. Guarda pruebas y versiones en el historial sin crear solicitudes oficiales. El switch de registro oficial está apagado por defecto: al activarlo, el cliente, productos, importe y PDF se guardan en el panel. “Hacer cotización” desde una solicitud carga cliente y productos; completar sus precios sigue siendo necesario. Al guardar como oficial actualiza esa solicitud y adjunta el PDF, sin duplicarla. Las nuevas oficiales de repuestos y maquinaria se registran por separado. El historial anterior se conserva sin convertirlo automáticamente en oficial.
+
+Después de copiar esta actualización es obligatorio ejecutar `php backend-php/migrate.php`. Nunca uses `seed.php` para actualizar una base con datos reales.

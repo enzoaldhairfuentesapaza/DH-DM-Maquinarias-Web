@@ -54,7 +54,7 @@ with tempfile.TemporaryDirectory(prefix='hdm-test-') as directory:
         expect(call('/api/excel')[0]==401,'Excel requires authentication')
         expect(call('/api/excel',token=customer)[0]==403,'customers denied Excel')
         schemas=call('/api/excel',token=owner)[1]
-        expect(len(schemas)==15,'all 15 sections have Excel schemas')
+        expect(len(schemas)==16,'all 16 sections have Excel schemas including contacts')
         expect({s['key'] for s in call('/api/excel',token=internal)[1]}=={'ventas','cotizaciones','cotizador'},'cotizador only allowed business tables')
         expect(call('/api/excel/accesos/export',token=admin)[0]==403,'admin denied account export')
         expect(call('/api/excel/repuestos/export',token=internal)[0]==403,'cotizador denied catalog export')

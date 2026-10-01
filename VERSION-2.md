@@ -2,7 +2,7 @@
 
 ## Cambios de esta versión
 
-Bienvenida editable en el panel; bandejas y carritos separados para repuestos/maquinaria; formularios de especificaciones con botones +/−; vista previa centrada; contactos exclusivos del owner; acciones de accesos con iconos.
+Bienvenida editable en el panel; bandejas y carritos separados para repuestos/maquinaria; formularios de especificaciones con botones +/−; vista previa centrada; configuración de teléfonos y correo exclusiva del owner; acciones de accesos con iconos.
 
 - El globo de sugerencias/reclamos está encima del de Mi cotización, sin superponerse, también en móvil.
 - La bienvenida siempre es la primera tarjeta. Las promociones destacadas la acompañan en la portada: imagen grande, título, vigencia, botones y selector de promociones.
@@ -17,7 +17,7 @@ Esta entrega modifica los archivos del proyecto. No publica automáticamente el 
 
 ## Actualizar tu copia local — PowerShell
 
-Detén las terminales de Vite y PHP con **Ctrl+C**. Descarga `DH-DM-actualizacion-2.1.0.zip` a Descargas. Los archivos del ZIP están en la raíz, sin carpeta adicional.
+Detén las terminales de Vite y PHP con **Ctrl+C**. Descarga `DH-DM-actualizacion-2.1.0-integrada.zip` a Descargas. Los archivos del ZIP están en la raíz, sin carpeta adicional.
 
 ### 1. Respaldar
 
@@ -42,7 +42,7 @@ if ($LASTEXITCODE -ne 0) { throw 'No se creó la rama. Revisa si version-2 ya ex
 El paquete excluye `.git`, entornos privados, `config.local.php`, bases de datos, archivos de clientes y dependencias. Copiarlo sobre el proyecto conserva esos datos existentes. No borres la carpeta del proyecto ni el backend para hacer la actualización.
 
 ```powershell
-$zipV2 = Join-Path $env:USERPROFILE 'Downloads\DH-DM-actualizacion-2.1.0.zip'
+$zipV2 = Join-Path $env:USERPROFILE 'Downloads\DH-DM-actualizacion-2.1.0-integrada.zip'
 if (-not (Test-Path -LiteralPath $zipV2)) { throw ('No se encontró: ' + $zipV2) }
 $extraccionV2 = Join-Path $env:TEMP ('DH-DM-v2-' + [guid]::NewGuid().ToString('N'))
 Expand-Archive -LiteralPath $zipV2 -DestinationPath $extraccionV2 -ErrorAction Stop
@@ -119,6 +119,20 @@ Los resultados de las pruebas están en `tests/resultados/`. Se verificaron perm
 
 - Bienvenida organizada en cuatro grupos: mensaje, imagen, botones y cifras, con campos amplios y vista previa en vivo.
 - El tablón muestra exclusivamente novedades guardadas en la base de datos, con destacadas primero. Sin novedades o ante un error se muestra un mensaje, sin anuncios fijos de respaldo.
-- Los filtros de cotizaciones identifican el origen: Desde el carrito y Desde Contacto. Las consultas generales de Contacto se conservan en Repuestos y otros.
+- Contacto tiene su propia bandeja y ya no se mezcla con cotizaciones. Cada mensaje indica si se eligió página, WhatsApp o correo.
 
 - Lista de maquinaria con estado de destacada; especificaciones con campos estilizados, controles compactos y selector de imágenes compartido.
+
+### Unión de la calculadora con el panel (2.1.0)
+
+- Calculadora React/TypeScript y PDF compartido entre edición e historial. Los enlaces antiguos redirigen al panel integrado.
+- Moneda final mediante un selector uniforme; conserva precios originales, ajustes sucesivos por marca, descuentos y redondeo al entero.
+- Historial de pruebas y versiones: guardar por defecto no crea registros oficiales.
+- Switch oficial explícito: guarda cliente, productos, total calculado en el servidor y PDF privado.
+- Solicitudes presenciales: crea un registro oficial identificado como presencial.
+- “Hacer cotización” carga datos de la solicitud y el catálogo. La respuesta oficial se vincula a la solicitud original y se publica en la cuenta del cliente cuando existe.
+- Contacto separado en el panel, exportación Excel y perfil. Los mensajes anteriores se conservan.
+- Mensajes y solicitudes se registran antes de abrir WhatsApp o correo; las respuestas también se guardan antes de abrir esos canales. La selección de canal no verifica la entrega externa.
+- Las pruebas del historial pueden eliminarse; los documentos oficiales se conservan y se editan como nuevas versiones.
+
+**Actualización obligatoria:** ejecutar `php backend-php/migrate.php` (o importar `backend-php/migration.mysql.sql` en phpMyAdmin) antes de iniciar la API. Añade los campos de oficial, vínculo de solicitud, PDF y cliente sin borrar registros. No volver a cargar las semillas.

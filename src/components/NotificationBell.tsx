@@ -86,7 +86,7 @@ export default function NotificationBell() {
                     <a href="#" onClick={(event) => { event.preventDefault(); event.stopPropagation(); void downloadApiFile(n.archivo_respuesta!).catch((error: unknown) => window.alert(error instanceof Error ? error.message : "No se pudo descargar.")); }}
                       className="notif-bell-archivo"
                     >
-                      <Paperclip size={12} /> Descargar cotización
+                      <Paperclip size={12} /> Descargar archivo
                     </a>
                   )}
                   <span className="notif-bell-fecha">

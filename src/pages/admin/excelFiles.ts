@@ -1,7 +1,7 @@
 export interface ExcelField { name: string; required: boolean; type: "text" | "number" | "boolean" | "json"; }
 export interface ExcelSchema { key: string; fields: ExcelField[]; importable: boolean; identity: string[]; updates: boolean; }
 export type ExcelRow = Record<string, unknown>;
-export const sectionNames: Record<string,string> = { estadisticas:"Estadísticas",novedades:"Novedades",blog:"Blog",promociones:"Promociones",maquinaria:"Maquinaria",repuestos:"Repuestos",ventas:"Ventas",categorias:"Categorías",accesos:"Accesos",cotizaciones:"Solicitudes de cotización",cotizador:"Cotizaciones formales",sugerencias:"Sugerencias y reclamos",configuracion:"Configuración",auditoria:"Registro de actividad",papelera:"Papelera",notificaciones:"Mis notificaciones" };
+export const sectionNames: Record<string,string> = { estadisticas:"Estadísticas",novedades:"Novedades",blog:"Blog",promociones:"Promociones",maquinaria:"Maquinaria",repuestos:"Repuestos",ventas:"Ventas",categorias:"Categorías",accesos:"Accesos",cotizaciones:"Solicitudes de cotización",contactos:"Mensajes de contacto",cotizador:"Historial de la calculadora",sugerencias:"Sugerencias y reclamos",configuracion:"Configuración",auditoria:"Registro de actividad",papelera:"Papelera",notificaciones:"Mis notificaciones" };
 export function normalize(value: unknown) { return String(value ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().replace(/\s+/g," ").toLowerCase(); }
 
 export async function saveWorkbook(schema: ExcelSchema, rows: ExcelRow[], template = false) {

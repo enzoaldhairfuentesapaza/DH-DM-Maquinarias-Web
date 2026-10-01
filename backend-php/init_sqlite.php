@@ -174,6 +174,13 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS cotizaciones_formales (
     moneda_mostrar TEXT NOT NULL DEFAULT 'PEN',
     total REAL NOT NULL DEFAULT 0,
     usuario_id INTEGER,
+    oficial INTEGER NOT NULL DEFAULT 0,
+    solicitud_id INTEGER,
+    cotizacion_id INTEGER,
+    archivo_pdf TEXT,
+    cliente_email TEXT,
+    cliente_telefono TEXT,
+    registro_clave TEXT,
     creado_en TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     actualizado_en TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 )");

@@ -37,6 +37,8 @@ const ConfiguracionSitio = lazy(() => import("./pages/admin/ConfiguracionSitio")
 const ProductosHub = lazy(() => import("./pages/admin/ProductosHub"));
 const CategoriasAdmin = lazy(() => import("./pages/admin/CategoriasAdmin"));
 const VentasCotizacionesHub = lazy(() => import("./pages/admin/VentasCotizacionesHub"));
+const Calculadora = lazy(() => import("./pages/admin/Calculadora"));
+const CalculadoraHistorial = lazy(() => import("./pages/admin/CalculadoraHistorial"));
 const Cotizaciones = lazy(() => import("./pages/admin/Cotizaciones"));
 const CotizacionDetalle = lazy(() => import("./pages/admin/CotizacionDetalle"));
 const ContentList = lazy(() => import("./pages/admin/ContentList"));
@@ -67,16 +69,7 @@ function ScrollToTop() {
 }
 
 function FormalQuoteRedirect({ history = false }: { history?: boolean }) {
-  const { user, loading } = useAuth();
-  useEffect(() => {
-    if (!loading && user && ["admin", "owner", "cotizador"].includes(user.rol)) {
-      window.location.replace(`/cotizador-app/${history ? "historial.html" : "index.html"}`);
-    }
-  }, [user, loading, history]);
-  if (loading) return <p>Cargando...</p>;
-  if (!user) return <Navigate to="/admin/login" replace />;
-  if (!["admin", "owner", "cotizador"].includes(user.rol)) return <Navigate to="/" replace />;
-  return <p>Abriendo cotizador...</p>;
+  return <Navigate to={history ? "/admin/calculadora/historial" : "/admin/calculadora"} replace />;
 }
 
 function PublicLayout() {
@@ -192,6 +185,11 @@ function App() {
           <Route path="ventas-cotizaciones" element={<VentasCotizacionesHub />} />
           <Route path="excel" element={<ExcelCenter />} />
           <Route path="estadisticas" element={<Estadisticas />} />
+          <Route path="calculadora" element={<Calculadora />} />
+          <Route path="calculadora/historial" element={<CalculadoraHistorial />} />
+          <Route path="contactos" element={<ProtectedRoute allowedRoles={["admin","owner"]}><Cotizaciones contacto /></ProtectedRoute>} />
+          <Route path="contactos/papelera" element={<ProtectedRoute allowedRoles={["owner"]}><Papelera contacto /></ProtectedRoute>} />
+          <Route path="contactos/:id" element={<ProtectedRoute allowedRoles={["admin","owner"]}><CotizacionDetalle /></ProtectedRoute>} />
           <Route path="cotizaciones" element={<Cotizaciones />} />
           <Route path="cotizaciones/:id" element={<CotizacionDetalle />} />
           <Route

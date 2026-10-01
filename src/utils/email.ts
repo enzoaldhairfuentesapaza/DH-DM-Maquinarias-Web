@@ -6,7 +6,7 @@
  * nada. Gmail en el navegador siempre funciona, con o sin sesión iniciada
  * (si no hay sesión, Google pide iniciarla y luego abre el borrador).
  */
-export function abrirGmailCompose(opts: { to: string; subject?: string; body?: string }) {
+export function gmailComposeUrl(opts: { to: string; subject?: string; body?: string }) {
   const params = new URLSearchParams({
     view: "cm",
     fs: "1",
@@ -15,8 +15,10 @@ export function abrirGmailCompose(opts: { to: string; subject?: string; body?: s
   if (opts.subject) params.set("su", opts.subject);
   if (opts.body) params.set("body", opts.body);
   const url = `https://mail.google.com/mail/?${params.toString()}`;
-  window.open(url, "_blank", "noopener,noreferrer");
+  return url;
 }
+
+export function abrirGmailCompose(opts: {to:string;subject?:string;body?:string}) {window.open(gmailComposeUrl(opts),"_blank","noopener,noreferrer");}
 
 /**
  * Panel de administración (Webuzo): la bandeja de correo del negocio vive en
@@ -24,7 +26,7 @@ export function abrirGmailCompose(opts: { to: string; subject?: string; body?: s
  * nueva y copiamos el mensaje ya armado al portapapeles, porque el webmail
  * de Webuzo no admite rellenar el "Nuevo mensaje" desde una URL externa.
  */
-export const WEBMAIL_PANEL_URL = "https://dh-dm-maquinarias.com:2003/sessnd8m1gaFmuNX5Tnd/mail/";
+export const WEBMAIL_PANEL_URL = "https://dh-dm-maquinarias.com:2003/";
 
 export async function abrirWebmailPanel(mensaje: string): Promise<boolean> {
   window.open(WEBMAIL_PANEL_URL, "_blank", "noopener,noreferrer");

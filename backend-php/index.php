@@ -307,11 +307,18 @@ if (($segments[0] ?? null) === 'accesos') {
 }
 
 // ---------- /cotizaciones (preparado para el futuro) ----------
-if (($segments[0] ?? null) === 'cotizaciones') {
+if (in_array($segments[0] ?? null, ['cotizaciones','contactos'], true)) {
+    $esContacto = $segments[0] === 'contactos';
+    $condicionOrigen = $esContacto ? "origen = 'contacto'" : "origen <> 'contacto'";
+    if (($segments[1] ?? null) !== null && ctype_digit((string)$segments[1])) {
+        require_ventas_access();
+        if($esContacto)require_admin_or_owner();
+        $check=db()->prepare('SELECT id FROM cotizaciones WHERE id = ? AND ' . $condicionOrigen);$check->execute([$segments[1]]);if(!$check->fetch())json_error('Registro no encontrado',404);
+    }
     // /cotizaciones/mias -> historial de cotizaciones del cliente logueado
     if ($method === 'GET' && ($segments[1] ?? null) === 'mias') {
         $user = current_user();
-        $stmt = db()->prepare('SELECT * FROM cotizaciones WHERE usuario_id = ? AND eliminado_en IS NULL ORDER BY id DESC');
+        $stmt = db()->prepare('SELECT * FROM cotizaciones WHERE usuario_id = ? AND eliminado_en IS NULL AND ' . $condicionOrigen . ' ORDER BY id DESC');
         $stmt->execute([$user['id']]);
         json_response(array_map('quote_for_client', $stmt->fetchAll()));
     }
@@ -321,6 +328,12 @@ if (($segments[0] ?? null) === 'cotizaciones') {
         $body = get_json_body();
 
         rate_limit('cotizaciones', 30, 3600);
+        if ($esContacto) {
+            $body['origen']='contacto';
+            if (!in_array($body['detalle']['canal'] ?? null, ['pagina','whatsapp','correo'],true))json_error('Canal invalido',422);
+            $body['detalle']['mensaje']=text_field($body['detalle'],'mensaje',20000,true);
+            $body['detalle']['asunto']=text_field($body['detalle'],'asunto',200,true);
+        }
         $nombreCliente = text_field($body, 'nombre_cliente', 150, true);
         $emailCliente = email_field($body, 'email_cliente');
         $body['telefono_cliente'] = text_field($body, 'telefono_cliente', 50);
@@ -342,7 +355,7 @@ if (($segments[0] ?? null) === 'cotizaciones') {
         $pdo=db();$saved=[];$pdo->beginTransaction();
         try {
             $stmt=$pdo->prepare('INSERT INTO cotizaciones (nombre_cliente,email_cliente,telefono_cliente,empresa,detalle,origen,usuario_id) VALUES (?,?,?,?,?,?,?)');
-            foreach (quote_detail_groups($body['detalle']) as $detail) {
+            foreach ((($body['origen'] ?? 'web') === 'contacto' ? [$body['detalle']] : quote_detail_groups($body['detalle'])) as $detail) {
                 $stmt->execute([$nombreCliente,$emailCliente,$body['telefono_cliente']??null,$body['empresa']??null,json_encode($detail,JSON_UNESCAPED_UNICODE),$body['origen']??'web',$user['id']??null]);
                 $select=$pdo->prepare('SELECT * FROM cotizaciones WHERE id = ?');$select->execute([$pdo->lastInsertId()]);$row=$select->fetch();$row['detalle']=$detail;$saved[]=$row;
             }
@@ -353,7 +366,8 @@ if (($segments[0] ?? null) === 'cotizaciones') {
 
     if ($method === 'GET' && ($segments[1] ?? null) === null) {
         require_ventas_access();
-        $rows = db()->query('SELECT * FROM cotizaciones WHERE eliminado_en IS NULL ORDER BY id DESC')->fetchAll();
+        if ($esContacto) require_admin_or_owner();
+        $rows = db()->query('SELECT * FROM cotizaciones WHERE eliminado_en IS NULL AND ' . $condicionOrigen . ' ORDER BY id DESC')->fetchAll();
         foreach ($rows as &$r) {
             $r['detalle'] = json_decode($r['detalle'], true) ?? [];
         }
@@ -367,6 +381,7 @@ if (($segments[0] ?? null) === 'cotizaciones') {
         $stmt->execute([$segments[1]]);
         $row = $stmt->fetch();
         if (!$row) json_error('No encontrada', 404);
+        if($row['origen']==='contacto')require_admin_or_owner();
         $row['detalle'] = json_decode($row['detalle'], true) ?? [];
         json_response($row);
     }
@@ -387,7 +402,7 @@ if (($segments[0] ?? null) === 'cotizaciones') {
         $existente = $stmt->fetch();
         if (!$existente) json_error('No encontrada', 404);
 
-        $mostrarEnPagina = to_bool($body['mostrar_en_pagina'] ?? false) && $existente['usuario_id'];
+        $mostrarEnPagina = (bool)$existente['usuario_id'];
 
         $stmt = db()->prepare(
             'UPDATE cotizaciones SET estado = ?, respuesta = ?, motivo_denegacion = ?, mostrar_en_pagina = ? WHERE id = ?'
@@ -444,9 +459,9 @@ if (($segments[0] ?? null) === 'cotizaciones') {
             array_map('trim', explode(',', (string) $canalesEnviados)),
             ['whatsapp', 'correo', 'pagina']
         ));
-        $canal = implode(',', $canalesValidos) ?: null;
+        $canal = implode(',',array_values(array_unique([...$canalesValidos,...($existente['usuario_id'] ? ['pagina'] : [])]))) ?: null;
 
-        $mostrarEnPagina = to_bool($_POST['mostrar_en_pagina'] ?? false) && $existente['usuario_id'];
+        $mostrarEnPagina = (bool)$existente['usuario_id'];
 
         $stmt = db()->prepare(
             'UPDATE cotizaciones
@@ -505,7 +520,7 @@ if (($segments[0] ?? null) === 'cotizaciones') {
     if ($method === 'GET' && ($segments[1] ?? null) === 'papelera') {
         require_owner();
         $rows = db()->query(
-            'SELECT * FROM cotizaciones WHERE eliminado_en IS NOT NULL ORDER BY eliminado_en DESC'
+            'SELECT * FROM cotizaciones WHERE eliminado_en IS NOT NULL AND ' . $condicionOrigen . ' ORDER BY eliminado_en DESC'
         )->fetchAll();
         foreach ($rows as &$r) {
             $r['detalle'] = json_decode($r['detalle'], true) ?? [];
@@ -591,7 +606,7 @@ if (($segments[0] ?? null) === 'estadisticas') {
     require_ventas_access();
 
     $ventas = db()->query("SELECT total, creado_en FROM ventas WHERE estado <> 'anulado'")->fetchAll();
-    $cotizaciones = db()->query('SELECT creado_en, estado FROM cotizaciones WHERE eliminado_en IS NULL')->fetchAll();
+    $cotizaciones = db()->query('SELECT creado_en, estado FROM cotizaciones WHERE eliminado_en IS NULL AND origen <> \'contacto\'')->fetchAll();
     $detalles = db()->query("SELECT detalle FROM cotizaciones WHERE eliminado_en IS NULL AND origen <> 'contacto'")->fetchAll();
 
     // Ranking de repuestos y maquinarias mas cotizados (por nombre+tipo, ya
@@ -655,7 +670,9 @@ if (in_array($segments[0] ?? null, ['documentos', 'uploads'], true) && $method =
     foreach ($quotes as $quote) {
         if ((int) $quote['usuario_id'] === (int) $user['id'] && $quote['mostrar_en_pagina'] && $quote['eliminado_en'] === null) $allowed = true;
     }
-    if (!$quotes || !$allowed) json_error('No tienes permiso para descargar este archivo', 403);
+    $formal=db()->prepare('SELECT id FROM cotizaciones_formales WHERE archivo_pdf = ?');$formal->execute([$url]);
+    $formalFile=(bool)$formal->fetch();
+    if ((!$quotes && !$formalFile) || !$allowed) json_error('No tienes permiso para descargar este archivo', 403);
     $dir = config()[$segments[0] === 'documentos' ? 'documents_dir' : 'uploads_dir'];
     $file = $dir . '/' . $filename;
     if (!is_file($file)) json_error('No encontrado', 404);
@@ -839,89 +856,7 @@ if (($segments[0] ?? null) === 'sugerencias') {
 }
 
 
-if (($segments[0] ?? null) === 'cotizador') {
-    $cotId = $segments[1] ?? null;
-    $user = require_ventas_access(); // herramienta interna de cotizacion formal
-
-    if ($method === 'GET' && $cotId === null) {
-        $esAdmin = es_rol_interno($user['rol']);
-        if ($esAdmin) {
-            $rows = db()->query('SELECT * FROM cotizaciones_formales ORDER BY id DESC')->fetchAll();
-        } else {
-            $stmt = db()->prepare('SELECT * FROM cotizaciones_formales WHERE usuario_id = ? ORDER BY id DESC');
-            $stmt->execute([$user['id']]);
-            $rows = $stmt->fetchAll();
-        }
-        foreach ($rows as &$r) {
-            $r['items'] = json_decode($r['items'], true) ?? [];
-        }
-        json_response($rows);
-    }
-
-    if ($method === 'GET' && $cotId !== null) {
-        $stmt = db()->prepare('SELECT * FROM cotizaciones_formales WHERE id = ?');
-        $stmt->execute([$cotId]);
-        $row = $stmt->fetch();
-        if (!$row) json_error('No encontrada', 404);
-        $esAdmin = es_rol_interno($user['rol']);
-        if (!$esAdmin && (int) $row['usuario_id'] !== (int) $user['id']) {
-            json_error('No tienes permiso para ver esta cotizacion', 403);
-        }
-        $row['items'] = json_decode($row['items'], true) ?? [];
-        json_response($row);
-    }
-
-    if ($method === 'POST') {
-        $body = get_json_body();
-        $body['numero'] = text_field($body, 'numero', 50, true);
-        $body['cliente_nombre'] = text_field($body, 'cliente_nombre', 150, true);
-        $body['cliente_documento'] = text_field($body, 'cliente_documento', 50);
-        $body['cliente_direccion'] = text_field($body, 'cliente_direccion', 255);
-        if (!in_array($body['moneda_mostrar'] ?? 'PEN', ['PEN', 'USD'], true)) json_error('Moneda invalida', 422);
-        if (!is_array($body['items'] ?? null) || count($body['items']) === 0 || count($body['items']) > 200) json_error('Productos invalidos', 422);
-        if (!is_numeric($body['total'] ?? null) || $body['total'] < 0 || $body['total'] > 9999999999) json_error('Total invalido', 422);
-        foreach ($body['items'] as $item) {
-            if (!is_array($item) || !is_numeric($item['qty'] ?? null) || $item['qty'] <= 0 || !is_numeric($item['price'] ?? null) || $item['price'] < 0) json_error('Precio o cantidad invalida', 422);
-        }
-        $stmt = db()->prepare(
-            'INSERT INTO cotizaciones_formales
-             (numero, cliente_nombre, cliente_documento, cliente_direccion, items, tipo_cambio, moneda_mostrar, total, usuario_id)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
-        );
-        $stmt->execute([
-            $body['numero'] ?? '',
-            $body['cliente_nombre'] ?? '',
-            $body['cliente_documento'] ?? null,
-            $body['cliente_direccion'] ?? null,
-            json_encode($body['items'] ?? [], JSON_UNESCAPED_UNICODE),
-            $body['tipo_cambio'] ?? null,
-            $body['moneda_mostrar'] ?? 'PEN',
-            $body['total'] ?? 0,
-            $user['id'],
-        ]);
-        $newId = db()->lastInsertId();
-        $stmt = db()->prepare('SELECT * FROM cotizaciones_formales WHERE id = ?');
-        $stmt->execute([$newId]);
-        $row = $stmt->fetch();
-        $row['items'] = json_decode($row['items'], true) ?? [];
-        json_response($row, 201);
-    }
-
-    if ($method === 'DELETE' && $cotId !== null) {
-        $stmt = db()->prepare('SELECT * FROM cotizaciones_formales WHERE id = ?');
-        $stmt->execute([$cotId]);
-        $row = $stmt->fetch();
-        if (!$row) json_error('No encontrada', 404);
-        $esAdmin = es_rol_interno($user['rol']);
-        if (!$esAdmin && (int) $row['usuario_id'] !== (int) $user['id']) {
-            json_error('No tienes permiso para eliminar esta cotizacion', 403);
-        }
-        db()->prepare('DELETE FROM cotizaciones_formales WHERE id = ?')->execute([$cotId]);
-        json_response(['ok' => true]);
-    }
-
-    json_error('Ruta no encontrada', 404);
-}
+require __DIR__ . '/cotizador.php';
 
 // ---------- /auditoria (registro de cambios: solo owner) ----------
 if (($segments[0] ?? null) === 'auditoria') {

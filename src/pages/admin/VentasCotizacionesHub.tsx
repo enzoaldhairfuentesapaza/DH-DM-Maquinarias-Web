@@ -37,7 +37,7 @@ export default function VentasCotizacionesHub() {
 
       <p className="subtitle" style={{ marginTop: 18 }}>
         ¿Buscas el cotizador formal (precios, descuentos y ajustes por marca)?
-        Está disponible como burbuja flotante en la esquina del panel.
+        Abre la calculadora desde el menú o desde una solicitud de cotización.
       </p>
     </div>
   );

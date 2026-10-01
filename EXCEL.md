@@ -77,4 +77,6 @@ La comparación ignora mayúsculas, espacios repetidos y tildes habituales. Pued
 
 ## Cotizaciones separadas desde 2.1
 
-En las bandejas de repuestos o maquinaria, Descargar todo exporta únicamente el grupo de esa bandeja. El Centro de Excel puede exportar todas las solicitudes. No se importan solicitudes mixtas: usa dos filas, una con productos de tipo `repuesto` y otra con productos de tipo `maquinaria`. Importar en una bandeja también comprueba que la fila corresponda a ese grupo. Los contactos del sitio ahora son exclusivos del owner.
+En las bandejas de repuestos o maquinaria, Descargar todo exporta únicamente el grupo de esa bandeja. El Centro de Excel puede exportar todas las solicitudes. No se importan solicitudes mixtas: usa dos filas, una con productos de tipo `repuesto` y otra con productos de tipo `maquinaria`. Importar en una bandeja también comprueba que la fila corresponda a ese grupo. La configuración de teléfonos y correo ahora es exclusiva del owner.
+
+Contacto se exporta desde su propia sección (solo admin/owner) y queda excluido de los Excel de cotizaciones. El historial de la calculadora identifica las oficiales y sus vínculos. Importar filas al historial no registra cotizaciones oficiales ni PDFs: el registro oficial requiere el switch y el guardado desde la calculadora.

@@ -5,7 +5,7 @@ const root = resolve('release');
 await rm(root, { recursive: true, force: true });
 await mkdir(`${root}/public_html/api`, { recursive: true });
 await cp('dist', `${root}/public_html`, { recursive: true });
-const runtime = ['index.php', 'helpers.php', 'crud.php', 'excel.php', 'bienvenida.php', 'db.php', 'jwt.php', 'config.php', 'config.example.php', '.htaccess'];
+const runtime = ['index.php', 'helpers.php', 'crud.php', 'excel.php', 'bienvenida.php', 'cotizador.php', 'db.php', 'jwt.php', 'config.php', 'config.example.php', '.htaccess'];
 for (const name of runtime) await cp(`backend-php/${name}`, `${root}/public_html/api/${name}`);
 for (const name of ['private', 'uploads']) {
   await mkdir(`${root}/public_html/api/${name}`, { recursive: true });
