@@ -3,9 +3,14 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { MapPin, Phone, Mail, Clock10Icon } from "lucide-react";
 import LegalModal from "../components/shared/LegalModal";
+import { abrirGmailCompose } from "../utils/email";
+import { useConfiguracionSitio } from "../hooks/useApiData";
 
 export default function Footer() {
   const [modal, setModal] = useState<"terms" | "privacy" | null>(null);
+  const { data: config } = useConfiguracionSitio();
+  const numero = config.whatsapp_primario;
+  const numeroFormateado = `+${numero.slice(0, 2)} ${numero.slice(2, 5)} ${numero.slice(5, 8)} ${numero.slice(8)}`;
   return (
     <footer className="footer">
       <div className="footer-top">
@@ -20,7 +25,12 @@ export default function Footer() {
             disponibilidad para tu operación.
           </p>
           <div className="footer-social">
-            <a href="#" aria-label="Facebook">
+            <a
+              href="https://www.facebook.com/profile.php?id=61588299007615&locale=es_LA"
+              aria-label="Facebook"
+              target="_blank"
+              rel="noreferrer"
+            >
               <svg
                 viewBox="0 0 24 24"
                 width="18"
@@ -41,7 +51,17 @@ export default function Footer() {
               </svg>
             </a>
             <a
-              href="https://wa.me/51942203833"
+              href="https://www.tiktok.com/@dhdm12?is_from_webapp=1&sender_device=pc"
+              aria-label="TikTok"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                <path d="M16.6 5.82c-.9-.98-1.4-2.26-1.4-3.62h-3.15v13.44c0 1.6-1.3 2.9-2.9 2.9a2.9 2.9 0 0 1-2.9-2.9 2.9 2.9 0 0 1 2.9-2.9c.3 0 .59.05.86.13V9.68a6.1 6.1 0 0 0-.86-.06A6.06 6.06 0 0 0 3.15 15.68a6.06 6.06 0 0 0 6.06 6.06 6.06 6.06 0 0 0 6.06-6.06V8.9a8.5 8.5 0 0 0 4.98 1.6V7.35a5.3 5.3 0 0 1-3.65-1.53z" />
+              </svg>
+            </a>
+            <a
+              href={`https://wa.me/${numero}`}
               aria-label="WhatsApp"
               target="_blank"
               rel="noreferrer"
@@ -119,20 +139,19 @@ export default function Footer() {
               Sábados 8am-5pm
             </li>
             <li>
-              <a href="tel:+51942203833" target="_blank" rel="noreferrer">
-                <Phone size={16} /> +51 942 203 833
-              </a>
-              <a href="tel:+51942203833" target="_blank" rel="noreferrer">
-                <Phone size={16} /> +51 977 272 747
+              <a href={`tel:+${numero}`} target="_blank" rel="noreferrer">
+                <Phone size={16} /> {numeroFormateado}
               </a>
             </li>
             <li>
               <a
-                href="mailto:info@dhdmmaquinarias.com"
-                target="_blank"
-                rel="noreferrer"
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  abrirGmailCompose({ to: config.correo_contacto });
+                }}
               >
-                <Mail size={16} /> info@dhdmmaquinarias.com
+                <Mail size={16} /> {config.correo_contacto}
               </a>
             </li>
           </ul>

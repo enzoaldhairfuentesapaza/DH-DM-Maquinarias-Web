@@ -2,7 +2,7 @@ import "./pages.css";
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Truck, Search, CalendarDays, Gauge } from "lucide-react";
-import { useMaquinarias } from "../hooks/useApiData";
+import { useMaquinarias, useCategorias } from "../hooks/useApiData";
 import { useCotizacion } from "../context/CotizacionContext";
 
 export default function Maquinaria() {
@@ -12,10 +12,14 @@ export default function Maquinaria() {
   const [busqueda, setBusqueda] = useState("");
   const { agregarItem, items } = useCotizacion();
   const { data: maquinarias, loading, error } = useMaquinarias();
+  const categoriasPanel = useCategorias("maquinaria");
 
   const categoriasMaquinaria = useMemo(
-    () => Array.from(new Set(maquinarias.map((m) => m.categoria))),
-    [maquinarias]
+    () =>
+      Array.from(
+        new Set([...categoriasPanel, ...maquinarias.map((m) => m.categoria)]),
+      ).sort(),
+    [maquinarias, categoriasPanel]
   );
 
   const toggle = (val: string, list: string[], setter: (v: string[]) => void) => {
@@ -168,6 +172,7 @@ export default function Maquinaria() {
                                 nombre: m.nombre,
                                 marca: m.marca,
                                 categoria: m.categoria,
+                                imagen: m.imagen,
                               })
                             }
                           >

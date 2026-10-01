@@ -2,11 +2,12 @@ import "./pages.css";
 import { useMemo, useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Package, Search } from "lucide-react";
-import { useRepuestos } from "../hooks/useApiData";
+import { useRepuestos, useCategorias } from "../hooks/useApiData";
 import { useCotizacion } from "../context/CotizacionContext";
 import { toast } from "react-toastify";
 
 const PAGE_SIZE = 24;
+const normalizeSearch = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
 
 export default function Repuestos() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -19,9 +20,13 @@ export default function Repuestos() {
   const { agregarItem, items } = useCotizacion();
   const { data: repuestos, loading, error } = useRepuestos();
 
+  const categoriasPanel = useCategorias("repuesto");
   const categorias = useMemo(
-    () => Array.from(new Set(repuestos.map((r) => r.categoria))).sort(),
-    [repuestos]
+    () =>
+      Array.from(
+        new Set([...categoriasPanel, ...repuestos.map((r) => r.categoria)]),
+      ).sort(),
+    [repuestos, categoriasPanel]
   );
   const marcas = useMemo(
     () => Array.from(new Set(repuestos.map((r) => r.marca))).sort(),
@@ -31,8 +36,9 @@ export default function Repuestos() {
   useEffect(() => {
     const cat = searchParams.get("categoria");
     const buscar = searchParams.get("buscar");
-    if (cat) setCategoriasSel([cat]);
-    if (buscar) setBusqueda(buscar);
+    setCategoriasSel(cat ? [cat] : []);
+    setBusqueda(buscar || "");
+    setPagina(1);
   }, [searchParams]);
 
   const toggle = (val: string, list: string[], setter: (v: string[]) => void) => {
@@ -46,9 +52,9 @@ export default function Repuestos() {
       const okMarca = marcasSel.length === 0 || marcasSel.includes(r.marca);
       const okBusqueda =
         !busqueda ||
-        r.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-        r.codigo.toLowerCase().includes(busqueda.toLowerCase()) ||
-        r.categoria.toLowerCase().includes(busqueda.toLowerCase());
+        normalizeSearch(r.nombre).includes(normalizeSearch(busqueda)) ||
+        normalizeSearch(r.codigo).includes(normalizeSearch(busqueda)) ||
+        normalizeSearch(r.categoria).includes(normalizeSearch(busqueda));
       return okCat && okMarca && okBusqueda;
     });
   }, [categoriasSel, marcasSel, busqueda, repuestos]);
@@ -154,7 +160,7 @@ export default function Repuestos() {
                     <div className="cat-card" key={r.id}>
                       <Link to={`/repuestos/${r.id}`} className="cat-card-media">
                         {r.imagen ? (
-                          <img src={r.imagen} alt={r.nombre} className="cat-card-img" />
+                          <img loading="lazy" decoding="async" src={r.imagen} alt={r.nombre} className="cat-card-img" />
                         ) : (
                           <>
                             <span className="cat-card-partnum">Part Number</span>
@@ -173,32 +179,28 @@ export default function Repuestos() {
                         </Link>
                         <div className="cat-card-meta">
                           <span>Marca: <strong>{r.marca}</strong></span>
-                          <span>Stock: <strong>Disponible</strong></span>
+                          <span>Stock: <strong>{r.stockDisponible ? "Disponible" : "Agotado"}</strong></span>
                         </div>
                         <div className="cat-card-actions">
                           <Link to={`/repuestos/${r.id}`} className="btn-outline-sm">
                             Ver más
                           </Link>
                           <button
-                            className="btn-add-quote"
+                            className={`btn-add-quote ${yaAgregado ? "added" : ""}`}
                             onClick={() => {
-                              if (!yaAgregado) {
-                                agregarItem({
-                                  tipo: "repuesto",
-                                  id: r.id,
-                                  nombre: r.nombre,
-                                  codigo: r.codigo,
-                                  marca: r.marca,
-                                  categoria: r.categoria,
-                                });
-
-                                toast.success("¡Repuesto agregado correctamente!");
-                              } else {
-                                toast.success("¡Repuesto agregado correctamente!");
-                              }
+                              agregarItem({
+                                tipo: "repuesto",
+                                id: r.id,
+                                nombre: r.nombre,
+                                codigo: r.codigo,
+                                marca: r.marca,
+                                categoria: r.categoria,
+                                imagen: r.imagen,
+                              });
+                              toast.success("¡Repuesto agregado correctamente!");
                             }}
                           >
-                            <Package size={14} /> Cotizar
+                            <Package size={14} /> {yaAgregado ? "Agregar otro" : "Cotizar"}
                           </button>
                         </div>
                       </div>
@@ -210,15 +212,11 @@ export default function Repuestos() {
 
             {totalPaginas > 1 && (
               <div className="pagination">
-                {Array.from({ length: totalPaginas }).slice(0, 10).map((_, i) => (
-                  <button
-                    key={i}
-                    className={paginaSegura === i + 1 ? "active" : ""}
-                    onClick={() => setPagina(i + 1)}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
+                <button disabled={paginaSegura === 1} onClick={() => setPagina(1)}>Primera</button>
+                <button disabled={paginaSegura === 1} onClick={() => setPagina(paginaSegura - 1)}>Anterior</button>
+                <span aria-live="polite">Página {paginaSegura} de {totalPaginas}</span>
+                <button disabled={paginaSegura === totalPaginas} onClick={() => setPagina(paginaSegura + 1)}>Siguiente</button>
+                <button disabled={paginaSegura === totalPaginas} onClick={() => setPagina(totalPaginas)}>Última</button>
               </div>
             )}
           </div>

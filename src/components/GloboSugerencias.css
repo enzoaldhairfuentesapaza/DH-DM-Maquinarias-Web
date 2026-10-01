@@ -1,0 +1,146 @@
+.globo-sugerencias {
+  position: fixed;
+  left: 24px;
+  bottom: 24px;
+  z-index: 900;
+}
+
+.globo-btn {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  border: none;
+  background: #1a1a1a;
+  color: #f4c20d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.globo-btn:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.32);
+}
+
+.globo-panel {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 300px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: globo-pop-in 0.18s ease-out;
+}
+
+@keyframes globo-pop-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.globo-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.globo-panel-header h4 {
+  margin: 0;
+  font-size: 15px;
+  color: #1a1a1a;
+}
+
+.globo-panel-header button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #888;
+  padding: 4px;
+  border-radius: 6px;
+}
+
+.globo-panel-header button:hover {
+  background: #f2f2f0;
+}
+
+.globo-tabs {
+  display: flex;
+  gap: 6px;
+  background: #f2f2f0;
+  padding: 4px;
+  border-radius: 999px;
+}
+
+.globo-tabs button {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 7px 10px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  color: #555;
+}
+
+.globo-tabs button.active {
+  background: #fff;
+  color: #1a1a1a;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+.globo-panel input,
+.globo-panel textarea {
+  border: 1.5px solid #e4e4e4;
+  border-radius: 10px;
+  padding: 9px 11px;
+  font-size: 13px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.globo-panel input:focus,
+.globo-panel textarea:focus {
+  outline: none;
+  border-color: var(--yellow, #f4c20d);
+}
+
+.globo-error {
+  color: #d6403c;
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.globo-exito {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  color: #1e9e5a;
+  padding: 12px 0;
+}
+
+.globo-exito p {
+  color: #333;
+  font-size: 13px;
+  margin: 0 0 6px;
+}
+
+@media (max-width: 480px) {
+  .globo-sugerencias {
+    left: 14px;
+    bottom: 14px;
+  }
+  .globo-panel {
+    width: calc(100vw - 44px);
+  }
+}

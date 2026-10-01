@@ -1,19 +1,7 @@
 import "./MarcasAsociadas.css";
 
 // Marcas reales con las que trabaja HDM, según el catálogo de productos.
-const marcas = [
-  "CTP",
-  "CAT",
-  "HDT",
-  "SKF",
-  "FAG",
-  "NTN",
-  "TIMKEN",
-  "IPD",
-  "NOK",
-  "HANDOK",
-  "DHDM",
-];
+const marcas = ["CTP", "CAT", "HDT", "IPD", "NOK", "HANDOK", "DHM"];
 
 // Logos disponibles para algunas marcas (deben existir en public/marcas/).
 // Si una marca no tiene logo aquí, se muestra como texto (comportamiento anterior).
@@ -21,12 +9,8 @@ const marcaLogos: Record<string, string> = {
   CAT: "/marcas/CAT.jpg",
   CTP: "/marcas/CTP.jpg",
   IPD: "/marcas/IPD.png",
-  FAG: "/marcas/FAG.jpg",
   HANDOK: "/marcas/HANDOK.jpg",
-  TIMKEN: "/marcas/TIMKEN.png",
   NOK: "/marcas/NOK.png",
-  NTN: "/marcas/NTN.png",
-  SKF: "/marcas/SKF.png",
 };
 
 // Algunos logos vienen con mucho margen en blanco alrededor del isotipo

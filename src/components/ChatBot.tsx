@@ -39,7 +39,7 @@ const respuestasPredeterminadas: Record<string, string> = {
 
 export default function ChatBot({ onClose }: { onClose: () => void }) {
   const [mensajes, setMensajes] = useState<Mensaje[]>([
-    { autor: "bot", texto: "¡Hola! 👋 Soy DoMi, el asistente virtual de HDM Maquinarias. ¿En qué puedo ayudarte?" },
+    { autor: "bot", texto: "¡Hola! 👋 Soy DoMi, el asistente virtual de DH&DM Maquinarias SAC. ¿En qué puedo ayudarte?" },
   ]);
   const [input, setInput] = useState("");
 

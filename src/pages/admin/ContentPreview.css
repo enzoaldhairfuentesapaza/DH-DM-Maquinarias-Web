@@ -1,0 +1,270 @@
+.preview-panel {
+  position: sticky;
+  top: 20px;
+  background: #fafaf8;
+  border: 1.5px solid #ececea;
+  border-radius: 16px;
+  padding: 16px;
+  align-self: flex-start;
+}
+
+.preview-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #6b6b6b;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 12px;
+}
+
+.preview-stage {
+  background: #fff;
+  border-radius: 12px;
+  padding: 18px;
+  display: flex;
+  justify-content: center;
+}
+
+.preview-note {
+  font-size: 11.5px;
+  color: #999;
+  margin: 10px 2px 0;
+  line-height: 1.4;
+}
+
+.preview-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #bbb;
+  background: #f2f2f0;
+}
+
+/* ---- Tarjeta genérica (maquinaria / repuestos) ---- */
+.preview-card {
+  width: 220px;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+  border: 1px solid #eee;
+}
+
+.preview-media {
+  position: relative;
+  height: 130px;
+  background: #f2f2f0;
+}
+
+.preview-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.preview-pill {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #1a1a1a;
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+.preview-body {
+  padding: 12px 14px 14px;
+}
+
+.preview-cat {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #8a6d00;
+  background: #fff3cc;
+  padding: 2px 8px;
+  border-radius: 999px;
+  margin-bottom: 6px;
+}
+
+.preview-body h4 {
+  margin: 0 0 4px;
+  font-size: 14.5px;
+  color: #1a1a1a;
+  line-height: 1.3;
+}
+
+.preview-meta {
+  margin: 0;
+  font-size: 12px;
+  color: #666;
+  font-weight: 600;
+}
+
+.preview-meta-small {
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: #999;
+}
+
+.preview-resumen {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: #666;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.preview-badge-destacado {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #8a6d00;
+  background: #fff3cc;
+  border: 1px solid #f4c20d;
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+
+/* ---- Tarjeta ancha (blog / novedad) ---- */
+.preview-card-wide {
+  width: 260px;
+}
+
+.preview-media-wide {
+  height: 140px;
+}
+
+/* ---- Tablón de anuncios ---- */
+.preview-tablon .preview-media-wide {
+  display: flex;
+  align-items: flex-end;
+  position: relative;
+}
+
+.preview-tablon-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.75), transparent 65%);
+}
+
+.preview-tablon-text {
+  position: relative;
+  padding: 10px 12px;
+  color: #fff;
+}
+
+.preview-tablon-text h4 {
+  margin: 0 0 3px;
+  font-size: 13.5px;
+  color: #fff;
+}
+
+.preview-tablon-text p {
+  margin: 0;
+  font-size: 10.5px;
+  color: #eee;
+  opacity: 0.9;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ---- Promoción (imita el carrusel grande del inicio) ---- */
+.preview-promo-card {
+  width: 260px;
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 2px solid #f4c20d;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+.preview-promo-media {
+  position: relative;
+  height: 110px;
+  background-color: #2a2a2a;
+  background-image: linear-gradient(135deg, #2a2a2a, #444);
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.preview-promo-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--yellow, #f4c20d);
+  color: #1a1a1a;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+.preview-promo-body {
+  padding: 12px 14px 14px;
+}
+
+.preview-promo-body h4 {
+  margin: 0 0 4px;
+  font-size: 14.5px;
+  color: #1a1a1a;
+}
+
+.preview-promo-body p {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: #666;
+  line-height: 1.4;
+}
+
+.preview-promo-vigencia {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #8a6d00;
+  background: #fff3cc;
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+
+/* ---- Layout de dos columnas en ContentForm ---- */
+.content-form-layout {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 880px) {
+  .content-form-layout {
+    grid-template-columns: 1fr;
+  }
+  .preview-panel {
+    position: static;
+    order: -1;
+  }
+}

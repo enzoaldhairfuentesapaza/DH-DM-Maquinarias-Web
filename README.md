@@ -1,76 +1,73 @@
-# DH & DM Maquinarias SAC — Sitio Web
+# DH & DM Maquinarias — versión 1.6.1
 
-Sitio web de **DH & DM Maquinarias**, empresa de venta de repuestos y maquinaria pesada (minería y construcción), con panel administrativo propio.
+React + TypeScript + Vite, API PHP y MySQL/MariaDB en producción. SQLite sirve para desarrollo local.
 
-🌐 **Producción:** https://www.dh-dm-maquinarias.com/
+## Requisitos
 
----
+- Node 20.19+ o 22.12+; recomendado Node 22 LTS. Usa `npm ci` con el lockfile incluido.
+- PHP 8.1+ con PDO, pdo_sqlite en local o pdo_mysql en producción, fileinfo y ctype. ZIP se necesita para validar documentos Office cuyo MIME se detecta como ZIP.
+- Apache 2.4 con mod_rewrite y AllowOverride habilitado; HTTPS en producción.
 
-## Características de la página
-
-### Sitio público
-- **Home**: Hero principal, tablón de anuncios (carrusel), marcas asociadas, maquinaria y productos destacados, sección "Sobre nosotros".
-- **Catálogo de Maquinaria y Repuestos**: listado con filtros por categoría (19 categorías, incluida "Réplicas a escala") y página de detalle por producto.
-- **Novedades, Blog y Promociones**: contenido editable desde el panel admin, con página de detalle para blog.
-- **Nosotros**: información institucional y páginas de detalle por sector especializado (Minería, Construcción).
-- **Cotización**: formulario tipo carrito con selector DNI/RUC, envío por WhatsApp o correo; toda solicitud queda registrada en el panel.
-- **Contacto**: formulario que registra la solicitud en la base de datos (antes era decorativo, ahora persiste).
-- **Cotizador** (`/cotizador`): herramienta de cotización formal con catálogo real, descuentos, ajuste automático por marca (ej. CAT +18%), toggle de dólares, generación de PDF con membrete oficial e historial por usuario (`/cotizador/historial`).
-- **Cuentas de usuario**: registro/login (`/registro`, `/login`), roles `visitante`, `cliente`, `admin`, `owner`.
-- **Contactos flotantes**: WhatsApp, chatbot (mascota "DoMi") y teléfono.
-
-### Panel administrativo (`/admin`)
-- **Editar Página**: Novedades, Blog, Promociones.
-- **Administrar Productos**: Maquinaria, Repuestos y Categorías (configurables).
-- **Ventas y Cotizaciones**: cotizaciones recibidas (con estado pendiente/respondida/denegada y canal de origen) y registro manual de ventas/boletas.
-- **Accesos** (solo `owner`): gestión de quién es admin/owner.
-
-### Arquitectura
-- **Frontend**: React 18 + TypeScript + Vite, React Router.
-- **Backend**: PHP puro (sin frameworks/Composer) — compatible con hosting compartido. Base de datos SQLite en local, MySQL en producción.
-- **Tablas**: usuarios, novedades, blog_posts, promociones, cotizaciones, cotizaciones_formales, maquinarias, repuestos, categorias_productos, ventas.
-
----
-
-## Despliegue local
-
-### 1. Backend (PHP)
-
-Requisitos: PHP 8.1+ con extensión `pdo_sqlite`.
+## Desarrollo
 
 ```bash
+npm ci
+cp .env.example .env
 cd backend-php
-cp config.example.php config.php     # opcional: edita OWNER_EMAIL / OWNER_PASSWORD
-php init_sqlite.php                  # crea las tablas en SQLite (solo desarrollo local)
-php seed.php                         # crea el primer usuario owner
-php load_seed_data.php               # migra datos de ejemplo (novedades/blog/promociones/maquinaria/repuestos)
-php add_stock_columns.php            # agrega columnas de stock
-php add_placeholder_maquinaria.php   # rellena categorías sin productos con fichas de ejemplo (con foto)
-php add_missing_images.php           # completa imagen en productos que no tenían ninguna
-php add_blog_images.php              # asigna las fotos reales del blog
-php update_pc200_8_image.php         # fuerza la foto real de la Excavadora PC200-8
-php -S localhost:8000                # levanta el servidor de desarrollo
+php setup-local.php
+php migrate.php
 ```
 
-> Sin correr estos últimos scripts de imágenes, algunas secciones de maquinaria y blog se ven sin foto. Ver `DEPLOY-WEBUZO.md` para el detalle de cada uno y cómo correrlos en producción.
-
-La API queda disponible en `http://localhost:8000` (prueba con `http://localhost:8000/api/health`).
-
-### 2. Frontend
+Define `owner_email` y `owner_password` en `backend-php/config.local.php` antes de ejecutar `php seed.php`. Usa un correo real y una contraseña de entre 8 y 72 bytes. Alternativamente usa las variables OWNER_EMAIL y OWNER_PASSWORD de tu terminal. No publiques ni compartas ese archivo.
 
 ```bash
-cp .env.example .env            # deja VITE_API_URL=http://localhost:8000
-npm install
+php seed.php
+php load_seed_data.php       # opcional: carga el catálogo y contenido de muestra en tablas vacías
+php migrate_categorias.php   # registra las categorías del catálogo
+php -S localhost:8000 router.php
+```
+
+En otra terminal, desde la raíz del proyecto:
+
+```bash
 npm run dev
 ```
 
-Abre `http://localhost:5173`. Para entrar al panel, usa `/login` con las credenciales de `config.php`, o directamente `/admin/login`.
+El sitio abre en http://localhost:5173 y la API en http://localhost:8000/api/health. Si empleas 127.0.0.1, usa esa dirección en ambos procesos para no tener orígenes mezclados.
 
----
+## Verificación y entrega
 
-## Dónde está desplegado
+```bash
+npm run lint
+npm run typecheck
+npm run build
+php tests/jwt.php
+python tests/api-smoke.py
+npm run release
+```
 
-- **Sitio público:** https://www.dh-dm-maquinarias.com/
-- **API/backend:** subdominio `api.dh-dm-maquinarias.com` (PHP + MySQL, hosting compartido tipo Webuzo/cPanel).
+Las pruebas de API necesitan Python 3 y PHP en PATH. Crean una base temporal; no usan tu base de trabajo. `PHP_BIN` permite señalar otro ejecutable PHP. La opción HDM_TEST_CONFIG se reserva a una base MariaDB dedicada de pruebas con `app_env = test`.
 
-Para el detalle paso a paso de cómo subir cambios a este hosting (backend y frontend), revisa `DEPLOY-WEBUZO.md`.
+`release/public_html/` contiene el frontend compilado y la API mínima. `release/mantenimiento/` contiene las utilidades para ejecutar fuera de la web. Nunca subas esta última carpeta al directorio público. La guía completa es [DEPLOY-WEBUZO.md](DEPLOY-WEBUZO.md); los cambios y límites de la revisión están en [REVISION-1.6.1.md](REVISION-1.6.1.md).
+
+## Configuración
+
+La configuración PHP combina `config.example.php`, variables de entorno y `config.local.php`. Este último contiene únicamente tus valores particulares. En producción usa como referencia `config.production.example.php`. El backend rechaza una clave JWT vacía, corta o de ejemplo y rechaza SQLite si app_env es production.
+
+VITE_API_URL es el **origen** de la API, sin `/api` ni barra final. Vacío en producción significa el mismo dominio. React y el cotizador estático usan ese mismo valor al compilar. No pongas contraseñas en variables VITE_: se incluyen en el JavaScript público.
+
+## Roles
+
+| Rol | Acceso |
+|---|---|
+| Visitante | Catálogo, contenido público, envío de solicitudes y sugerencias |
+| Cliente | Lo anterior, perfil e historial propio con respuestas visibles |
+| Cotizador | Ventas, solicitudes, estadísticas y cotizador formal |
+| Admin | Contenido, productos, categorías, configuración, sugerencias y funciones del cotizador |
+| Owner | Todo lo anterior, accesos, auditoría y papelera |
+
+Los permisos se comprueban en PHP además de la interfaz. Los archivos de respuesta se descargan con token y autorización. Las imágenes de catálogo son públicas.
+
+## GitHub
+
+Para reemplazar la versión antigua, conservar el historial y subir cambios pequeños, sigue [GIT-GITHUB.md](GIT-GITHUB.md). El .gitignore incluido excluye credenciales, bases locales, dependencias y archivos generados.

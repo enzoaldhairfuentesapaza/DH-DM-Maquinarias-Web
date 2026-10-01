@@ -21,6 +21,8 @@
 
 .header-wrap {
   width: 100%;
+  position: relative;
+  z-index: 500;
 }
 
 /* ============================= */
@@ -32,7 +34,7 @@
   min-height: 110px;
 
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 
   background: var(--black);
 
@@ -268,9 +270,14 @@
     display: none;
   }
 
-  .logo-bar-right .search-box,
-  .logo-bar-right .cart-btn {
+  /* En movil todo el bloque derecho (buscador, carrito, cuenta) se mueve
+     dentro del menu hamburguesa para que nada se desborde. */
+  .logo-bar-right {
     display: none;
+  }
+
+  .header-mobile-actions {
+    display: flex;
   }
 
   .header {
@@ -516,8 +523,17 @@
   gap: 6px;
   font-size: 14px;
   font-weight: 600;
-  color: var(--black, #121212);
+  color: #fff;
   white-space: nowrap;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  border-radius: 8px;
+  padding: 9px 14px;
+}
+
+.account-greeting:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
 }
 
 .account-btn-primary {
@@ -565,5 +581,227 @@
   }
   .account-greeting {
     display: none;
+  }
+}
+
+/* ============================= */
+/* ACCIONES MÓVILES (campana + carrito + hamburguesa) */
+/* ============================= */
+
+.header-mobile-actions {
+  display: none;
+  align-items: center;
+  gap: 10px;
+}
+
+.mobile-cart-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  color: #fff;
+  text-decoration: none;
+  padding: 6px;
+}
+
+.mobile-cart-badge {
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  background: var(--yellow, #f4c20d);
+  color: var(--black, #121212);
+  font-size: 10px;
+  font-weight: 800;
+  border-radius: 999px;
+  min-width: 17px;
+  height: 17px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+
+/* Fondo oscuro detrás del panel móvil */
+.mobile-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 400;
+  animation: backdropFade 0.2s ease;
+}
+
+@keyframes backdropFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Buscador y cuenta dentro del menú móvil: ocultos en escritorio */
+.mobile-search,
+.mobile-account {
+  display: none;
+}
+
+/* ============================= */
+/* MENÚ MÓVIL */
+/* ============================= */
+
+@media (max-width: 992px) {
+  .burger {
+    display: block;
+  }
+
+  .navbar.open {
+    display: flex;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    z-index: 600;
+    animation: menuSlideDown 0.22s ease;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+  }
+
+  @keyframes menuSlideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .navbar a {
+    font-size: 16.5px;
+  }
+
+  .nav-drop-trigger {
+    justify-content: space-between;
+  }
+
+  .nav-drop-trigger svg {
+    transition: transform 0.22s ease;
+  }
+
+  .nav-drop-trigger.abierto svg {
+    transform: rotate(180deg);
+  }
+
+  .mobile-search {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 6px 20px 12px;
+    padding: 0 14px;
+    background: #fff;
+    border-radius: 8px;
+    height: 44px;
+    width: calc(100% - 40px);
+  }
+
+  .mobile-search svg {
+    color: #777;
+    flex-shrink: 0;
+  }
+
+  .mobile-search input {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 15px;
+    width: 100%;
+    color: #222;
+  }
+
+  .mobile-account {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    width: 100%;
+    padding: 16px 20px 10px;
+    margin-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+  }
+
+  .mobile-account-btn {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1.5px solid rgba(255, 255, 255, 0.22);
+    color: #fff !important;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .mobile-account-btn:hover {
+    background: rgba(255, 255, 255, 0.18);
+  }
+
+  .mobile-account-btn.primary {
+    background: var(--yellow, #f4c20d);
+    border-color: var(--yellow, #f4c20d);
+    color: var(--black, #121212) !important;
+  }
+
+  .mobile-account-btn.primary:hover {
+    background: var(--yellow-hover, #e5b800);
+  }
+}
+
+/* ============================= */
+/* AJUSTES FINOS PARA PANTALLAS PEQUEÑAS / ZOOM ALTO */
+/* ============================= */
+
+@media (max-width: 1400px) {
+  .navbar {
+    gap: 30px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .navbar {
+    gap: 18px;
+  }
+
+  .navbar a {
+    font-size: 16px;
+  }
+
+  .account-btn-primary,
+  .account-link {
+    font-size: 13px;
+    padding: 8px 11px;
+  }
+
+  .search-box {
+    width: 180px;
+  }
+}
+
+@media (max-width: 560px) {
+  .logo-bar {
+    padding: 10px 14px;
+  }
+
+  .logo {
+    height: 46px;
+  }
+
+  .header-mobile-actions {
+    gap: 6px;
+  }
+
+  .navbar a {
+    padding: 13px 20px;
+  }
+
+  .mobile-search,
+  .mobile-account {
+    margin-left: 14px;
+    margin-right: 14px;
+  }
+
+  .mobile-search {
+    width: calc(100% - 28px);
   }
 }

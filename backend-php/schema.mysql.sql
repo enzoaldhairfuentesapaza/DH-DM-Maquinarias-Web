@@ -6,8 +6,9 @@ CREATE TABLE IF NOT EXISTS usuarios (
     nombre VARCHAR(150) NOT NULL,
     email VARCHAR(150) NOT NULL UNIQUE,
     hashed_password VARCHAR(255) NOT NULL,
-    rol ENUM('cliente','admin','owner') NOT NULL DEFAULT 'cliente',
+    rol ENUM('cliente','admin','owner','cotizador') NOT NULL DEFAULT 'cliente',
     activo TINYINT(1) NOT NULL DEFAULT 1,
+    token_version INT NOT NULL DEFAULT 0,
     telefono VARCHAR(30) NULL,
     tipo_documento ENUM('dni','ruc') NULL,
     numero_documento VARCHAR(20) NULL,
@@ -22,6 +23,7 @@ CREATE TABLE IF NOT EXISTS novedades (
     fecha VARCHAR(50) NOT NULL,
     resumen TEXT NOT NULL,
     imagen VARCHAR(500) DEFAULT NULL,
+    destacado TINYINT(1) NOT NULL DEFAULT 0,
     creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     actualizado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -60,10 +62,40 @@ CREATE TABLE IF NOT EXISTS cotizaciones (
     estado ENUM('pendiente','respondida','denegada') NOT NULL DEFAULT 'pendiente',
     respuesta TEXT DEFAULT NULL,
     motivo_denegacion TEXT DEFAULT NULL,
+    archivo_respuesta VARCHAR(500) DEFAULT NULL,
+    canal_respuesta VARCHAR(60) DEFAULT NULL,
+    mostrar_en_pagina TINYINT(1) NOT NULL DEFAULT 0,
     origen VARCHAR(50) NOT NULL DEFAULT 'web',
     usuario_id INT DEFAULT NULL,
+    eliminado_en DATETIME DEFAULT NULL,
+    eliminado_por INT DEFAULT NULL,
+    eliminado_por_nombre VARCHAR(150) DEFAULT NULL,
+    motivo_eliminacion TEXT DEFAULT NULL,
     creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     actualizado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Registro general de auditoria: quien hizo que cambio, en que seccion.
+CREATE TABLE IF NOT EXISTS auditoria (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT DEFAULT NULL,
+    usuario_nombre VARCHAR(150) DEFAULT NULL,
+    usuario_rol VARCHAR(30) DEFAULT NULL,
+    categoria VARCHAR(60) NOT NULL,
+    accion VARCHAR(30) NOT NULL,
+    descripcion VARCHAR(500) NOT NULL,
+    creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS notificaciones (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    cotizacion_id INT DEFAULT NULL,
+    tipo VARCHAR(30) NOT NULL DEFAULT 'cotizacion',
+    mensaje TEXT NOT NULL,
+    leida TINYINT(1) NOT NULL DEFAULT 0,
+    creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX (usuario_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS maquinarias (
@@ -101,6 +133,7 @@ CREATE TABLE IF NOT EXISTS repuestos (
     imagen VARCHAR(500) DEFAULT NULL,
     stock_disponible TINYINT(1) NOT NULL DEFAULT 1,
     stock_cantidad INT NOT NULL DEFAULT 0,
+    destacado TINYINT(1) NOT NULL DEFAULT 0,
     creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     actualizado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -148,5 +181,34 @@ CREATE TABLE IF NOT EXISTS categorias_productos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     tipo ENUM('maquinaria','repuesto') NOT NULL,
     nombre VARCHAR(100) NOT NULL,
+    creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uniq_tipo_nombre (tipo, nombre)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Configuracion general del sitio (numeros de contacto, correos, etc.) que
+-- los admins/owners pueden editar desde "Editar Pagina" sin tocar codigo.
+CREATE TABLE IF NOT EXISTS configuracion_sitio (
+    clave VARCHAR(80) PRIMARY KEY,
+    valor VARCHAR(255) NOT NULL,
+    actualizado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Sugerencias y reclamos enviados desde el globo flotante del sitio publico.
+-- Solo admins/owners pueden verlos (endpoint protegido).
+CREATE TABLE IF NOT EXISTS sugerencias (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    tipo ENUM('sugerencia','reclamo') NOT NULL DEFAULT 'sugerencia',
+    nombre VARCHAR(150) NOT NULL,
+    correo VARCHAR(150) DEFAULT NULL,
+    mensaje TEXT NOT NULL,
+    leido TINYINT(1) NOT NULL DEFAULT 0,
+    usuario_id INT DEFAULT NULL,
     creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS rate_limits (
+    bucket VARCHAR(64) PRIMARY KEY,
+    hits INT NOT NULL DEFAULT 1,
+    expires_at BIGINT NOT NULL,
+    INDEX (expires_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

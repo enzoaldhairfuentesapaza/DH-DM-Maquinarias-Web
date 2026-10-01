@@ -7,20 +7,23 @@ function db(): PDO
         return $pdo;
     }
 
-    $config = require __DIR__ . '/config.php';
+    $config = config();
     $dbConfig = $config['db'];
 
     if ($dbConfig['driver'] === 'sqlite') {
         $dsn = 'sqlite:' . $dbConfig['sqlite_path'];
         $pdo = new PDO($dsn);
-    } else {
+    } elseif ($dbConfig['driver'] === 'mysql') {
         $dsn = sprintf(
-            'mysql:host=%s;dbname=%s;charset=%s',
+            'mysql:host=%s;port=%d;dbname=%s;charset=%s',
             $dbConfig['host'],
+            $dbConfig['port'] ?? 3306,
             $dbConfig['name'],
             $dbConfig['charset'] ?? 'utf8mb4'
         );
         $pdo = new PDO($dsn, $dbConfig['user'], $dbConfig['pass']);
+    } else {
+        throw new RuntimeException('Driver de base de datos no soportado');
     }
 
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -43,6 +46,13 @@ function config(): array
     static $config = null;
     if ($config === null) {
         $config = require __DIR__ . '/config.php';
+        if (strlen($config['secret_key']) < 32 || preg_match('/cambia|completar/i', $config['secret_key'])) {
+            throw new RuntimeException('Configura JWT_SECRET o secret_key con al menos 32 caracteres aleatorios');
+        }
+        if ($config['app_env'] === 'production' && $config['db']['driver'] !== 'mysql') {
+            throw new RuntimeException('Produccion requiere MySQL');
+        }
+        date_default_timezone_set($config['timezone'] ?? 'America/Lima');
     }
     return $config;
 }

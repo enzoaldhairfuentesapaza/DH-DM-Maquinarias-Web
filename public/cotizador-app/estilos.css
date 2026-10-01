@@ -706,3 +706,55 @@ header {
 header .btn-historial:not(:first-of-type) {
   margin-left: 0;
 }
+
+/* ---------- Boton para dejar la cotizacion en dolares ---------- */
+
+.dolar-toggle-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.btn-currency-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 2px solid #ccc;
+  background: #f4f4f4;
+  color: #444;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-currency-toggle .toggle-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #999;
+  transition: 0.2s;
+}
+
+.btn-currency-toggle:hover {
+  border-color: #999;
+}
+
+.btn-currency-toggle.activo {
+  background: #e6f4ea;
+  border-color: #2e9e52;
+  color: #1e6b38;
+}
+
+.btn-currency-toggle.activo .toggle-dot {
+  background: #2e9e52;
+  box-shadow: 0 0 0 3px rgba(46, 158, 82, 0.25);
+}
+
+#tc:disabled {
+  background: #eee;
+  color: #888;
+  cursor: not-allowed;
+}

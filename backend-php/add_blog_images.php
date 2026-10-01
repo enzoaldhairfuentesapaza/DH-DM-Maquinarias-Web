@@ -1,10 +1,11 @@
 <?php
+require_once __DIR__ . '/cli_only.php';
 /**
  * Reemplaza las imagenes del blog por las fotos reales que subio el cliente
  * (public/blogs/blog1.jpg ... blog5.jpg), revisadas una por una segun su
  * contenido real (no por orden de archivo, que no coincidia).
  *
- * Correr una sola vez visitando esta URL desde el navegador, luego borrar
+ * Ejecutar por terminal; nunca desde el navegador.
  * este archivo del servidor.
  */
 require_once __DIR__ . '/db.php';

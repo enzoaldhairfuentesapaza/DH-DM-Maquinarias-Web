@@ -4,14 +4,38 @@
 // y el catalogo real de la base de datos en vez de una lista propia.
 // ---------------------------------------------------------------------
 
-const API_URL = (() => {
-  const host = window.location.hostname;
-  if (host === "localhost" || host === "127.0.0.1") return "http://localhost:8000";
-  return "https://api.dh-dm-maquinarias.com";
-})();
+const API_URL = window.HDM_API_ORIGIN ?? "";
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>\"\']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "\'": "&#39;" }[char]));
+}
 
 function getToken() {
   return localStorage.getItem("hdm_token");
+}
+
+// ---------------------------------------------------------------------
+// Toggle "Dejar cotizacion en dolares": por defecto desactivado.
+// Al activarlo se bloquea el tipo de cambio (no hace falta convertir nada
+// porque toda la cotizacion se entrega en USD).
+// ---------------------------------------------------------------------
+let dejarEnDolares = false;
+
+function toggleDejarEnDolares() {
+  dejarEnDolares = !dejarEnDolares;
+  const btn = document.getElementById("btnDejarEnDolares");
+  const tcInput = document.getElementById("tc");
+  if (!btn || !tcInput) return;
+
+  btn.classList.toggle("activo", dejarEnDolares);
+  btn.setAttribute("aria-pressed", String(dejarEnDolares));
+  tcInput.disabled = dejarEnDolares && !products.some(p => p.currency === "PEN");
+
+  if (tcInput.disabled) {
+    tcInput.title = "Bloqueado: la cotización se entregará en dólares.";
+  } else {
+    tcInput.title = "";
+  }
 }
 
 async function apiFetch(path, options = {}) {
@@ -20,7 +44,9 @@ async function apiFetch(path, options = {}) {
   if (!(options.body instanceof FormData)) headers["Content-Type"] = "application/json";
   if (token) headers["X-Auth-Token"] = token;
 
-  const res = await fetch(`${API_URL}${path}`, { ...options, headers });
+  let method = options.method;
+  if (["PUT", "DELETE", "PATCH"].includes(method)) { headers["X-HTTP-Method-Override"] = method; method = "POST"; }
+  const res = await fetch(`${API_URL}${path}`, { ...options, method, headers });
   if (!res.ok) {
     let detail = "Ocurrio un error";
     try {
@@ -55,7 +81,7 @@ async function verificarAcceso() {
     window.location.href = "/admin/login";
     return false;
   }
-  if (usuarioActual.rol !== "admin" && usuarioActual.rol !== "owner") {
+  if (!["admin", "owner", "cotizador"].includes(usuarioActual.rol)) {
     alert("El cotizador es solo para administradores.");
     window.location.href = "/";
     return false;
@@ -178,8 +204,9 @@ async function iniciar() {
   if (!ok) return;
   await cargarCatalogo();
   await inicializarNumeroCotizacion();
+  await cargarCotizacionDesdeNumero();
 }
-iniciar();
+iniciar().catch(error => alert(error.message));
 
 function updateBrandInputsTemp() {
   brandInputsTemp = [...document.querySelectorAll(".brand-input")]
@@ -346,12 +373,12 @@ async function cargarListaCotizaciones() {
 
     tbody.innerHTML += `
       <tr>
-        <td>${c.id}</td>
-        <td>${c.cliente}</td>
-        <td>${new Date(c.fecha).toLocaleDateString()}</td>
-        <td>${c.total}</td>
+        <td>${escapeHtml(c.id)}</td>
+        <td>${escapeHtml(c.cliente)}</td>
+        <td>${escapeHtml(new Date(c.fecha).toLocaleDateString())}</td>
+        <td>${escapeHtml(c.total)}</td>
         <td>
-          <button onclick='cargarCotizacionDesdeDB(${JSON.stringify(c)})'>
+          <button onclick='cargarCotizacionPorId(${Number(c.id)})'>
             Abrir
           </button>
         </td>
@@ -359,6 +386,11 @@ async function cargarListaCotizaciones() {
     `;
   });
 }
+
+window.cargarCotizacionPorId = async (id) => {
+  const c = await apiFetch(`/api/cotizador/${id}`);
+  cargarCotizacionDesdeDB({ cliente: c.cliente_nombre, productos: c.items });
+};
 
 function cargarCotizacionDesdeDB(coti) {
 
@@ -399,7 +431,7 @@ updateMonedaLabel();
 ======================= */
 function addDiscount() {
   const d = Number(descuentoInput.value);
-  if (d > 0) {
+  if (Number.isFinite(d) && d > 0 && d <= 100) {
     discountsTemp.push(d);
     descuentoInput.value = "";
     updateDiscountLabel();
@@ -421,11 +453,11 @@ function updateDiscountLabel() {
 ======================= */
 function addProduct() {
 
-  if (monedaProducto.value === "USD") {
+  if ((monedaProducto.value === "USD" && !dejarEnDolares) || (monedaProducto.value === "PEN" && dejarEnDolares)) {
     const tipoCambio = Number(tc.value);
 
     if (!tipoCambio || tipoCambio <= 0) {
-      alert("Debes ingresar un tipo de cambio válido antes de agregar un producto en USD.");
+      alert("Debes ingresar un tipo de cambio válido para convertir la moneda del producto.");
       tc.focus();
       return;
     }
@@ -464,6 +496,11 @@ function addProduct() {
     showDiscounts: mostrarDescCheck.checked 
   };
 
+  if (!product.code.trim() || !product.desc.trim() || !Number.isInteger(product.qty) || product.qty < 1 || !Number.isFinite(product.price) || product.price < 0) {
+    alert("Completa código, descripción, cantidad positiva y precio válido.");
+    return;
+  }
+  if (product.discounts.some(d => !Number.isFinite(d) || d < 0 || d > 100)) { alert("El descuento debe estar entre 0 y 100%."); return; }
   if (editIndex !== null) {
     products[editIndex] = product;
     editIndex = null;
@@ -526,12 +563,13 @@ function calcularPrecioFinal(p) {
       precio
     );
   }
-  if (p.currency === "USD") {
-    const tcambio = Number(tc.value);
-
-    if (tcambio && tcambio > 0) {
-      precio *= tcambio;
-    }
+  const tcambio = Number(tc.value);
+  if (dejarEnDolares && p.currency === "PEN") {
+    if (!(tcambio > 0)) return NaN;
+    precio /= tcambio;
+  } else if (!dejarEnDolares && p.currency === "USD") {
+    if (!(tcambio > 0)) return NaN;
+    precio *= tcambio;
   }
 
   return Math.round(precio);
@@ -549,6 +587,7 @@ function renderTable() {
   const tbody = document.getElementById("tabla");
   tbody.innerHTML = "";
 
+  tc.disabled = dejarEnDolares && !products.some(p => p.currency === "PEN");
   let total = 0;
 
   products.forEach((p, i) => {
@@ -561,13 +600,13 @@ function renderTable() {
 
     tbody.innerHTML += `
       <tr>
-        <td>${p.code}</td>
-        <td>${p.unit}</td>
-        <td>${p.brand}</td>
-        <td>${p.qty}</td>
-        <td>${descTexto}</td>
-        <td>${p.price.toFixed(2)} ${p.currency}</td>
-        <td>${subtotal.toFixed(2)}</td>
+        <td>${escapeHtml(p.code)}</td>
+        <td>${escapeHtml(p.unit)}</td>
+        <td>${escapeHtml(p.brand)}</td>
+        <td>${escapeHtml(p.qty)}</td>
+        <td>${escapeHtml(descTexto)}</td>
+        <td>${escapeHtml(p.price.toFixed(2))} ${escapeHtml(p.currency)}</td>
+        <td>${escapeHtml(subtotal.toFixed(2))}</td>
         <td>
           <div class="actions-wrap">
             <button title="Editar producto" onclick="editProduct(${i})">✏️</button>
@@ -629,12 +668,13 @@ function editProduct(index)
 
 async function buildPDF(numeroCotizacion, data = null)
 {
+  if (products.some(p => !Number.isFinite(calcularPrecioFinal(p)))) throw new Error("Ingresa un tipo de cambio válido antes de generar el PDF.");
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF("p", "mm", "a4");
 
   const img = new Image();
   img.src = "plantillahdm.png";
-  await new Promise(resolve => img.onload = resolve);
+  await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = () => reject(new Error("No se pudo cargar la plantilla PDF.")); });
 
   doc.addImage(img, "PNG", 0, 0, 210, 297);
 
@@ -673,6 +713,11 @@ async function buildPDF(numeroCotizacion, data = null)
     const lineHeight = 5;
     const maxLines = Math.max(codigoLines.length, descLines.length);
     const blockHeight = maxLines * lineHeight;
+    if (y + blockHeight > 260) {
+      doc.addPage();
+      doc.addImage(img, "PNG", 0, 0, 210, 297);
+      y = 100;
+    }
 
     // 🔹 TODO parte desde la misma línea base (y)
 
@@ -734,8 +779,9 @@ async function guardarCotizacion() {
   const clienteDireccion = direccion.value || "";
 
   const total = Number(document.getElementById("total").innerText);
+  if (!Number.isFinite(total)) { alert("Ingresa un tipo de cambio válido para convertir los productos."); return; }
 
-  // 🧠 NUEVO: tipo de cambio
+  // 🧠 NUEVO: tipo de cambio (bloqueado/no aplica si la cotizacion queda en USD)
   const tipoCambio = Number(tc.value) || 0;
 
   try {
@@ -748,7 +794,7 @@ async function guardarCotizacion() {
         cliente_direccion: clienteDireccion,
         items: products,
         tipo_cambio: tipoCambio,
-        moneda_mostrar: "PEN",
+        moneda_mostrar: dejarEnDolares ? "USD" : "PEN",
         total: total,
       }),
     });
@@ -775,6 +821,7 @@ async function obtenerCotizaciones() {
       productos: c.items,
       total: c.total,
       tipo_cambio: c.tipo_cambio,
+      moneda_mostrar: c.moneda_mostrar,
     }));
   } catch (err) {
     console.error(err);
@@ -790,13 +837,26 @@ function cargarCotizacion(coti) {
 
   products = coti.productos || [];
 
+  // Restaura el estado del boton "Dejar en dolares" segun quedo guardado.
+  dejarEnDolares = coti.moneda_mostrar === "USD";
+  const btn = document.getElementById("btnDejarEnDolares");
+  const tcInput = document.getElementById("tc");
+  if (btn && tcInput) {
+    btn.classList.toggle("activo", dejarEnDolares);
+    btn.setAttribute("aria-pressed", String(dejarEnDolares));
+    tcInput.disabled = dejarEnDolares;
+  }
+  if (tcInput) tcInput.value = coti.tipo_cambio || "";
+
   renderTable();
 }
 
 
 async function updatePDFPreview(id = numeroCotizacionActual) {
   const doc = await buildPDF(id);
+  const oldUrl = pdfPreview.src;
   pdfPreview.src = URL.createObjectURL(doc.output("blob"));
+  if (oldUrl.startsWith("blob:")) URL.revokeObjectURL(oldUrl);
 }
 
 async function downloadPDF(id = numeroCotizacionActual) {
@@ -840,18 +900,18 @@ async function cargarCotizacionDesdeNumero()
   const id = localStorage.getItem("cotizacionAbrir");
   if (!id) return;
 
-  const { data, error } = await supabase
-    .from("cotizaciones")
-    .select("*")
-    .eq("id", id)
-    .single();
-
-  if (error || !data) {
-    console.error("Error cargando:", error);
+  let data;
+  try {
+    const row = await apiFetch(`/api/cotizador/${Number(id)}`);
+    data = { id: row.id, cliente: row.cliente_nombre, dni: row.cliente_documento, direccion: row.cliente_direccion, tipo_cambio: row.tipo_cambio, productos: row.items, moneda_mostrar: row.moneda_mostrar };
+    cargarCotizacion(data);
+  } catch (error) {
+    alert(error instanceof Error ? error.message : "No se pudo cargar la cotización.");
+    localStorage.removeItem("cotizacionAbrir");
     return;
   }
 
-  tituloCotizacion.innerText = `Editando Cotización N° ${data.id}`;
+  tituloCotizacion.innerText = `Copia de Cotización N° ${data.id}`;
 
   cliente.value = data.cliente || "";
   dni.value = data.dni || "";
@@ -867,9 +927,9 @@ async function cargarCotizacionDesdeNumero()
 
   localStorage.removeItem("cotizacionAbrir");
   const aviso = document.getElementById("modoEdicionAviso");
-  aviso.style.display = "block";
+  if (aviso) aviso.style.display = "block";
 }
-cargarCotizacionDesdeNumero();
+// Loaded after authentication/catalog initialization below.
 
 
 
@@ -890,3 +950,9 @@ window.updatePDFPreview = updatePDFPreview;
 window.toggleCurrency = toggleCurrency;
 window.editProduct = editProduct;
 window.renderTable = renderTable;
+window.toggleDejarEnDolares = toggleDejarEnDolares;
+window.convertAll = convertAll;
+window.updateMonedaLabel = updateMonedaLabel;
+window.addBrandAdjustment = addBrandAdjustment;
+window.removeBrandAdjustment = removeBrandAdjustment;
+window.updateBrandInputsTemp = updateBrandInputsTemp;

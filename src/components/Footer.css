@@ -128,3 +128,8 @@
 .footer-link:hover {
   color: var(--yellow);
 }
+
+.footer-col { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 640px) {
+  .footer-top { grid-template-columns: 1fr; padding-left: 26px; padding-right: 26px; }
+}

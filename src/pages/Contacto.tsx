@@ -14,8 +14,8 @@ import {
 import { api } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { useAuthModal } from "../context/AuthModalContext";
-
-const WHATSAPP_NUMERO = "51942203833";
+import { abrirGmailCompose } from "../utils/email";
+import { useConfiguracionSitio } from "../hooks/useApiData";
 
 const ASUNTOS = [
   "Consulta general",
@@ -29,6 +29,7 @@ const ASUNTOS = [
 export default function Contacto() {
   const { user } = useAuth();
   const { openLogin } = useAuthModal();
+  const { data: config } = useConfiguracionSitio();
 
   const [datos, setDatos] = useState({
     nombre: "",
@@ -38,10 +39,11 @@ export default function Contacto() {
     mensaje: "",
   });
 
-  const [enviado, setEnviado] = useState<null | "whatsapp" | "pagina">(null);
-  const [enviando, setEnviando] = useState<null | "whatsapp" | "pagina">(null);
+  const [enviado, setEnviado] = useState<null | "whatsapp" | "pagina" | "correo">(null);
+  const [enviando, setEnviando] = useState<null | "whatsapp" | "pagina" | "correo">(null);
   const [errorEnvio, setErrorEnvio] = useState("");
   const [confirmandoWhatsapp, setConfirmandoWhatsapp] = useState(false);
+  const [confirmandoCorreo, setConfirmandoCorreo] = useState(false);
 
   const datosCompletos = () => {
     if (!datos.mensaje.trim()) return false;
@@ -49,7 +51,7 @@ export default function Contacto() {
     return !!(datos.nombre && datos.correo);
   };
 
-  const guardarSolicitud = async (canal: "whatsapp" | "pagina") => {
+  const guardarSolicitud = async (canal: "whatsapp" | "pagina" | "correo") => {
     await api.post("/api/cotizaciones", {
       nombre_cliente: user ? user.nombre : datos.nombre,
       email_cliente: user ? user.email : datos.correo,
@@ -67,12 +69,23 @@ export default function Contacto() {
   const construirMensajeWhatsapp = () => {
     const nombre = user ? user.nombre : datos.nombre;
     const correo = user ? user.email : datos.correo;
-    let msg = `*Contacto - DH & DM Maquinarias SAC.*%0A%0A`;
-    msg += `*Nombre:* ${nombre}%0A`;
-    msg += `*Correo:* ${correo}%0A`;
-    if (!user && datos.telefono) msg += `*Teléfono:* ${datos.telefono}%0A`;
-    msg += `*Asunto:* ${datos.asunto}%0A%0A`;
-    msg += `*Mensaje:*%0A${encodeURIComponent(datos.mensaje)}`;
+    let msg = `*Contacto - DH & DM Maquinarias SAC.*\n\n`;
+    msg += `*Nombre:* ${nombre}\n`;
+    msg += `*Correo:* ${correo}\n`;
+    if (!user && datos.telefono) msg += `*Teléfono:* ${datos.telefono}\n`;
+    msg += `*Asunto:* ${datos.asunto}\n\n`;
+    msg += `*Mensaje:*\n${datos.mensaje}`;
+    return msg;
+  };
+
+  const construirMensajePlano = () => {
+    const nombre = user ? user.nombre : datos.nombre;
+    const correo = user ? user.email : datos.correo;
+    let msg = `Nombre: ${nombre}\n`;
+    msg += `Correo: ${correo}\n`;
+    if (!user && datos.telefono) msg += `Teléfono: ${datos.telefono}\n`;
+    msg += `Asunto: ${datos.asunto}\n\n`;
+    msg += `Mensaje:\n${datos.mensaje}`;
     return msg;
   };
 
@@ -84,11 +97,10 @@ export default function Contacto() {
       return;
     }
     setErrorEnvio("");
-    const url = `https://wa.me/${WHATSAPP_NUMERO}?text=${construirMensajeWhatsapp()}`;
-    window.open(url, "_blank");
+    const url = `https://wa.me/${config.whatsapp_primario}?text=${encodeURIComponent(construirMensajeWhatsapp())}`;
+    window.open(url, "_blank", "noopener,noreferrer");
     setConfirmandoWhatsapp(true);
   };
-
   const confirmarWhatsappExitoso = async (exitoso: boolean) => {
     setConfirmandoWhatsapp(false);
     if (!exitoso) return; // se mantiene el formulario tal cual para reintentar
@@ -102,6 +114,41 @@ export default function Contacto() {
         err instanceof Error
           ? err.message
           : "No se pudo registrar tu solicitud",
+      );
+    } finally {
+      setEnviando(null);
+    }
+  };
+
+  const handleEnviarCorreo = () => {
+    if (!datosCompletos()) {
+      setErrorEnvio(
+        "Completa tu nombre, correo y el mensaje (marcados con *) antes de enviar.",
+      );
+      return;
+    }
+    setErrorEnvio("");
+    // Abrimos Gmail en una pestaña nueva con el mensaje ya armado (mailto:
+    // no abre nada si no hay un programa de correo de escritorio instalado).
+    abrirGmailCompose({
+      to: config.correo_contacto,
+      subject: `Contacto (${datos.asunto}) - ${user ? user.nombre : datos.nombre}`,
+      body: construirMensajePlano(),
+    });
+    setConfirmandoCorreo(true);
+  };
+
+  const confirmarCorreoExitoso = async (exitoso: boolean) => {
+    setConfirmandoCorreo(false);
+    if (!exitoso) return;
+    setEnviando("correo");
+    setErrorEnvio("");
+    try {
+      await guardarSolicitud("correo");
+      setEnviado("correo");
+    } catch (err) {
+      setErrorEnvio(
+        err instanceof Error ? err.message : "No se pudo registrar tu solicitud",
       );
     } finally {
       setEnviando(null);
@@ -170,6 +217,37 @@ export default function Contacto() {
         </div>
       )}
 
+      {confirmandoCorreo && (
+        <div className="whatsapp-confirm-overlay">
+          <div className="whatsapp-confirm-box">
+            <h3>¿Se abrió tu correo correctamente?</h3>
+            <p>
+              Si Gmail se abrió con el mensaje ya redactado y lo enviaste,
+              confirma aquí para registrar tu solicitud.
+            </p>
+            <div className="whatsapp-confirm-actions">
+              <button
+                className="submit-quote-btn"
+                onClick={() => confirmarCorreoExitoso(true)}
+              >
+                Sí, se envió
+              </button>
+              <button
+                className="submit-quote-btn"
+                style={{
+                  background: "#fff",
+                  color: "#121212",
+                  border: "1.5px solid #121212",
+                }}
+                onClick={() => confirmarCorreoExitoso(false)}
+              >
+                Probar de nuevo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="page-body">
         <div className="contacto-layout">
           <div className="contacto-left">
@@ -196,16 +274,17 @@ export default function Contacto() {
               <Phone size={20} />
               <div>
                 <strong>Líneas directas / WhatsApp</strong>
-                <span>+51 942 203 833</span>
-                <br></br>
-                <span>+51 977 272 747</span>
+                <span>
+                  +{config.whatsapp_primario.slice(0, 2)} {config.whatsapp_primario.slice(2, 5)}{" "}
+                  {config.whatsapp_primario.slice(5, 8)} {config.whatsapp_primario.slice(8)}
+                </span>
               </div>
             </div>
             <div className="contacto-info-item">
               <Mail size={20} />
               <div>
                 <strong>Correo corporativo</strong>
-                <span>info@dhdmmaquinarias.com</span>
+                <span>{config.correo_contacto}</span>
               </div>
             </div>
             <div className="contacto-info-item">
@@ -377,6 +456,22 @@ export default function Contacto() {
                     border: "1.5px solid #121212",
                     marginTop: 10,
                   }}
+                  disabled={enviando !== null}
+                  onClick={handleEnviarCorreo}
+                >
+                  <Mail size={17} />{" "}
+                  {enviando === "correo" ? "Enviando..." : "Enviar mensaje por correo"}
+                </button>
+
+                <button
+                  type="button"
+                  className="submit-quote-btn"
+                  style={{
+                    background: "#fff",
+                    color: "#121212",
+                    border: "1.5px solid #121212",
+                    marginTop: 10,
+                  }}
                   disabled={enviando !== null || (!!user && !datosCompletos())}
                   onClick={handleEnviarPorPagina}
                 >
@@ -390,7 +485,9 @@ export default function Contacto() {
 
                 <p className="form-note">
                   Tus datos están seguros. Solo los usaremos para responder tu
-                  mensaje.
+                  mensaje. Al enviar "por la página", tu mensaje queda
+                  registrado y nuestro equipo lo revisa desde el panel de
+                  administración.
                 </p>
               </div>
             )}

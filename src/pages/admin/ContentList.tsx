@@ -3,9 +3,10 @@ import { Link, useParams, useNavigate } from "react-router-dom";
 import { Search, X } from "lucide-react";
 import { api } from "../../api/client";
 import { entities } from "./entityConfig";
+import { useFeedback } from "../../context/FeedbackContext";
 import "./admin.css";
 
-type Row = Record<string, any>;
+type Row = Record<string, unknown> & { id: number };
 type OrdenCampo = "nombre" | "fecha";
 type OrdenDireccion = "asc" | "desc";
 
@@ -31,6 +32,7 @@ export default function ContentList() {
   const { entityKey } = useParams<{ entityKey: string }>();
   const config = entityKey ? entities[entityKey] : undefined;
   const navigate = useNavigate();
+  const feedback = useFeedback();
 
   const [items, setItems] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,14 +63,19 @@ export default function ContentList() {
 
   async function handleDelete(id: number) {
     if (!config) return;
-    if (!confirm(`¿Seguro que quieres eliminar este ${config.singular.toLowerCase()}?`)) {
-      return;
-    }
+    const ok = await feedback.confirm({
+      title: `Eliminar ${config.singular.toLowerCase()}`,
+      message: `¿Seguro que quieres eliminar este ${config.singular.toLowerCase()}? Esta acción no se puede deshacer.`,
+      confirmLabel: "Sí, eliminar",
+      danger: true,
+    });
+    if (!ok) return;
     try {
       await api.delete(`${config.apiPath}/${id}`);
       setItems((prev) => prev.filter((i) => i.id !== id));
+      feedback.success(`Se eliminó ${config.singular.toLowerCase()}.`);
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Error al eliminar");
+      feedback.error(err instanceof Error ? err.message : "Error al eliminar.");
     }
   }
 
@@ -98,8 +105,7 @@ export default function ContentList() {
     });
 
     return resultado;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, busqueda, ordenCampo, ordenDireccion]);
+  }, [items, busqueda, ordenCampo, ordenDireccion, config]);
 
   if (!config) {
     return <p>Sección no encontrada.</p>;

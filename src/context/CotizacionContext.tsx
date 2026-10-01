@@ -29,7 +29,9 @@ export function CotizacionProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<ItemCotizacion[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : [];
+      const parsed: unknown = saved ? JSON.parse(saved) : [];
+      if (!Array.isArray(parsed)) return [];
+      return parsed.filter((item): item is ItemCotizacion => item && typeof item.uid === "string" && typeof item.nombre === "string" && Number.isInteger(item.id) && ["repuesto", "maquinaria"].includes(item.tipo) && Number.isInteger(item.cantidad) && item.cantidad > 0 && item.cantidad <= 100000);
     } catch {
       return [];
     }
@@ -44,12 +46,13 @@ export function CotizacionProvider({ children }: { children: ReactNode }) {
   }, [items]);
 
   const agregarItem: CotizacionContextType["agregarItem"] = (item, cantidad = 1) => {
+    if (!Number.isInteger(cantidad) || cantidad < 1 || cantidad > 100000) return;
     setItems((prev) => {
       const uid = `${item.tipo}-${item.id}`;
       const existente = prev.find((i) => i.uid === uid);
       if (existente) {
         return prev.map((i) =>
-          i.uid === uid ? { ...i, cantidad: i.cantidad + cantidad } : i
+          i.uid === uid ? { ...i, cantidad: Math.min(100000, i.cantidad + cantidad) } : i
         );
       }
       return [...prev, { ...item, uid, cantidad }];
@@ -61,6 +64,7 @@ export function CotizacionProvider({ children }: { children: ReactNode }) {
   };
 
   const actualizarCantidad = (uid: string, cantidad: number) => {
+    if (!Number.isInteger(cantidad) || cantidad < 1 || cantidad > 100000) return;
     setItems((prev) =>
       prev.map((i) => (i.uid === uid ? { ...i, cantidad: Math.max(1, cantidad) } : i))
     );

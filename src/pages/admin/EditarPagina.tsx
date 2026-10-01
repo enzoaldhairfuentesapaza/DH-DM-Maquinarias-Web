@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Megaphone, FileText, Tag } from "lucide-react";
+import { Megaphone, FileText, Tag, Phone } from "lucide-react";
 import "./admin.css";
 
 const secciones = [
@@ -20,6 +20,12 @@ const secciones = [
     titulo: "Promociones",
     desc: "Editar, eliminar o agregar promociones vigentes.",
     icon: <Tag size={20} />,
+  },
+  {
+    to: "/admin/configuracion",
+    titulo: "Números y correo",
+    desc: "Cambia los WhatsApp (primario y secundario) y el correo de contacto que se usan en todo el sitio.",
+    icon: <Phone size={20} />,
   },
 ];
 

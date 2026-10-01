@@ -10,13 +10,23 @@ import {
   Lock,
   CheckCircle2,
   AlertCircle,
+  Mail,
 } from "lucide-react";
 import { useCotizacion } from "../context/CotizacionContext";
 import { useAuth } from "../context/AuthContext";
 import { useAuthModal } from "../context/AuthModalContext";
 import { api } from "../api/client";
+import QtyInput from "../components/QtyInput";
+import { abrirGmailCompose } from "../utils/email";
+import { useConfiguracionSitio } from "../hooks/useApiData";
 
-const WHATSAPP_NUMERO = "51942203833";
+// Número de pruebas, oculto: solo visible para el administrador principal
+// (ignora la selección automática de número, para poder probar sin
+// mezclar solicitudes reales con las de prueba).
+const WHATSAPP_OCULTO = {
+  numero: "51953770220",
+  correoPermitido: "administrador_principal@dhydm.com",
+};
 
 interface DatosCliente {
   nombre: string;
@@ -32,6 +42,7 @@ export default function Cotizacion() {
     useCotizacion();
   const { user } = useAuth();
   const { openLogin } = useAuthModal();
+  const { data: config } = useConfiguracionSitio();
 
   const [datos, setDatos] = useState<DatosCliente>({
     nombre: "",
@@ -42,10 +53,21 @@ export default function Cotizacion() {
     razonSocial: "",
   });
 
-  const [enviado, setEnviado] = useState<null | "whatsapp" | "pagina">(null);
-  const [enviando, setEnviando] = useState<null | "whatsapp" | "pagina">(null);
+  const [enviado, setEnviado] = useState<null | "whatsapp" | "pagina" | "correo">(null);
+  const [enviando, setEnviando] = useState<null | "whatsapp" | "pagina" | "correo">(null);
   const [errorEnvio, setErrorEnvio] = useState("");
   const [confirmandoWhatsapp, setConfirmandoWhatsapp] = useState(false);
+  const [confirmandoCorreo, setConfirmandoCorreo] = useState(false);
+
+  // Elige el número de WhatsApp según lo que haya en el carrito: solo
+  // repuestos -> primario, solo maquinaria -> secundario, ambos -> primario.
+  const numeroDestino = (): string => {
+    if (user?.email === WHATSAPP_OCULTO.correoPermitido) return WHATSAPP_OCULTO.numero;
+    const tieneRepuesto = items.some((i) => i.tipo === "repuesto");
+    const tieneMaquinaria = items.some((i) => i.tipo === "maquinaria");
+    if (tieneMaquinaria && !tieneRepuesto) return config.whatsapp_secundario;
+    return config.whatsapp_primario; // solo repuestos, o ambos
+  };
 
   const datosCompletos = () => {
     if (user) return true;
@@ -60,25 +82,25 @@ export default function Cotizacion() {
     return true;
   };
 
-  const construirMensajeWhatsapp = () => {
-    let msg = `*Solicitud de Cotización - DH & DM Maquinarias SAC.*%0A%0A`;
+  const construirMensajeWhatsapp = (): string => {
+    let msg = `*Solicitud de Cotización - DH & DM Maquinarias SAC.*\n\n`;
     if (user) {
-      msg += `*Cliente:* ${user.nombre}%0A`;
-      msg += `*Correo:* ${user.email}%0A`;
-      if (user.telefono) msg += `*Teléfono:* ${user.telefono}%0A`;
+      msg += `*Cliente:* ${user.nombre}\n`;
+      msg += `*Correo:* ${user.email}\n`;
+      if (user.telefono) msg += `*Teléfono:* ${user.telefono}\n`;
     } else {
-      msg += `*Cliente:* ${datos.nombre}%0A`;
-      msg += `*Teléfono:* ${datos.telefono}%0A`;
-      msg += `*Correo:* ${datos.correo}%0A`;
-      msg += `*${datos.tipoDocumento === "dni" ? "DNI" : "RUC"}:* ${datos.numeroDocumento}%0A`;
+      msg += `*Cliente:* ${datos.nombre}\n`;
+      msg += `*Teléfono:* ${datos.telefono}\n`;
+      msg += `*Correo:* ${datos.correo}\n`;
+      msg += `*${datos.tipoDocumento === "dni" ? "DNI" : "RUC"}:* ${datos.numeroDocumento}\n`;
       if (datos.tipoDocumento === "ruc")
-        msg += `*Razón social:* ${datos.razonSocial}%0A`;
+        msg += `*Razón social:* ${datos.razonSocial}\n`;
     }
-    msg += `%0A*Productos solicitados:*%0A`;
+    msg += `\n*Productos solicitados:*\n`;
     items.forEach((i, idx) => {
       msg += `${idx + 1}. ${i.nombre}${i.codigo ? ` (Cód. ${i.codigo})` : ""} — Cant: ${i.cantidad} [${
         i.tipo === "repuesto" ? "Repuesto" : "Maquinaria"
-      }]%0A`;
+      }]\n`;
     });
     return msg;
   };
@@ -100,7 +122,7 @@ export default function Cotizacion() {
         }),
   });
 
-  const guardarSolicitud = async (origen: "whatsapp" | "pagina") => {
+  const guardarSolicitud = async (origen: "whatsapp" | "pagina" | "correo") => {
     await api.post("/api/cotizaciones", {
       nombre_cliente: user ? user.nombre : datos.nombre,
       email_cliente: user ? user.email : datos.correo,
@@ -119,9 +141,46 @@ export default function Cotizacion() {
       return;
     }
     setErrorEnvio("");
-    const url = `https://wa.me/${WHATSAPP_NUMERO}?text=${construirMensajeWhatsapp()}`;
-    window.open(url, "_blank");
+    const url = `https://wa.me/${numeroDestino()}?text=${encodeURIComponent(construirMensajeWhatsapp())}`;
+    window.open(url, "_blank", "noopener,noreferrer");
     setConfirmandoWhatsapp(true);
+  };
+
+  const handleEnviarCorreo = () => {
+    if (items.length === 0) return;
+    if (!datosCompletos()) {
+      setErrorEnvio(
+        "Completa tu nombre, teléfono, correo y documento (marcados con *) antes de enviar la solicitud.",
+      );
+      return;
+    }
+    setErrorEnvio("");
+    const asunto = "Solicitud de cotización - DH & DM Maquinarias";
+    const cuerpo = construirMensajeWhatsapp();
+    // Abrimos Gmail en una pestaña nueva con el mensaje ya armado (mailto:
+    // no abre nada si no hay un programa de correo de escritorio instalado).
+    abrirGmailCompose({ to: config.correo_contacto, subject: asunto, body: cuerpo });
+    setConfirmandoCorreo(true);
+  };
+
+  const confirmarCorreoExitoso = async (exitoso: boolean) => {
+    setConfirmandoCorreo(false);
+    if (!exitoso) return;
+    setEnviando("correo");
+    setErrorEnvio("");
+    try {
+      await guardarSolicitud("correo");
+      setEnviado("correo");
+      vaciarCarrito();
+    } catch (err) {
+      setErrorEnvio(
+        err instanceof Error
+          ? err.message
+          : "No se pudo registrar la solicitud",
+      );
+    } finally {
+      setEnviando(null);
+    }
   };
 
   const confirmarWhatsappExitoso = async (exitoso: boolean) => {
@@ -214,6 +273,37 @@ export default function Cotizacion() {
         </div>
       )}
 
+      {confirmandoCorreo && (
+        <div className="whatsapp-confirm-overlay">
+          <div className="whatsapp-confirm-box">
+            <h3>¿Se abrió tu programa de correo correctamente?</h3>
+            <p>
+              Si tu correo se abrió con el mensaje ya redactado y lo enviaste,
+              confirma aquí para vaciar tu carrito de cotización.
+            </p>
+            <div className="whatsapp-confirm-actions">
+              <button
+                className="submit-quote-btn"
+                onClick={() => confirmarCorreoExitoso(true)}
+              >
+                Sí, se envió
+              </button>
+              <button
+                className="submit-quote-btn"
+                style={{
+                  background: "#fff",
+                  color: "#121212",
+                  border: "1.5px solid #121212",
+                }}
+                onClick={() => confirmarCorreoExitoso(false)}
+              >
+                Probar de nuevo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="page-body">
         <div className="cotizacion-layout">
           <div>
@@ -246,7 +336,17 @@ export default function Cotizacion() {
                 {items.map((item) => (
                   <div className="cart-item-row" key={item.uid}>
                     <div className="cart-item-thumb">
-                      {item.tipo === "repuesto" ? (
+                      {item.imagen ? (
+                        <img
+                          src={item.imagen}
+                          alt={item.nombre}
+                          className="cart-item-img"
+                          onError={(e) => {
+                            // Si la imagen falla, se oculta y queda el icono de respaldo.
+                            e.currentTarget.style.display = "none";
+                          }}
+                        />
+                      ) : item.tipo === "repuesto" ? (
                         <Package size={22} />
                       ) : (
                         <Truck size={22} />
@@ -267,14 +367,19 @@ export default function Cotizacion() {
                         onClick={() =>
                           actualizarCantidad(item.uid, item.cantidad - 1)
                         }
+                        aria-label="Restar unidad"
                       >
                         −
                       </button>
-                      <span>{item.cantidad}</span>
+                      <QtyInput
+                        cantidad={item.cantidad}
+                        onCambiar={(valor) => actualizarCantidad(item.uid, valor)}
+                      />
                       <button
                         onClick={() =>
                           actualizarCantidad(item.uid, item.cantidad + 1)
                         }
+                        aria-label="Sumar unidad"
                       >
                         +
                       </button>
@@ -305,12 +410,16 @@ export default function Cotizacion() {
                 <h4>
                   {enviado === "whatsapp"
                     ? "¡Solicitud enviada por WhatsApp!"
-                    : "¡Solicitud enviada con éxito!"}
+                    : enviado === "correo"
+                      ? "¡Solicitud enviada por correo!"
+                      : "¡Solicitud enviada con éxito!"}
                 </h4>
                 <p>
                   {enviado === "whatsapp"
                     ? "Nuestro equipo se pondrá en contacto contigo pronto por ese medio."
-                    : "Quedó registrada en nuestro sistema; un asesor te contactará pronto para confirmar precios y disponibilidad."}
+                    : enviado === "correo"
+                      ? "Nuestro equipo revisará tu correo y te responderá a la brevedad."
+                      : "Quedó registrada en nuestro sistema; un asesor te contactará pronto para confirmar precios y disponibilidad."}
                 </p>
                 <button
                   className="clear-filters"
@@ -499,6 +608,24 @@ export default function Cotizacion() {
                     : user
                       ? "Enviar solicitud por la página"
                       : "Enviar por la página (inicia sesión)"}
+                </button>
+
+                <button
+                  type="button"
+                  className="submit-quote-btn"
+                  style={{
+                    background: "#fff",
+                    color: "#121212",
+                    border: "1.5px solid #121212",
+                    marginTop: 10,
+                  }}
+                  disabled={items.length === 0 || enviando !== null}
+                  onClick={handleEnviarCorreo}
+                >
+                  <Mail size={17} />{" "}
+                  {enviando === "correo"
+                    ? "Enviando..."
+                    : "Enviar solicitud por correo"}
                 </button>
 
                 <p className="form-note">

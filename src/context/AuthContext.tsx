@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { api, setToken } from "../api/client";
+import { api, setToken, getToken, ApiError } from "../api/client";
 
-export type Rol = "cliente" | "admin" | "owner";
+export type Rol = "cliente" | "admin" | "owner" | "cotizador";
 
 export interface Usuario {
   id: number;
@@ -23,6 +23,10 @@ interface AuthContextValue {
   refreshUser: () => Promise<void>;
   isAdminOrOwner: boolean;
   isOwner: boolean;
+  /** El cotizador solo ve ventas/cotizaciones y estadisticas. */
+  isCotizador: boolean;
+  /** Cualquier rol con acceso al panel de administracion. */
+  canAccessPanel: boolean;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -35,21 +39,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const me = await api.get<Usuario>("/api/auth/me");
       setUser(me);
-    } catch {
+    } catch (error) {
       setUser(null);
-      setToken(null);
+      if (error instanceof ApiError && error.status === 401) setToken(null);
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    const token = localStorage.getItem("hdm_token");
+    const onUnauthorized = () => setUser(null);
+    window.addEventListener("hdm:unauthorized", onUnauthorized);
+    const token = getToken();
     if (token) {
       loadMe();
     } else {
       setLoading(false);
     }
+    return () => window.removeEventListener("hdm:unauthorized", onUnauthorized);
   }, []);
 
   async function login(email: string, password: string) {
@@ -58,7 +65,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password,
     });
     setToken(res.access_token);
-    await loadMe();
+    try {
+      const me = await api.get<Usuario>("/api/auth/me");
+      setUser(me);
+    } catch (error) {
+      setToken(null);
+      throw error;
+    }
   }
 
   function logout() {
@@ -68,10 +81,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isAdminOrOwner = user?.rol === "admin" || user?.rol === "owner";
   const isOwner = user?.rol === "owner";
+  const isCotizador = user?.rol === "cotizador";
+  const canAccessPanel = isAdminOrOwner || isCotizador;
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, login, logout, refreshUser: loadMe, isAdminOrOwner, isOwner }}
+      value={{
+        user,
+        loading,
+        login,
+        logout,
+        refreshUser: loadMe,
+        isAdminOrOwner,
+        isOwner,
+        isCotizador,
+        canAccessPanel,
+      }}
     >
       {children}
     </AuthContext.Provider>

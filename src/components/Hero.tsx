@@ -7,21 +7,22 @@ export default function Hero() {
     <section className="hero">
       <div className="hero-overlay" />
       <div className="hero-content">
-        <span className="hero-tag">Repuestos originales y alternativos</span>
-        <h1>
-          Repuestos para <span>maquinaria pesada</span> en los que puedes confiar
+        <span className="hero-tag hero-anim hero-anim-1">Repuestos y maquinaria pesada</span>
+        <h1 className="hero-anim hero-anim-2">
+          Maquinaria pesada y <span>repuestos originales</span> en un solo lugar
         </h1>
-        <p>
-          Más de 8 años abasteciendo a la construcción, transporte e industria con
-          repuestos de calidad, stock permanente y atención técnica especializada.
+        <p className="hero-anim hero-anim-3">
+          Más de 10 años abasteciendo a la construcción, transporte e industria,
+          vendiendo tanto maquinaria pesada como los repuestos que la mantienen
+          funcionando, con stock permanente y atención técnica especializada.
         </p>
 
-        <div className="hero-actions">
+        <div className="hero-actions hero-anim hero-anim-4">
           <Link to="/repuestos" className="btn-primary">Ver catálogo de repuestos</Link>
           <Link to="/maquinaria" className="btn-secondary">Ver catálogo de maquinaria</Link>
         </div>
 
-        <div className="hero-stats">
+        <div className="hero-stats hero-anim hero-anim-5">
           <div className="stat">
             <Truck size={26} />
             <div>

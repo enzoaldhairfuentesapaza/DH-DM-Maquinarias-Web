@@ -1,49 +1,58 @@
 import "./App.css";
-import { Routes, Route } from "react-router-dom";
-import { useEffect } from "react";
+import { Routes, Route, Navigate, useParams } from "react-router-dom";
+import { useEffect, ReactNode, lazy, Suspense } from "react";
 import { useLocation } from "react-router-dom";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import FloatingContacts from "./components/FloatingContacts";
+import GloboSugerencias from "./components/GloboSugerencias";
 import FloatingCotizadorBtn from "./components/FloatingCotizadorBtn";
-import Home from "./pages/Home";
-import Nosotros from "./pages/Nosotros";
-import Maquinaria from "./pages/Maquinaria";
-import MaquinariaDetalle from "./pages/MaquinariaDetalle";
-import SectorDetalle from "./pages/SectorDetalle";
-import Repuestos from "./pages/Repuestos";
-import RepuestoDetalle from "./pages/RepuestoDetalle";
-import Novedades from "./pages/Novedades";
-import Blog from "./pages/Blog";
-import BlogDetalle from "./pages/BlogDetalle";
-import Promociones from "./pages/Promociones";
-import Cotizacion from "./pages/Cotizacion";
-import Contacto from "./pages/Contacto";
-import Login from "./pages/Login";
-import Registro from "./pages/Registro";
-import Perfil from "./pages/Perfil";
+const Home = lazy(() => import("./pages/Home"));
+const Nosotros = lazy(() => import("./pages/Nosotros"));
+const Maquinaria = lazy(() => import("./pages/Maquinaria"));
+const MaquinariaDetalle = lazy(() => import("./pages/MaquinariaDetalle"));
+const SectorDetalle = lazy(() => import("./pages/SectorDetalle"));
+const Repuestos = lazy(() => import("./pages/Repuestos"));
+const RepuestoDetalle = lazy(() => import("./pages/RepuestoDetalle"));
+const Novedades = lazy(() => import("./pages/Novedades"));
+const Blog = lazy(() => import("./pages/Blog"));
+const BlogDetalle = lazy(() => import("./pages/BlogDetalle"));
+const Promociones = lazy(() => import("./pages/Promociones"));
+const Cotizacion = lazy(() => import("./pages/Cotizacion"));
+const Contacto = lazy(() => import("./pages/Contacto"));
+const Login = lazy(() => import("./pages/Login"));
+const Registro = lazy(() => import("./pages/Registro"));
+const Perfil = lazy(() => import("./pages/Perfil"));
 import RequireAuth from "./components/RequireAuth";
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import { AuthModalProvider } from "./context/AuthModalContext";
+import { FeedbackProvider } from "./context/FeedbackContext";
 import AuthModal from "./components/AuthModal";
 import ProtectedRoute from "./components/admin/ProtectedRoute";
-import AdminLogin from "./pages/admin/Login";
-import AdminLayout from "./pages/admin/AdminLayout";
-import EditarPagina from "./pages/admin/EditarPagina";
-import ProductosHub from "./pages/admin/ProductosHub";
-import CategoriasAdmin from "./pages/admin/CategoriasAdmin";
-import VentasCotizacionesHub from "./pages/admin/VentasCotizacionesHub";
-import Cotizaciones from "./pages/admin/Cotizaciones";
-import CotizacionDetalle from "./pages/admin/CotizacionDetalle";
-import ContentList from "./pages/admin/ContentList";
-import ContentForm from "./pages/admin/ContentForm";
-import Accesos from "./pages/admin/Accesos";
+const AdminLogin = lazy(() => import("./pages/admin/Login"));
+const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
+const EditarPagina = lazy(() => import("./pages/admin/EditarPagina"));
+const ConfiguracionSitio = lazy(() => import("./pages/admin/ConfiguracionSitio"));
+const ProductosHub = lazy(() => import("./pages/admin/ProductosHub"));
+const CategoriasAdmin = lazy(() => import("./pages/admin/CategoriasAdmin"));
+const VentasCotizacionesHub = lazy(() => import("./pages/admin/VentasCotizacionesHub"));
+const Cotizaciones = lazy(() => import("./pages/admin/Cotizaciones"));
+const CotizacionDetalle = lazy(() => import("./pages/admin/CotizacionDetalle"));
+const ContentList = lazy(() => import("./pages/admin/ContentList"));
+const ContentForm = lazy(() => import("./pages/admin/ContentForm"));
+const Accesos = lazy(() => import("./pages/admin/Accesos"));
+const Papelera = lazy(() => import("./pages/admin/Papelera"));
+const Auditoria = lazy(() => import("./pages/admin/Auditoria"));
+const Sugerencias = lazy(() => import("./pages/admin/Sugerencias"));
+const Estadisticas = lazy(() => import("./pages/admin/Estadisticas"));
+
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 function ScrollToTop() {
   const { pathname, hash } = useLocation();
   useEffect(() => {
     if (hash) {
-      const el = document.querySelector(hash);
+      const el = document.getElementById(decodeURIComponent(hash.slice(1)));
       if (el) {
         setTimeout(() => el.scrollIntoView({ behavior: "smooth" }), 80);
         return;
@@ -52,6 +61,19 @@ function ScrollToTop() {
     window.scrollTo(0, 0);
   }, [pathname, hash]);
   return null;
+}
+
+function FormalQuoteRedirect({ history = false }: { history?: boolean }) {
+  const { user, loading } = useAuth();
+  useEffect(() => {
+    if (!loading && user && ["admin", "owner", "cotizador"].includes(user.rol)) {
+      window.location.replace(`/cotizador-app/${history ? "historial.html" : "index.html"}`);
+    }
+  }, [user, loading, history]);
+  if (loading) return <p>Cargando...</p>;
+  if (!user) return <Navigate to="/admin/login" replace />;
+  if (!["admin", "owner", "cotizador"].includes(user.rol)) return <Navigate to="/" replace />;
+  return <p>Abriendo cotizador...</p>;
 }
 
 function PublicLayout() {
@@ -82,19 +104,47 @@ function PublicLayout() {
             </RequireAuth>
           }
         />
-        <Route path="*" element={<Home />} />
+        <Route path="/cotizador" element={<FormalQuoteRedirect />} />
+        <Route path="/cotizador/historial" element={<FormalQuoteRedirect history />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
       <Footer />
       <FloatingContacts />
+      <GloboSugerencias />
       <FloatingCotizadorBtn />
     </>
   );
 }
 
+/**
+ * Guarda las secciones de contenido (:entityKey). El cotizador solo puede
+ * entrar a "ventas"; el resto del contenido es de admin/owner.
+ */
+function ContenidoRoute({ children }: { children: ReactNode }) {
+  const { isCotizador } = useAuth();
+  const { entityKey } = useParams<{ entityKey: string }>();
+  if (isCotizador && entityKey !== "ventas") {
+    return <Navigate to="/admin/ventas-cotizaciones" replace />;
+  }
+  return <>{children}</>;
+}
+
+/**
+ * Pantalla inicial del panel: los admin/owner ven "Editar Página";
+ * el cotizador no tiene acceso ahí, así que va directo a sus secciones.
+ */
+function AdminHome() {
+  const { isCotizador } = useAuth();
+  if (isCotizador) return <Navigate to="/admin/ventas-cotizaciones" replace />;
+  return <EditarPagina />;
+}
+
 function App() {
   return (
+    <FeedbackProvider>
     <AuthProvider>
       <AuthModalProvider>
+        <Suspense fallback={<p role="status" style={{ padding: 24 }}>Cargando página...</p>}>
         <ScrollToTop />
         <AuthModal />
         <Routes>
@@ -103,20 +153,65 @@ function App() {
         <Route
           path="/admin"
           element={
-            <ProtectedRoute allowedRoles={["admin", "owner"]}>
+            <ProtectedRoute allowedRoles={["admin", "owner", "cotizador"]}>
               <AdminLayout />
             </ProtectedRoute>
           }
         >
-          <Route index element={<EditarPagina />} />
-          <Route path="productos" element={<ProductosHub />} />
-          <Route path="productos/categorias" element={<CategoriasAdmin />} />
+          {/* El cotizador entra directo a Ventas y Cotizaciones */}
+          <Route index element={<AdminHome />} />
+          <Route
+            path="productos"
+            element={
+              <ProtectedRoute allowedRoles={["admin", "owner"]}>
+                <ProductosHub />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="productos/categorias"
+            element={
+              <ProtectedRoute allowedRoles={["admin", "owner"]}>
+                <CategoriasAdmin />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="configuracion"
+            element={
+              <ProtectedRoute allowedRoles={["admin", "owner"]}>
+                <ConfiguracionSitio />
+              </ProtectedRoute>
+            }
+          />
           <Route path="ventas-cotizaciones" element={<VentasCotizacionesHub />} />
+          <Route path="estadisticas" element={<Estadisticas />} />
           <Route path="cotizaciones" element={<Cotizaciones />} />
           <Route path="cotizaciones/:id" element={<CotizacionDetalle />} />
-          <Route path=":entityKey" element={<ContentList />} />
-          <Route path=":entityKey/nuevo" element={<ContentForm />} />
-          <Route path=":entityKey/:id" element={<ContentForm />} />
+          <Route
+            path=":entityKey"
+            element={
+              <ContenidoRoute>
+                <ContentList />
+              </ContenidoRoute>
+            }
+          />
+          <Route
+            path=":entityKey/nuevo"
+            element={
+              <ContenidoRoute>
+                <ContentForm />
+              </ContenidoRoute>
+            }
+          />
+          <Route
+            path=":entityKey/:id"
+            element={
+              <ContenidoRoute>
+                <ContentForm />
+              </ContenidoRoute>
+            }
+          />
           <Route
             path="accesos"
             element={
@@ -125,12 +220,38 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="cotizaciones/papelera"
+            element={
+              <ProtectedRoute allowedRoles={["owner"]}>
+                <Papelera />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="auditoria"
+            element={
+              <ProtectedRoute allowedRoles={["owner"]}>
+                <Auditoria />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="sugerencias"
+            element={
+              <ProtectedRoute allowedRoles={["admin", "owner"]}>
+                <Sugerencias />
+              </ProtectedRoute>
+            }
+          />
         </Route>
 
         <Route path="/*" element={<PublicLayout />} />
         </Routes>
+      </Suspense>
       </AuthModalProvider>
     </AuthProvider>
+    </FeedbackProvider>
   );
 }
 

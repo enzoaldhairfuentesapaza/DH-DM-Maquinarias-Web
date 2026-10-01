@@ -1,0 +1,22 @@
+{
+  "passed": 16,
+  "checks": [
+    "home renders",
+    "all 4802 products reachable",
+    "pagination previous works",
+    "part-code search works",
+    "catalog fits mobile",
+    "unknown route renders 404 page",
+    "owner panel renders",
+    "admin creates product",
+    "history alias opens calculator",
+    "calculator adds valid product",
+    "CAT adjustment and quantity calculation",
+    "calculator module executes",
+    "formal quote accepted for internal role",
+    "history escapes client HTML",
+    "stored HTML cannot execute",
+    "no runtime errors: "
+  ],
+  "errors": []
+}

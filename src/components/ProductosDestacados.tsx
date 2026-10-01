@@ -1,16 +1,16 @@
 import "./ProductosDestacados.css";
 import { Link } from "react-router-dom";
-import { Cog, Filter, Droplets, Link2 } from "lucide-react";
+import { Wrench, Filter, Droplets, Link2 } from "lucide-react";
 
 const productos = [
   {
-    icon: Cog,
-    nombre: "Rodamientos y engranajes",
+    icon: Wrench,
+    nombre: "Kits de mantenimiento",
     desc: "Componentes de alta resistencia para transmisión de potencia.",
   },
   {
     icon: Filter,
-    nombre: "Filtros hidráulicos y de aire",
+    nombre: "Filtros",
     desc: "Filtración certificada para motores y sistemas hidráulicos.",
   },
   {

@@ -2,14 +2,14 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <title>HDM Maquinarias - Cotización</title>
+    <title>DH&DM Maquinarias SAC - Cotización</title>
     <link rel="stylesheet" href="estilos.css" />
     <link rel="icon" href="icono.png" />
   </head>
 
   <body>
     <header>
-      <img src="/Logo.jpg" alt="HDM Maquinarias" class="logo" />
+      <img src="/Logo.jpg" alt="DH&DM Maquinarias SAC" class="logo" />
       <button
         class="btn-historial"
         onclick="window.location.href = 'historial.html'"
@@ -181,6 +181,24 @@
               El tipo de cambio solo se aplica a productos en USD
             </small>
           </div>
+
+          <div class="dolar-toggle-wrap">
+            <button
+              type="button"
+              id="btnDejarEnDolares"
+              class="btn-currency-toggle"
+              onclick="toggleDejarEnDolares()"
+              aria-pressed="false"
+            >
+              <span class="toggle-dot"></span>
+              Dejar cotización en dólares
+            </button>
+            <small class="info-text">
+              Actívalo cuando el cliente pidió la cotización directamente en
+              USD. Mientras esté activo, el tipo de cambio queda bloqueado
+              porque no se necesita convertir nada.
+            </small>
+          </div>
           <!--
 <div class="currency-global">
     <button class="btn-currency usd" onclick="convertAll('USD')">
@@ -219,23 +237,9 @@
       </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="/vendor/jspdf.umd.min.js"></script>
+    <script src="runtime-config.js"></script>
     <script type="module" src="script.js"></script>
 
-    <div id="editModal" class="modal">
-      <div class="modal-content">
-        <h3>Editar Producto</h3>
-
-        <input id="editCodigo" placeholder="Código" />
-        <input id="editDescripcion" placeholder="Descripción" />
-        <input id="editPrecio" type="number" placeholder="Precio" />
-        <input id="editCantidad" type="number" placeholder="Cantidad" />
-
-        <div class="modal-buttons">
-          <button onclick="guardarEdicion()">Guardar</button>
-          <button onclick="cerrarModal()">Cancelar</button>
-        </div>
-      </div>
-    </div>
   </body>
 </html>

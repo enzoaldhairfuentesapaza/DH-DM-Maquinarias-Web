@@ -1,10 +1,11 @@
 <?php
+require_once __DIR__ . '/cli_only.php';
 /**
  * Agrega las columnas de stock (stock_disponible, stock_cantidad) a las
  * tablas maquinarias y repuestos si todavia no existen. Seguro de correr
  * varias veces: revisa si la columna ya existe antes de agregarla.
  *
- * Correr una sola vez visitando esta URL desde el navegador, luego borrar
+ * Ejecutar por terminal; nunca desde el navegador.
  * este archivo del servidor.
  */
 require_once __DIR__ . '/db.php';

@@ -1,10 +1,11 @@
 <?php
+require_once __DIR__ . '/cli_only.php';
 /**
  * Agrega maquinaria de EJEMPLO/PLACEHOLDER en las categorias que no tenian
  * productos todavia, con fotos de licencia libre (Wikimedia Commons) mientras
  * se completa el inventario real. NO borra ni modifica lo que ya existe.
  *
- * Correr una sola vez visitando esta URL desde el navegador, luego borrar
+ * Ejecutar por terminal; nunca desde el navegador.
  * este archivo del servidor.
  *
  * Creditos de fotos (Wikimedia Commons, licencias CC0 / CC-BY-SA):

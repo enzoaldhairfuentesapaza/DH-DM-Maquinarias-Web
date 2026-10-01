@@ -1,9 +1,10 @@
 <?php
+require_once __DIR__ . '/cli_only.php';
 /**
  * Migracion: agrega a la tabla usuarios las columnas necesarias para el
  * registro extendido (telefono, tipo/numero de documento, razon social).
  *
- * Correr una sola vez visitando esta URL desde el navegador, luego borrar
+ * Ejecutar por terminal; nunca desde el navegador.
  * este archivo del servidor. Es seguro volver a correrlo (ignora columnas
  * que ya existan).
  */

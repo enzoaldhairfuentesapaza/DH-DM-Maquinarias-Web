@@ -31,7 +31,7 @@ export default function AdminLogin() {
         <div className="admin-login-logo">
           <div className="mark">H</div>
           <div>
-            <div style={{ fontWeight: 800, fontSize: 15, color: "#121212" }}>HDM</div>
+            <div style={{ fontWeight: 800, fontSize: 15, color: "#121212" }}>{"DH&DM"}</div>
             <div className="company">Panel administrativo</div>
           </div>
         </div>
@@ -71,7 +71,7 @@ export default function AdminLogin() {
           </button>
         </form>
         <p style={{ textAlign: "center", marginTop: 22, fontSize: 13, color: "#999" }}>
-          Acceso exclusivo para administradores y owners
+          Acceso exclusivo para administradores, owners y cotizadores
         </p>
       </div>
     </div>

@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import "./auth.css";
 
 export default function Login() {
-  const { login, user, isAdminOrOwner } = useAuth();
+  const { login, user, canAccessPanel } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -32,7 +32,7 @@ export default function Login() {
         <div className="auth-box">
           <h1>¡Bienvenido, {user.nombre.split(" ")[0]}!</h1>
           <p className="subtitle">Iniciaste sesión correctamente.</p>
-          {isAdminOrOwner ? (
+          {canAccessPanel ? (
             <div className="auth-panel-cta">
               <span>Tienes acceso al panel administrativo</span>
               <Link to="/admin">Ir al panel</Link>

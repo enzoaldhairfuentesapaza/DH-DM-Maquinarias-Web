@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Plus, Trash2, Pencil, Check, X, Search } from "lucide-react";
 import { api } from "../../api/client";
+import { useFeedback } from "../../context/FeedbackContext";
 import "./admin.css";
 
 interface Categoria {
@@ -11,6 +12,7 @@ interface Categoria {
 }
 
 export default function CategoriasAdmin() {
+  const feedback = useFeedback();
   const [tab, setTab] = useState<"maquinaria" | "repuesto">("maquinaria");
   const [items, setItems] = useState<Categoria[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,18 +46,26 @@ export default function CategoriasAdmin() {
       await api.post("/api/categorias", { tipo: tab, nombre: nuevo.trim() });
       setNuevo("");
       load();
+      feedback.success("Categoría agregada.");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Error al agregar");
+      feedback.error(err instanceof Error ? err.message : "Error al agregar la categoría.");
     }
   }
 
   async function handleEliminar(id: number) {
-    if (!confirm("¿Eliminar esta categoría? Los productos que ya la usan no se verán afectados, pero dejará de aparecer como opción.")) return;
+    const ok = await feedback.confirm({
+      title: "Eliminar categoría",
+      message: "Los productos que ya la usan no se verán afectados, pero dejará de aparecer como opción.",
+      confirmLabel: "Sí, eliminar",
+      danger: true,
+    });
+    if (!ok) return;
     try {
       await api.delete(`/api/categorias/${id}`);
       setItems((prev) => prev.filter((c) => c.id !== id));
+      feedback.success("Categoría eliminada.");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Error al eliminar");
+      feedback.error(err instanceof Error ? err.message : "Error al eliminar la categoría.");
     }
   }
 
@@ -70,8 +80,9 @@ export default function CategoriasAdmin() {
       await api.put(`/api/categorias/${id}`, { nombre: editNombre.trim() });
       setEditId(null);
       load();
+      feedback.success("Categoría actualizada.");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Error al editar");
+      feedback.error(err instanceof Error ? err.message : "Error al editar la categoría.");
     }
   }
 

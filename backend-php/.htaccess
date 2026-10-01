@@ -1,0 +1,15 @@
+Options -Indexes
+RewriteEngine On
+# Only the API front controller is reachable as PHP over HTTP.
+RewriteRule ^(?!index\.php$).*\.php$ - [F,L,NC]
+RewriteRule ^(?:private|seed_data)(?:/|$) - [F,L,NC]
+RewriteRule \.(?:db|sqlite|sql|ini|log|bak)(?:[.-].*)?$ - [F,L,NC]
+RewriteRule (^|/)\.(?!well-known) - [F,L]
+# Legacy public document links go through authentication too.
+RewriteRule ^uploads/.*\.(?:pdf|docx?|xlsx?)$ /api/index.php [END,NC]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ /api/index.php [END]
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+</IfModule>

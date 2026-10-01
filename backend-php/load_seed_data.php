@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/cli_only.php';
 /**
  * Carga a la base de datos el contenido que antes estaba "hardcodeado" en
  * src/data/*.ts (novedades, blog, promociones), ya exportado a JSON en

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "../api/client";
+import { api, resolveApiAsset } from "../api/client";
 
 export interface Novedad {
   id: number;
@@ -8,6 +8,7 @@ export interface Novedad {
   fecha: string;
   resumen: string;
   imagen: string;
+  destacado?: boolean;
 }
 
 export interface Promocion {
@@ -68,9 +69,20 @@ export interface Repuesto {
   imagen: string;
   stockDisponible: boolean;
   stockCantidad: number;
+  destacado?: boolean;
 }
 
-function useFetchList<T>(path: string, mapItem: (raw: any) => T) {
+interface RawRecord {
+  id: number; titulo: string; categoria: string; fecha: string; resumen: string;
+  imagen: string | null; destacado: boolean; descripcion: string; vigencia: string;
+  contenido: string[]; nombre: string; marca: string; anio: number; año?: number;
+  condicion: Maquina['condicion']; potencia: string; peso: string; ubicacion: string;
+  especificaciones: EspecificacionItem[] | string; stock_disponible?: boolean;
+  stock_cantidad: number; codigo: string; marca_detalle: string; unidad: string;
+  modelo_recomendado: string[]; codigo_original: string;
+}
+
+function useFetchList<T>(path: string, mapItem: (raw: RawRecord) => T) {
   const [data, setData] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -78,8 +90,9 @@ function useFetchList<T>(path: string, mapItem: (raw: any) => T) {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    setError("");
     api
-      .get<any[]>(path)
+      .get<RawRecord[]>(path)
       .then((raw) => {
         if (!cancelled) setData(raw.map(mapItem));
       })
@@ -105,8 +118,71 @@ export function useNovedades() {
     categoria: n.categoria,
     fecha: n.fecha,
     resumen: n.resumen,
-    imagen: n.imagen ?? "",
+    imagen: resolveApiAsset(n.imagen),
+    destacado: !!n.destacado,
   }));
+}
+
+/**
+ * Categorías creadas en el panel (Productos > Categorías) para "maquinaria" o
+ * "repuesto". Se usa para que una categoría recién creada aparezca en los
+ * filtros de /maquinaria o /repuestos aunque todavía no tenga productos.
+ */
+export function useCategorias(tipo: "maquinaria" | "repuesto") {
+  const [nombres, setNombres] = useState<string[]>([]);
+
+  useEffect(() => {
+    let cancelado = false;
+    api
+      .get<{ nombre: string }[]>(`/api/categorias?tipo=${tipo}`)
+      .then((data) => {
+        if (!cancelado) setNombres(data.map((c) => c.nombre));
+      })
+      .catch(() => {
+        if (!cancelado) setNombres([]);
+      });
+    return () => {
+      cancelado = true;
+    };
+  }, [tipo]);
+
+  return nombres;
+}
+
+/**
+ * Configuración general del sitio (números de contacto, correo, etc.)
+ * editable por admins/owners desde "Editar Página > Números y correo".
+ */
+export interface ConfiguracionSitio {
+  whatsapp_primario: string;
+  whatsapp_secundario: string;
+  correo_contacto: string;
+}
+
+const CONFIG_POR_DEFECTO: ConfiguracionSitio = {
+  whatsapp_primario: "51988341207",
+  whatsapp_secundario: "51976215893",
+  correo_contacto: "contacto@dh-dm-maquinarias.com",
+};
+
+export function useConfiguracionSitio() {
+  const [data, setData] = useState<ConfiguracionSitio>(CONFIG_POR_DEFECTO);
+  const [loading, setLoading] = useState(true);
+
+  const recargar = () => {
+    setLoading(true);
+    api
+      .get<Partial<ConfiguracionSitio>>("/api/configuracion")
+      .then((raw) => setData({ ...CONFIG_POR_DEFECTO, ...raw }))
+      .catch(() => setData(CONFIG_POR_DEFECTO))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    recargar();
+  }, []);
+
+  return { data, loading, recargar };
 }
 
 export function usePromociones() {
@@ -115,7 +191,7 @@ export function usePromociones() {
     titulo: p.titulo,
     descripcion: p.descripcion,
     vigencia: p.vigencia,
-    imagen: p.imagen ?? "",
+    imagen: resolveApiAsset(p.imagen),
     destacado: !!p.destacado,
   }));
 }
@@ -128,7 +204,7 @@ export function useBlogPosts() {
     fecha: b.fecha,
     resumen: b.resumen,
     contenido: Array.isArray(b.contenido) ? b.contenido : [],
-    imagen: b.imagen ?? "",
+    imagen: resolveApiAsset(b.imagen),
     destacado: !!b.destacado,
   }));
 }
@@ -146,7 +222,7 @@ export function useMaquinarias() {
     ubicacion: m.ubicacion ?? "",
     descripcion: m.descripcion,
     especificaciones: Array.isArray(m.especificaciones) ? m.especificaciones : [],
-    imagen: m.imagen ?? "",
+    imagen: resolveApiAsset(m.imagen),
     destacado: !!m.destacado,
     stockDisponible: m.stock_disponible === undefined ? true : !!m.stock_disponible,
     stockCantidad: Number(m.stock_cantidad ?? 0),
@@ -160,14 +236,15 @@ export function useRepuestos() {
     marca: r.marca,
     marcaDetalle: r.marca_detalle ?? "",
     nombre: r.nombre,
-    especificaciones: r.especificaciones ?? "",
+    especificaciones: typeof r.especificaciones === "string" ? r.especificaciones : "",
     categoria: r.categoria,
     descripcion: r.descripcion,
     unidad: r.unidad ?? "UNIDADES",
     modeloRecomendado: Array.isArray(r.modelo_recomendado) ? r.modelo_recomendado : [],
     codigoOriginal: r.codigo_original ?? "",
-    imagen: r.imagen ?? "",
+    imagen: resolveApiAsset(r.imagen),
     stockDisponible: r.stock_disponible === undefined ? true : !!r.stock_disponible,
     stockCantidad: Number(r.stock_cantidad ?? 0),
+    destacado: !!r.destacado,
   }));
 }

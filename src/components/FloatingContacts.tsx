@@ -2,11 +2,15 @@ import "./FloatingContacts.css";
 import { Phone, X } from "lucide-react";
 import ChatBot from "./ChatBot";
 import { useState } from "react";
+import { useConfiguracionSitio } from "../hooks/useApiData";
 
 type ActiveFab = "chat" | "whatsapp" | "phone" | null;
 
 export default function FloatingContacts() {
   const [active, setActive] = useState<ActiveFab>(null);
+  const { data: config } = useConfiguracionSitio();
+  const numero = config.whatsapp_primario;
+  const numeroFormateado = `+${numero.slice(0, 2)} ${numero.slice(2, 5)} ${numero.slice(5, 8)} ${numero.slice(8)}`;
 
   const toggle = (fab: ActiveFab) => {
     setActive((current) => (current === fab ? null : fab));
@@ -46,12 +50,12 @@ export default function FloatingContacts() {
             <div className="fab-popover">
               <p>Escríbenos por WhatsApp</p>
               <a
-                href="https://wa.me/51942203833"
+                href={`https://wa.me/${numero}`}
                 target="_blank"
                 rel="noreferrer"
                 onClick={() => setActive(null)}
               >
-                +51 942 203 833 +51 977 272 747
+                {numeroFormateado}
               </a>
             </div>
           )}
@@ -70,7 +74,7 @@ export default function FloatingContacts() {
           {active === "phone" && (
             <div className="fab-popover">
               <p>Llámanos</p>
-              <a href="tel:+51942203833">+51 942 203 833</a>
+              <a href={`tel:+${numero}`}>{numeroFormateado}</a>
             </div>
           )}
           <button

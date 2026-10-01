@@ -1,10 +1,10 @@
 // Adaptado para usar el backend PHP de HDM Maquinarias en vez de Supabase.
 
-const API_URL = (() => {
-  const host = window.location.hostname;
-  if (host === "localhost" || host === "127.0.0.1") return "http://localhost:8000";
-  return "https://api.dh-dm-maquinarias.com";
-})();
+const API_URL = window.HDM_API_ORIGIN ?? "";
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>\"\']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "\'": "&#39;" }[char]));
+}
 
 function getToken() {
   return localStorage.getItem("hdm_token");
@@ -16,7 +16,9 @@ async function apiFetch(path, options = {}) {
   if (!(options.body instanceof FormData)) headers["Content-Type"] = "application/json";
   if (token) headers["X-Auth-Token"] = token;
 
-  const res = await fetch(`${API_URL}${path}`, { ...options, headers });
+  let method = options.method;
+  if (["PUT", "DELETE", "PATCH"].includes(method)) { headers["X-HTTP-Method-Override"] = method; method = "POST"; }
+  const res = await fetch(`${API_URL}${path}`, { ...options, method, headers });
   if (!res.ok) {
     let detail = "Ocurrio un error";
     try {
@@ -38,7 +40,7 @@ async function verificarAcceso() {
   }
   try {
     const usuario = await apiFetch("/api/auth/me");
-    if (usuario.rol !== "admin" && usuario.rol !== "owner") {
+    if (!["admin", "owner", "cotizador"].includes(usuario.rol)) {
       alert("El historial de cotizaciones es solo para administradores.");
       window.location.href = "/";
       return false;
@@ -66,8 +68,10 @@ async function obtenerCotizaciones() {
       direccion: c.cliente_direccion,
       fecha: c.creado_en,
       productos: c.items,
+      cantidad_productos: Array.isArray(c.items) ? c.items.length : 0,
       total: c.total,
       tipo_cambio: c.tipo_cambio,
+      moneda_mostrar: c.moneda_mostrar,
     }));
   } catch (err) {
     console.error(err);
@@ -107,18 +111,18 @@ function renderTabla(lista) {
   lista.forEach(c => {
     html += `
       <tr>
-        <td>${c.id}</td>
-        <td>${c.cliente}</td>
-        <td>${new Date(c.fecha).toLocaleDateString()}</td>
-        <td>${c.dni || "-"}</td>
-        <td>${c.direccion || "-"}</td>
-        <td>${c.total}</td>
-        <td>${c.tipo_cambio || "-"}</td>
-        <td>${c.cantidad_productos || 0}</td>
+        <td>${escapeHtml(c.id)}</td>
+        <td>${escapeHtml(c.cliente)}</td>
+        <td>${escapeHtml(new Date(c.fecha).toLocaleDateString())}</td>
+        <td>${escapeHtml(c.dni || "-")}</td>
+        <td>${escapeHtml(c.direccion || "-")}</td>
+        <td>${escapeHtml(c.total)}</td>
+        <td>${escapeHtml(c.tipo_cambio || "-")}</td>
+        <td>${escapeHtml(c.cantidad_productos || 0)}</td>
         <td class="acciones">
-          <button onclick='abrirCotizacion(${c.id})'>✏️</button>
-          <button onclick='descargarPDF(${c.id})'>⬇️</button>
-          <button onclick='borrarCotizacion(${c.id})'>🗑️</button>
+          <button onclick='abrirCotizacion(${Number(c.id)})'>✏️</button>
+          <button onclick='descargarPDF(${Number(c.id)})'>⬇️</button>
+          <button onclick='borrarCotizacion(${Number(c.id)})'>🗑️</button>
         </td>
       </tr>
     `;
@@ -156,16 +160,9 @@ function aplicarFiltros() {
       coincideFecha = fechaCoti === fechaSeleccionada;
     }
 
-    console.log("Filtro fecha:", fechaSeleccionada);
 
-    const fecha = new Date(c.fecha);
 
-    const fechaCoti =
-      fecha.getFullYear() + "-" +
-      String(fecha.getMonth() + 1).padStart(2, "0") + "-" +
-      String(fecha.getDate()).padStart(2, "0");
 
-    console.log("Fecha BD:", fechaCoti)
 
     return coincideTexto && coincideFecha;
   });
@@ -211,8 +208,10 @@ async function descargarPDF(id)
       direccion: c.cliente_direccion,
       fecha: c.creado_en,
       productos: c.items,
+      cantidad_productos: Array.isArray(c.items) ? c.items.length : 0,
       total: c.total,
       tipo_cambio: c.tipo_cambio,
+      moneda_mostrar: c.moneda_mostrar,
     };
   } catch (err) {
     alert("No se pudo cargar la cotización");
@@ -224,7 +223,7 @@ async function descargarPDF(id)
 
   const img = new Image();
   img.src = "plantillahdm.png";
-  await new Promise(r => img.onload = r);
+  await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = () => reject(new Error("No se pudo cargar la plantilla PDF.")); });
 
   doc.addImage(img, "PNG", 0, 0, 210, 297);
 
@@ -249,9 +248,9 @@ async function descargarPDF(id)
     // 🔥 cálculo igual al index
     let precio = p.price;
 
-    if (p.currency === "USD") {
-      precio *= (cotizacion.tipo_cambio || 1);
-    }
+    if (cotizacion.moneda_mostrar === "USD") {
+      if (p.currency === "PEN") precio /= (cotizacion.tipo_cambio || 1);
+    } else if (p.currency === "USD") precio *= (cotizacion.tipo_cambio || 1);
 
     (p.brandAdjustments || []).forEach(a => precio *= (1 + a / 100));
     (p.discounts || []).forEach(d => precio *= (1 - d / 100));
@@ -272,6 +271,7 @@ async function descargarPDF(id)
     const lineHeight = 5;
     const maxLines = Math.max(codigoLines.length, descLines.length);
     const blockHeight = maxLines * lineHeight;
+    if (y + blockHeight > 260) { doc.addPage(); doc.addImage(img, "PNG", 0, 0, 210, 297); y = 107; }
 
     // 🔹 todo alineado arriba (como decidiste)
     doc.setFontSize(10);
@@ -294,7 +294,7 @@ async function descargarPDF(id)
   });
 
   doc.setFontSize(10);
-  doc.text(total.toFixed(2), 202, 275, { align: "right" });
+  doc.text(`${cotizacion.moneda_mostrar === "USD" ? "USD" : "PEN"} ${total.toFixed(2)}`, 202, 275, { align: "right" });
 
   doc.save(`Cotizacion_${cotizacion.id}.pdf`);
 }

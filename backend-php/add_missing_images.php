@@ -1,10 +1,11 @@
 <?php
+require_once __DIR__ . '/cli_only.php';
 /**
  * Agrega fotos (licencia libre, Wikimedia Commons) a los productos que no
  * tenian imagen todavia. Solo actualiza el campo 'imagen' cuando esta vacio,
  * no toca ningun otro dato del producto.
  *
- * Correr una sola vez visitando esta URL desde el navegador, luego borrar
+ * Ejecutar por terminal; nunca desde el navegador.
  * este archivo del servidor.
  *
  * Creditos de fotos (Wikimedia Commons, licencias libres):

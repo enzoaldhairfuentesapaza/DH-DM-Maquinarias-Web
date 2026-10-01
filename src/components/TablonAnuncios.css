@@ -23,6 +23,9 @@
     transition: opacity 0.7s ease, transform 6s ease;
     display: flex;
     align-items: flex-end;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
 }
 
     .tablon-slide.active {

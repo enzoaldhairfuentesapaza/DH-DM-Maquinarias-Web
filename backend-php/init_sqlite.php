@@ -1,10 +1,11 @@
 <?php
+require_once __DIR__ . '/cli_only.php';
 /**
  * Solo para desarrollo local con SQLite. En produccion (MySQL) usa
  * schema.mysql.sql directamente en phpMyAdmin; este archivo no se usa ahi.
  * Ejecutar con: php init_sqlite.php
  */
-require __DIR__ . '/db.php';
+require_once __DIR__ . '/db.php';
 
 $pdo = db();
 
@@ -15,6 +16,7 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS usuarios (
     hashed_password TEXT NOT NULL,
     rol TEXT NOT NULL DEFAULT 'cliente',
     activo INTEGER NOT NULL DEFAULT 1,
+    token_version INTEGER NOT NULL DEFAULT 0,
     telefono TEXT,
     tipo_documento TEXT,
     numero_documento TEXT,
@@ -29,6 +31,7 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS novedades (
     fecha TEXT NOT NULL,
     resumen TEXT NOT NULL,
     imagen TEXT,
+    destacado INTEGER NOT NULL DEFAULT 0,
     creado_en TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     actualizado_en TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 )");
@@ -67,10 +70,38 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS cotizaciones (
     estado TEXT NOT NULL DEFAULT 'pendiente',
     respuesta TEXT,
     motivo_denegacion TEXT,
+    archivo_respuesta TEXT,
+    canal_respuesta TEXT,
+    mostrar_en_pagina INTEGER NOT NULL DEFAULT 0,
     origen TEXT NOT NULL DEFAULT 'web',
     usuario_id INTEGER,
+    eliminado_en TEXT,
+    eliminado_por INTEGER,
+    eliminado_por_nombre TEXT,
+    motivo_eliminacion TEXT,
     creado_en TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     actualizado_en TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+)");
+
+$pdo->exec("CREATE TABLE IF NOT EXISTS auditoria (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    usuario_id INTEGER,
+    usuario_nombre TEXT,
+    usuario_rol TEXT,
+    categoria TEXT NOT NULL,
+    accion TEXT NOT NULL,
+    descripcion TEXT NOT NULL,
+    creado_en TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+)");
+
+$pdo->exec("CREATE TABLE IF NOT EXISTS notificaciones (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    usuario_id INTEGER NOT NULL,
+    cotizacion_id INTEGER,
+    tipo TEXT NOT NULL DEFAULT 'cotizacion',
+    mensaje TEXT NOT NULL,
+    leida INTEGER NOT NULL DEFAULT 0,
+    creado_en TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 )");
 
 $pdo->exec("CREATE TABLE IF NOT EXISTS maquinarias (
@@ -108,6 +139,7 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS repuestos (
     imagen TEXT,
     stock_disponible INTEGER NOT NULL DEFAULT 1,
     stock_cantidad INTEGER NOT NULL DEFAULT 0,
+    destacado INTEGER NOT NULL DEFAULT 0,
     creado_en TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     actualizado_en TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 )");
@@ -150,7 +182,12 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS categorias_productos (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     tipo TEXT NOT NULL,
     nombre TEXT NOT NULL,
-    creado_en TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    creado_en TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(tipo, nombre)
 )");
+
+require __DIR__ . '/migrate_configuracion_sitio.php';
+require __DIR__ . '/migrate_sugerencias.php';
+$pdo->exec('CREATE TABLE IF NOT EXISTS rate_limits (bucket VARCHAR(64) PRIMARY KEY, hits INT NOT NULL, expires_at BIGINT NOT NULL)');
 
 echo "Tablas creadas correctamente en SQLite (hdm.db).\n";

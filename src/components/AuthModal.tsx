@@ -7,7 +7,7 @@ import "./AuthModal.css";
 
 export default function AuthModal() {
   const { mode, close, openLogin, openRegistro } = useAuthModal();
-  const { login, user, isAdminOrOwner } = useAuth();
+  const { login, user, canAccessPanel } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -75,7 +75,7 @@ export default function AuthModal() {
             <p className="auth-modal-subtitle">
               {mode === "registro" ? "Tu cuenta se creó correctamente." : "Iniciaste sesión correctamente."}
             </p>
-            {isAdminOrOwner && (
+            {canAccessPanel && (
               <div className="auth-modal-panel-cta">
                 <span>Tienes acceso al panel administrativo</span>
                 <Link to="/admin" onClick={close}>

@@ -1,0 +1,42 @@
+# Dependencias y resultados de compilación
+node_modules/
+dist/
+release/
+coverage/
+*.tsbuildinfo
+scripts/out/
+
+# Variables locales: solo se versionan los ejemplos y la configuración pública de build
+.env
+.env.*
+!.env.example
+!.env.production
+
+# Credenciales del servidor y bases locales
+backend-php/config.local.php
+*.db
+*.db-*
+*.db.*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+owner.sql
+
+# Archivos subidos por usuarios: conservar las reglas de protección
+backend-php/private/*
+!backend-php/private/.htaccess
+backend-php/uploads/*
+!backend-php/uploads/.htaccess
+
+# Logs y archivos del sistema/editor
+*.log
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+*.swp
+*.swo
+*~
+
+# Se conservan package-lock.json, imágenes públicas, código, esquemas SQL y tests.

@@ -63,26 +63,23 @@ export default function CardRepuestos() {
                 </Link>
                 <p>Código: {r.codigo || "—"}</p>
                 <button
-                  className="btn-primary small"
+                  className={`btn-primary small ${yaAgregado ? "added" : ""}`}
                   disabled={!r.stockDisponible}
                   onClick={() => {
-                    if (!yaAgregado) {
-                      agregarItem({
-                        tipo: "repuesto",
-                        id: r.id,
-                        nombre: r.nombre,
-                        codigo: r.codigo,
-                        marca: r.marca,
-                        categoria: r.categoria,
-                      });
-
-                      toast.success("¡Repuesto agregado correctamente!");
-                    } else {
-                      toast.success("¡Repuesto agregado correctamente!");
-                    }
+                    agregarItem({
+                      tipo: "repuesto",
+                      id: r.id,
+                      nombre: r.nombre,
+                      codigo: r.codigo,
+                      marca: r.marca,
+                      categoria: r.categoria,
+                      imagen: r.imagen,
+                    });
+                    toast.success("¡Repuesto agregado correctamente!");
                   }}
                 >
-                  <Package size={14} /> {r.stockDisponible ? "Cotizar" : "Agotado"}
+                  <Package size={14} />{" "}
+                  {!r.stockDisponible ? "Agotado" : yaAgregado ? "Agregar otro" : "Cotizar"}
                 </button>
               </div>
             );

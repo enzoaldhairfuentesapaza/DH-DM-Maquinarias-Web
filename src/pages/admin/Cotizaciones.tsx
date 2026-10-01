@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
+import type { QuoteDetail, QuoteProduct } from "../../types/content";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Trash2, Eye, Package, MessageCircle } from "lucide-react";
+import { Trash2, Eye, Package, Truck, MessageCircle, Search } from "lucide-react";
 import { api } from "../../api/client";
+import { useFeedback } from "../../context/FeedbackContext";
 import "./admin.css";
 
 interface Cotizacion {
@@ -10,18 +12,22 @@ interface Cotizacion {
   email_cliente: string;
   telefono_cliente: string | null;
   empresa: string | null;
-  detalle: Record<string, any>;
+  detalle: QuoteDetail;
   estado: "pendiente" | "respondida" | "denegada";
   respuesta: string | null;
   motivo_denegacion: string | null;
   origen: string;
   creado_en: string;
+  usuario_id: number | null;
 }
 
 const FILTROS = ["todas", "pendiente", "respondida", "denegada"] as const;
+const TIPOS = ["todas", "productos", "contacto"] as const;
+const CONTENIDOS = ["todas", "solo_repuestos", "solo_maquinaria", "ambos"] as const;
 
 const ORIGEN_LABELS: Record<string, string> = {
   whatsapp: "WhatsApp",
+  correo: "Correo",
   pagina: "Por la página",
   contacto: "Formulario de contacto",
   web: "Web",
@@ -39,15 +45,32 @@ function labelEstado(estado: string, origen: string) {
 function cantidadProductos(c: Cotizacion): number | null {
   const productos = c.detalle?.productos;
   if (!Array.isArray(productos)) return null;
-  return productos.reduce((acc: number, p: any) => acc + (Number(p.cantidad) || 1), 0);
+  return productos.reduce((acc: number, p: QuoteProduct) => acc + (Number(p.cantidad) || 1), 0);
+}
+
+/** Desglosa cuántas unidades de repuestos y cuántas de maquinaria trae la solicitud. */
+function resumenTipos(c: Cotizacion): { repuestos: number; maquinarias: number } | null {
+  const productos = c.detalle?.productos;
+  if (!Array.isArray(productos)) return null;
+  let repuestos = 0;
+  let maquinarias = 0;
+  for (const p of productos) {
+    const cant = Number(p.cantidad) || 1;
+    if (p.tipo === "maquinaria") maquinarias += cant;
+    else repuestos += cant;
+  }
+  return { repuestos, maquinarias };
 }
 
 export default function Cotizaciones() {
+  const feedback = useFeedback();
   const [items, setItems] = useState<Cotizacion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filtro, setFiltro] = useState<(typeof FILTROS)[number]>("todas");
-  const [savingId, setSavingId] = useState<number | null>(null);
+  const [tipo, setTipo] = useState<(typeof TIPOS)[number]>("todas");
+  const [contenido, setContenido] = useState<(typeof CONTENIDOS)[number]>("todas");
+  const [busqueda, setBusqueda] = useState("");
 
   useEffect(() => {
     load();
@@ -65,29 +88,52 @@ export default function Cotizaciones() {
     }
   }
 
-  async function updateEstado(id: number, estado: "pendiente" | "respondida" | "denegada") {
-    setSavingId(id);
+  async function handleEliminar(id: number, nombre: string) {
+    const motivo = await feedback.prompt({
+      title: "Mover a la papelera",
+      message: `Esta solicitud de ${nombre} se moverá a la papelera; solo el owner puede verla ahí. Cuéntanos brevemente el motivo:`,
+      placeholder: "Ej. Solicitud duplicada / cliente canceló el pedido",
+      confirmLabel: "Eliminar solicitud",
+      danger: true,
+      required: true,
+    });
+    if (motivo === null) return; // canceló
     try {
-      const updated = await api.put<Cotizacion>(`/api/cotizaciones/${id}/estado`, { estado });
-      setItems((prev) => prev.map((i) => (i.id === id ? updated : i)));
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Error al actualizar");
-    } finally {
-      setSavingId(null);
-    }
-  }
-
-  async function handleEliminar(id: number) {
-    if (!confirm("¿Eliminar esta solicitud? Esta acción no se puede deshacer (útil para spam).")) return;
-    try {
-      await api.delete(`/api/cotizaciones/${id}`);
+      await api.delete(`/api/cotizaciones/${id}`, { motivo });
       setItems((prev) => prev.filter((i) => i.id !== id));
+      feedback.success("La solicitud se movió a la papelera.");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Error al eliminar");
+      feedback.error(err instanceof Error ? err.message : "Error al eliminar la solicitud.");
     }
   }
 
-  const visibles = items.filter((i) => filtro === "todas" || i.estado === filtro);
+  const visibles = useMemo(() => {
+    const texto = busqueda.trim().toLowerCase();
+    return items.filter((i) => {
+      if (filtro !== "todas" && i.estado !== filtro) return false;
+      if (tipo === "productos" && i.origen === "contacto") return false;
+      if (tipo === "contacto" && i.origen !== "contacto") return false;
+      if (contenido !== "todas") {
+        const tipos = resumenTipos(i);
+        const tieneRep = !!tipos && tipos.repuestos > 0;
+        const tieneMaq = !!tipos && tipos.maquinarias > 0;
+        if (contenido === "solo_repuestos" && !(tieneRep && !tieneMaq)) return false;
+        if (contenido === "solo_maquinaria" && !(tieneMaq && !tieneRep)) return false;
+        if (contenido === "ambos" && !(tieneRep && tieneMaq)) return false;
+      }
+      if (!texto) return true;
+      return (
+        i.nombre_cliente?.toLowerCase().includes(texto) ||
+        i.email_cliente?.toLowerCase().includes(texto) ||
+        (i.telefono_cliente ?? "").toLowerCase().includes(texto) ||
+        (i.empresa ?? "").toLowerCase().includes(texto) ||
+        String(i.id).includes(texto)
+      );
+    });
+  }, [items, filtro, tipo, contenido, busqueda]);
+
+  const totalContacto = items.filter((i) => i.origen === "contacto").length;
+  const totalProductos = items.length - totalContacto;
 
   return (
     <div>
@@ -95,12 +141,45 @@ export default function Cotizaciones() {
         <div>
           <h1>Cotizaciones recibidas</h1>
           <p className="subtitle">
-            Solicitudes de cotización (WhatsApp / página) y consultas del formulario de contacto.
+            Solicitudes de cotización (WhatsApp / correo / página) y consultas del formulario de contacto.
           </p>
         </div>
         <Link to="/admin/ventas-cotizaciones" className="btn-admin outline">
           Volver
         </Link>
+      </div>
+
+      <div className="admin-search-bar">
+        <Search size={16} />
+        <input
+          type="text"
+          placeholder="Buscar por nombre, correo, teléfono, empresa o N°..."
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+        />
+      </div>
+
+      <div
+        className="admin-tabs"
+        data-tooltip="Separa las cotizaciones de productos (carrito) de las consultas generales (formulario de contacto)"
+      >
+        {TIPOS.map((t) => (
+          <button key={t} className={tipo === t ? "active" : ""} onClick={() => setTipo(t)}>
+            {t === "todas" && `Todas (${items.length})`}
+            {t === "productos" && (
+              <>
+                <Package size={13} style={{ verticalAlign: "-2px", marginRight: 4 }} />
+                Cotizaciones de productos ({totalProductos})
+              </>
+            )}
+            {t === "contacto" && (
+              <>
+                <MessageCircle size={13} style={{ verticalAlign: "-2px", marginRight: 4 }} />
+                Consultas de contacto ({totalContacto})
+              </>
+            )}
+          </button>
+        ))}
       </div>
 
       <div className="admin-tabs">
@@ -112,20 +191,54 @@ export default function Cotizaciones() {
         ))}
       </div>
 
+      {tipo !== "contacto" && (
+        <div
+          className="admin-tabs"
+          data-tooltip="Filtra según si la solicitud trae solo repuestos, solo maquinaria o ambos"
+        >
+          {CONTENIDOS.map((c) => (
+            <button key={c} className={contenido === c ? "active" : ""} onClick={() => setContenido(c)}>
+              {c === "todas" && "Cualquier contenido"}
+              {c === "solo_repuestos" && (
+                <>
+                  <Package size={13} style={{ verticalAlign: "-2px", marginRight: 4 }} />
+                  Solo repuestos
+                </>
+              )}
+              {c === "solo_maquinaria" && (
+                <>
+                  <Truck size={13} style={{ verticalAlign: "-2px", marginRight: 4 }} />
+                  Solo maquinaria
+                </>
+              )}
+              {c === "ambos" && "Repuestos + maquinaria"}
+            </button>
+          ))}
+        </div>
+      )}
+
       {error && <div className="admin-error">{error}</div>}
       {loading ? (
         <p>Cargando...</p>
       ) : visibles.length === 0 ? (
-        <p>No hay solicitudes en este filtro.</p>
+        <p>No hay solicitudes en este filtro/búsqueda.</p>
       ) : (
         visibles.map((c) => {
           const cant = cantidadProductos(c);
+          const tipos = resumenTipos(c);
           const esContacto = c.origen === "contacto";
           return (
             <div className="cotizacion-resumen-card" key={c.id}>
               <div className="cotizacion-resumen-main">
                 <div className="cotizacion-resumen-info">
-                  <strong>{c.nombre_cliente}</strong>
+                  <strong>
+                    {c.nombre_cliente}
+                    {!c.usuario_id && (
+                      <span className="rol-badge danger" style={{ marginLeft: 8 }}>
+                        Sin cuenta
+                      </span>
+                    )}
+                  </strong>
                   <span className="meta">
                     {c.email_cliente || "sin correo"}
                     {c.telefono_cliente ? ` · ${c.telefono_cliente}` : ""}
@@ -139,38 +252,66 @@ export default function Cotizaciones() {
                     <span className="rol-badge cliente">
                       <MessageCircle size={12} style={{ verticalAlign: "-2px" }} /> Consulta general
                     </span>
+                  ) : tipos && (tipos.repuestos > 0 || tipos.maquinarias > 0) ? (
+                    <span
+                      className="rol-badge cliente"
+                      data-tooltip={
+                        tipos.repuestos > 0 && tipos.maquinarias > 0
+                          ? "Esta solicitud combina repuestos y maquinaria"
+                          : tipos.maquinarias > 0
+                            ? "Esta solicitud es solo de maquinaria"
+                            : "Esta solicitud es solo de repuestos"
+                      }
+                    >
+                      {tipos.repuestos > 0 && tipos.maquinarias > 0 ? (
+                        <>
+                          <Package size={12} style={{ verticalAlign: "-2px" }} /> {tipos.repuestos} repuesto(s) +{" "}
+                          <Truck size={12} style={{ verticalAlign: "-2px" }} /> {tipos.maquinarias} máquina(s)
+                        </>
+                      ) : tipos.maquinarias > 0 ? (
+                        <>
+                          <Truck size={12} style={{ verticalAlign: "-2px" }} /> {tipos.maquinarias} máquina(s)
+                        </>
+                      ) : (
+                        <>
+                          <Package size={12} style={{ verticalAlign: "-2px" }} /> {tipos.repuestos} repuesto(s)
+                        </>
+                      )}
+                    </span>
                   ) : (
                     <span className="rol-badge cliente">
                       <Package size={12} style={{ verticalAlign: "-2px" }} /> {cant ?? "?"} producto(s)
                     </span>
                   )}
-                  <span className={`estado-badge ${c.estado}`}>{labelEstado(c.estado, c.origen)}</span>
+                  <span
+                    className={`estado-badge ${c.estado}`}
+                    data-tooltip={
+                      c.estado === "pendiente"
+                        ? "Todavía no se ha respondido"
+                        : c.estado === "respondida"
+                          ? "Ya se le envió una respuesta al cliente"
+                          : "Se rechazó esta solicitud"
+                    }
+                  >
+                    {labelEstado(c.estado, c.origen)}
+                  </span>
                 </div>
               </div>
 
+              {/* Aceptar/Rechazar solo se hacen dentro del detalle, con motivo si aplica. */}
               <div className="cotizacion-resumen-actions">
-                <Link to={`/admin/cotizaciones/${c.id}`} className="btn-admin small">
+                <Link
+                  to={`/admin/cotizaciones/${c.id}`}
+                  className="btn-admin small"
+                  data-tooltip="Abre el detalle para revisar, responder o denegar esta solicitud"
+                >
                   <Eye size={14} /> Evaluar
                 </Link>
-                {c.estado !== "respondida" && (
-                  <button
-                    className="btn-admin yellow small"
-                    disabled={savingId === c.id}
-                    onClick={() => updateEstado(c.id, "respondida")}
-                  >
-                    {esContacto ? "Atender" : "Aceptar"}
-                  </button>
-                )}
-                {c.estado !== "denegada" && (
-                  <button
-                    className="btn-admin outline small"
-                    disabled={savingId === c.id}
-                    onClick={() => updateEstado(c.id, "denegada")}
-                  >
-                    {esContacto ? "Descartar" : "Rechazar"}
-                  </button>
-                )}
-                <button className="btn-admin danger small" onClick={() => handleEliminar(c.id)}>
+                <button
+                  className="btn-admin danger small"
+                  onClick={() => handleEliminar(c.id, c.nombre_cliente)}
+                  data-tooltip="Mueve la solicitud a la papelera"
+                >
                   <Trash2 size={14} />
                 </button>
               </div>

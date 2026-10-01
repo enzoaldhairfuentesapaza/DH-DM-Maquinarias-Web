@@ -9,13 +9,14 @@ function jwt_base64url_encode(string $data): string
     return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
 }
 
-function jwt_base64url_decode(string $data): string
+function jwt_base64url_decode(string $data): string|false
 {
+    if ($data === '' || preg_match('/[^A-Za-z0-9_-]/', $data)) return false;
     $remainder = strlen($data) % 4;
     if ($remainder) {
         $data .= str_repeat('=', 4 - $remainder);
     }
-    return base64_decode(strtr($data, '-_', '+/'));
+    return base64_decode(strtr($data, '-_', '+/'), true);
 }
 
 function jwt_encode(array $payload, string $secret, int $expiresInSeconds): string
@@ -52,16 +53,21 @@ function jwt_decode(string $token, string $secret): ?array
     $expectedSignature = hash_hmac('sha256', $signingInput, $secret, true);
     $actualSignature = jwt_base64url_decode($signatureB64);
 
-    if (!hash_equals($expectedSignature, $actualSignature)) {
+    if ($actualSignature === false || !hash_equals($expectedSignature, $actualSignature)) {
         return null;
     }
 
-    $payload = json_decode(jwt_base64url_decode($payloadB64), true);
+    $headerJson = jwt_base64url_decode($headerB64);
+    $payloadJson = jwt_base64url_decode($payloadB64);
+    if ($headerJson === false || $payloadJson === false) return null;
+    $header = json_decode($headerJson, true);
+    if (!is_array($header) || ($header['alg'] ?? null) !== 'HS256') return null;
+    $payload = json_decode($payloadJson, true);
     if (!is_array($payload)) {
         return null;
     }
 
-    if (isset($payload['exp']) && time() > $payload['exp']) {
+    if (!isset($payload['exp']) || !is_int($payload['exp']) || time() >= $payload['exp']) {
         return null; // expirado
     }
 

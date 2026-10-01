@@ -5,6 +5,7 @@ import { Package } from "lucide-react";
 import { useRepuestos } from "../hooks/useApiData";
 import { useCotizacion } from "../context/CotizacionContext";
 import AvisoCompatibilidad from "../components/shared/AvisoCompatibilidad";
+import QtyInput from "../components/QtyInput";
 import { toast } from "react-toastify";
 
 export default function RepuestoDetalle() {
@@ -138,7 +139,7 @@ export default function RepuestoDetalle() {
                 <button onClick={() => setCantidad((c) => Math.max(1, c - 1))}>
                   −
                 </button>
-                <span>{cantidad}</span>
+                <QtyInput cantidad={cantidad} onCambiar={setCantidad} className="qty-selector-input" />
                 <button onClick={() => setCantidad((c) => c + 1)}>+</button>
               </div>
 
@@ -146,23 +147,19 @@ export default function RepuestoDetalle() {
                 className={`detail-add-btn ${yaAgregado ? "added" : ""}`}
                 disabled={!repuesto.stockDisponible}
                 onClick={() => {
-                  if (!yaAgregado) {
-                    agregarItem(
-                      {
-                        tipo: "repuesto",
-                        id: repuesto.id,
-                        nombre: repuesto.nombre,
-                        codigo: repuesto.codigo,
-                        marca: repuesto.marca,
-                        categoria: repuesto.categoria,
-                      },
-                      cantidad,
-                    );
-
-                    toast.success("¡Repuesto agregado correctamente!");
-                  } else {
-                    toast.success("¡Repuesto agregado correctamente!");
-                  }
+                  agregarItem(
+                    {
+                      tipo: "repuesto",
+                      id: repuesto.id,
+                      nombre: repuesto.nombre,
+                      codigo: repuesto.codigo,
+                      marca: repuesto.marca,
+                      categoria: repuesto.categoria,
+                      imagen: repuesto.imagen,
+                    },
+                    cantidad,
+                  );
+                  toast.success("¡Repuesto agregado correctamente!");
                 }}
               >
                 <Package size={17} />{" "}

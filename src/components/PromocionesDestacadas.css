@@ -1,0 +1,177 @@
+.promos-destacadas {
+  padding: 40px 0 10px;
+  background: linear-gradient(135deg, #fff6d9, #fff1c2);
+}
+
+.promo-carrusel-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  align-items: stretch;
+  background: #fff;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.14);
+  border: 2px solid #f4c20d;
+  cursor: pointer;
+  min-height: 220px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.promo-carrusel-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.18);
+}
+
+.promo-carrusel-media {
+  position: relative;
+  background-size: cover;
+  background-position: center;
+  background-color: #2a2a2a;
+  background-image: linear-gradient(135deg, #2a2a2a, #444);
+  min-height: 220px;
+}
+
+.promo-carrusel-badge {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--yellow, #f4c20d);
+  color: #1a1a1a;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 6px 12px;
+  border-radius: 999px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+}
+
+.promo-carrusel-body {
+  padding: 30px 36px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+}
+
+.promo-carrusel-body h3 {
+  margin: 0;
+  font-size: 26px;
+  color: #1a1a1a;
+  animation: promo-fade-in 0.4s ease;
+}
+
+.promo-carrusel-body p {
+  margin: 0;
+  font-size: 14.5px;
+  color: #666;
+  line-height: 1.5;
+  max-width: 520px;
+}
+
+@keyframes promo-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.promo-carrusel-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 13.5px;
+  color: #1a1a1a;
+  margin-top: 6px;
+  width: fit-content;
+  padding-bottom: 2px;
+  border-bottom: 2px solid var(--yellow, #f4c20d);
+}
+
+.promo-carrusel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.9);
+  color: #1a1a1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  z-index: 2;
+}
+
+.promo-carrusel-arrow:hover {
+  background: #fff;
+}
+
+.promo-carrusel-arrow.left {
+  left: 14px;
+}
+
+.promo-carrusel-arrow.right {
+  right: 14px;
+}
+
+.promo-carrusel-dots {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 7px;
+  z-index: 2;
+}
+
+.promo-carrusel-dots button {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  padding: 0;
+}
+
+.promo-carrusel-dots button.active {
+  background: var(--yellow, #f4c20d);
+  width: 20px;
+  border-radius: 5px;
+}
+
+.promo-destacada-vigencia {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #8a6d00;
+  background: #fff3cc;
+  padding: 4px 10px;
+  border-radius: 999px;
+  width: fit-content;
+}
+
+@media (max-width: 720px) {
+  .promo-carrusel-card {
+    grid-template-columns: 1fr;
+  }
+  .promo-carrusel-media {
+    min-height: 160px;
+  }
+  .promo-carrusel-body {
+    padding: 22px 24px 40px;
+  }
+  .promo-carrusel-body h3 {
+    font-size: 21px;
+  }
+  .promo-carrusel-arrow {
+    display: none;
+  }
+}

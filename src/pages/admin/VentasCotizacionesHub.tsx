@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ClipboardList, Receipt } from "lucide-react";
+import { ClipboardList, Receipt, BarChart3 } from "lucide-react";
 import "./admin.css";
 
 export default function VentasCotizacionesHub() {
@@ -29,6 +29,14 @@ export default function VentasCotizacionesHub() {
           </div>
           <h3>Ventas / Boletas</h3>
           <p>Registra y consulta las ventas concretadas, con el detalle de cada boleta.</p>
+        </Link>
+
+        <Link to="/admin/estadisticas" className="admin-card">
+          <div className="icon-badge">
+            <BarChart3 size={20} />
+          </div>
+          <h3>Estadísticas</h3>
+          <p>Gráficos de ventas y cotizaciones por semana, mes o año.</p>
         </Link>
       </div>
 

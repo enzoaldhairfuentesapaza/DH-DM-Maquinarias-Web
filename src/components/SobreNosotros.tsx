@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { CheckCircle2 } from "lucide-react";
 
 const puntos = [
-  "Más de 8 años de experiencia en el rubro",
+  "Más de 10 años de experiencia en el rubro",
   "Repuestos originales y alternativos certificados",
   "Stock permanente y despacho a nivel nacional",
   "Asesoría a la compra del producto",

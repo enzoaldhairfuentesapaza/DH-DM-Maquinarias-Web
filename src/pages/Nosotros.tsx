@@ -27,7 +27,7 @@ export default function Nosotros() {
             Conoce <span>DH & DM Maquinarias</span>
           </h1>
           <p>
-            Más de 8 años abasteciendo al mundo de las maquinarias, con
+            Más de 10 años abasteciendo al mundo de las maquinarias, con
             soluciones en repuestos y equipos para los sectores de
             construcción, transporte e industria, con atención personalizada
             y compromiso con nuestros clientes.

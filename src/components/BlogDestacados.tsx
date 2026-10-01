@@ -6,6 +6,7 @@ import { useBlogPosts } from "../hooks/useApiData";
 export default function BlogDestacados() {
   const { data: posts, loading } = useBlogPosts();
   const destacados = [...posts]
+    .filter((p) => p.destacado)
     .sort((a, b) => b.id - a.id)
     .slice(0, 3);
 
