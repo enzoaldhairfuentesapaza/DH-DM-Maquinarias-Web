@@ -1,0 +1,22 @@
+{
+  "passed": 17,
+  "checks": [
+    "initial catalogue preserved",
+    "blog_posts starts with existing local images",
+    "maquinarias starts with existing local images",
+    "novedades starts with existing local images",
+    "promociones starts with existing local images",
+    "loading twice does not duplicate records",
+    "custom blog image preserved",
+    "NULL image repaired",
+    "empty image repaired",
+    "known legacy remote image replaced by bundled photo",
+    "custom machine image preserved",
+    "unknown Commons image preserved",
+    "repair repeated without inserting inventory",
+    "repair does not recreate removed content",
+    "optional examples remain opt-in",
+    "all optional examples have bundled photos",
+    "optional examples remain repeatable"
+  ]
+}

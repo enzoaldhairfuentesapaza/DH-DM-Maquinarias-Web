@@ -140,3 +140,7 @@ if ($count === 0) {
 } else {
     echo "Categorías ya tenían datos, se omite.\n";
 }
+
+// Also repair known demo records in databases created before image paths were bundled.
+require_once __DIR__ . '/repair_seed_images.php';
+echo 'Rutas de imágenes reparadas: ' . repair_seed_images($pdo) . ".\n";

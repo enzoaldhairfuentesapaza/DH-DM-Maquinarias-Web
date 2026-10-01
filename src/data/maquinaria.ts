@@ -37,7 +37,7 @@ export const maquinarias: Maquina[] = [
       { label: "Profundidad de excavación", valor: "6.62 m" },
       { label: "Horas de uso", valor: "8 200 h" },
     ],
-    imagen: "",
+    imagen: "/maquinaria/referencias/cat-320d.jpg",
     destacado: true,
   },
   {
@@ -58,7 +58,7 @@ export const maquinarias: Maquina[] = [
       { label: "Profundidad de excavación", valor: "6.62 m" },
       { label: "Horas de uso", valor: "7 100 h" },
     ],
-    imagen: "",
+    imagen: "/maquinaria/pc200-8.jpg",
     destacado: true,
   },
   {
@@ -79,7 +79,7 @@ export const maquinarias: Maquina[] = [
       { label: "Profundidad de excavación", valor: "6.83 m" },
       { label: "Horas de uso", valor: "8 900 h" },
     ],
-    imagen: "",
+    imagen: "/maquinaria/referencias/hitachi-referencial.jpg",
     destacado: true,
   },
 ];

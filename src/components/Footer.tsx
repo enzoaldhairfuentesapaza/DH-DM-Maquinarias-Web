@@ -161,6 +161,7 @@ export default function Footer() {
       <div className="footer-bottom">
         <p>© 2026 DH & DM Maquinarias SAC. Todos los derechos reservados.</p>
         <div className="footer-legal">
+          <a className="footer-link" href="/creditos-imagenes.html">Créditos de imágenes</a>
           <button className="footer-link" onClick={() => setModal("terms")}>
             Términos
           </button>

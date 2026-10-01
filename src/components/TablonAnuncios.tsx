@@ -2,7 +2,7 @@ import "./TablonAnuncios.css";
 import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { usePromociones, useNovedades } from "../hooks/useApiData";
+import { useNovedades } from "../hooks/useApiData";
 
 type Slide = {
   imagen: string;
@@ -39,8 +39,6 @@ const slidesRespaldo: Slide[] = [
 
 export default function TablonAnuncios() {
   const [activo, setActivo] = useState(0);
-  const [promoIndex, setPromoIndex] = useState(0);
-  const { data: promociones } = usePromociones();
   const { data: novedades } = useNovedades();
 
   // Las novedades marcadas como destacadas en el panel reemplazan los
@@ -76,16 +74,6 @@ export default function TablonAnuncios() {
     return () => clearInterval(id);
   }, [siguiente]);
 
-  useEffect(() => {
-    if (promociones.length === 0) return;
-    const id = setInterval(() => {
-      setPromoIndex((i) => (i + 1) % promociones.length);
-    }, 4000);
-    return () => clearInterval(id);
-  }, [promociones]);
-
-  const promoActual = promociones[promoIndex];
-
   return (
     <section className="tablon">
       <div className="tablon-track">
@@ -119,20 +107,6 @@ export default function TablonAnuncios() {
           );
         })}
       </div>
-
-      <Link to="/promociones" className="tablon-more-btn">
-        Ver promociones <ChevronRight size={16} />
-      </Link>
-
-      {promoActual && (
-        <div className="tablon-promo-mini">
-          <span className="tablon-promo-mini-tag">Promo</span>
-          <p key={promoActual.id} className="tablon-promo-mini-text">
-            {promoActual.titulo}
-          </p>
-          <span className="tablon-promo-mini-vigencia">{promoActual.vigencia}</span>
-        </div>
-      )}
 
       <button className="tablon-arrow left" onClick={anterior} aria-label="Anterior">
         <ChevronLeft size={22} />

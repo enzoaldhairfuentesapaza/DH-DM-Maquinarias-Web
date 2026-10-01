@@ -1,3 +1,4 @@
+import ImageCredit from "../components/ImageCredit";
 import "./pages.css";
 import { useState } from "react";
 import { Link, useParams, Navigate } from "react-router-dom";
@@ -65,6 +66,7 @@ export default function MaquinariaDetalle() {
           </div>
 
           <div className="detail-info">
+            <ImageCredit image={maquina.imagen} />
             <span className="tag">{maquina.categoria}</span>
             <h1>{maquina.nombre}</h1>
             <span

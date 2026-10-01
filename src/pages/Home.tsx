@@ -1,4 +1,3 @@
-import Hero from "../components/Hero";
 import MarcasAsociadas from "../components/MarcasAsociadas";
 import TablonAnuncios from "../components/TablonAnuncios";
 import PromocionesDestacadas from "../components/PromocionesDestacadas";
@@ -16,14 +15,7 @@ import Reveal from "../components/Reveal";
 export default function Home() {
   return (
     <>
-      {/* El hero se muestra de entrada, sin esperar al scroll. */}
-      <Hero />
-
-      {/* Las promociones van casi de primero: son de lo primero que el
-          cliente debe notar al entrar a la página. */}
-      <Reveal>
-        <PromocionesDestacadas />
-      </Reveal>
+      <PromocionesDestacadas />
 
       <Reveal>
         <MarcasAsociadas />

@@ -5,6 +5,7 @@ error_reporting(E_ALL);
 
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/crud.php';
+require_once __DIR__ . '/excel.php';
 
 // Cualquier excepcion no controlada (ej. error de base de datos) se responde
 // como JSON limpio en vez de romper la pagina con un stack trace.
@@ -41,6 +42,8 @@ if ($path === '/api' || str_starts_with($path, '/api/')) {
     $path = substr($path, 4);
 }
 $segments = array_values(array_filter(explode('/', $path)));
+
+if (($segments[0] ?? null) === 'excel') excel_handle($segments, $method);
 
 // ---------- /health ----------
 if ($segments === ['health'] && $method === 'GET') {

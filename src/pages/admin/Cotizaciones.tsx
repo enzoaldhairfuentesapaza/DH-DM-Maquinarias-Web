@@ -1,3 +1,4 @@
+import ExcelTools from "./ExcelTools";
 import type { QuoteDetail, QuoteProduct } from "../../types/content";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
@@ -137,6 +138,7 @@ export default function Cotizaciones() {
 
   return (
     <div>
+      <ExcelTools entity="cotizaciones" onImported={() => window.location.reload()} />
       <div className="admin-header-row">
         <div>
           <h1>Cotizaciones recibidas</h1>

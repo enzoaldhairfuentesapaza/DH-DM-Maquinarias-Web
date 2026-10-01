@@ -1,3 +1,4 @@
+import ExcelTools from "./ExcelTools";
 import { useEffect, useState, useCallback } from "react";
 import { MessageSquare, Trash2, Mail, Check } from "lucide-react";
 import { api } from "../../api/client";
@@ -75,6 +76,7 @@ export default function Sugerencias() {
 
   return (
     <div>
+      <ExcelTools entity="sugerencias" onImported={() => window.location.reload()} />
       <div className="admin-header-row">
         <div>
           <h1>Sugerencias y reclamos</h1>

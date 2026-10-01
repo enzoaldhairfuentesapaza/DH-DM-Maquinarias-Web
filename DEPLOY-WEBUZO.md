@@ -1,4 +1,4 @@
-# Desplegar en Webuzo / Apache — 1.6.1
+# Desplegar en Webuzo / Apache — 2.0.0
 
 Dominio de esta entrega: https://dh-dm-maquinarias.com/. Frontend y API comparten dominio; la API se publica en public_html/api/. Los bloques powershell se ejecutan en Windows y los bloques bash solo en la terminal Linux del hosting.
 
@@ -133,12 +133,12 @@ Nunca subas owner.sql al directorio público. Si ya tienes un owner, usa esa cue
 
 ### Con SSH: utilidades fuera de public_html
 
-Sube el CONTENIDO de release/mantenimiento/ a una carpeta privada del usuario del hosting llamada hdm-mantenimiento-1.6.1, al lado de public_html. No publiques mantenimiento/ dentro de la web.
+Sube el CONTENIDO de release/mantenimiento/ a una carpeta privada del usuario del hosting llamada hdm-mantenimiento-2.0.0, al lado de public_html. No publiques mantenimiento/ dentro de la web.
 
 En la terminal Linux del hosting, con config.local.php de producción ya creado:
 
 ```bash
-cd "$HOME/hdm-mantenimiento-1.6.1/backend-php"
+cd "$HOME/hdm-mantenimiento-2.0.0/backend-php"
 php --version
 php -m
 read -r -p 'Ruta absoluta del public_html de este dominio: ' HDM_PUBLIC_HTML
@@ -255,3 +255,19 @@ Repón los archivos y configuración del respaldo. Para revertir también la bas
 Prueba primero en local, guarda el cambio en GitHub y genera de nuevo el paquete del paso 2. Si cambia el esquema, respalda/migra la base; si solo cambian estilos o React, no hay que sembrar datos ni recrear cuentas. Subir un commit a GitHub no publica automáticamente en este hosting.
 
 Referencias técnicas: https://vite.dev/guide/env-and-mode.html y https://www.php.net/manual/en/pdo.installation.php.
+
+## Actualización de imágenes iniciales
+
+Las fotos del blog y las fotos referenciales de maquinaria se publican desde public/ al compilar; no dependen de una descarga en el hosting. Incluye también creditos-imagenes.html y conserva los créditos/licencias de las imágenes.
+
+Para registros de muestra existentes con rutas vacías o enlaces conocidos antiguos, desde la copia privada de mantenimiento configurada en el paso 5:
+
+```bash
+php repair_seed_images.php
+```
+
+Este comando no inserta maquinaria de ejemplo ni reemplaza fotos personalizadas. Sin SSH, las instalaciones nuevas reciben las rutas cuando se cargan los datos iniciales; para una base existente puedes asignar las rutas desde el panel, siguiendo la tabla de IMAGENES-LOCALES.md. No expongas utilidades CLI por HTTP para ejecutarlas. Las fichas de muestra no acreditan existencias reales: revisa el inventario antes de publicarlas.
+
+## Comprobaciones de la versión 2
+
+La carpeta `api/` debe incluir `excel.php` junto con el resto de la API de esta versión. La versión 2 no añade tablas ni requiere borrar o volver a importar los datos existentes. Prueba exportar un Excel de repuestos, importar dos filas de prueba y borrarlas después, comprobar los avisos privados de nombres repetidos, abrir una vista previa ampliada y marcar al menos dos promociones como destacadas. La rotación de portada cambia cada seis segundos y puede pausarse. No publiques los Excel exportados de clientes dentro de public_html.

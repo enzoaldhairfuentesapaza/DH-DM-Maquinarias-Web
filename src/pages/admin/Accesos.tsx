@@ -1,3 +1,5 @@
+import { normalize } from "./excelFiles";
+import ExcelTools from "./ExcelTools";
 import { useEffect, useMemo, useState, FormEvent } from "react";
 import { Search, Pencil, Trash2, ShieldOff, ShieldCheck, Ban } from "lucide-react";
 import { api } from "../../api/client";
@@ -231,6 +233,7 @@ export default function Accesos() {
 
   return (
     <div>
+      <ExcelTools entity="accesos" onImported={() => window.location.reload()} />
       <div className="admin-header-row">
         <h1>Administrar Accesos</h1>
         <button
@@ -242,6 +245,7 @@ export default function Accesos() {
         </button>
       </div>
 
+      {normalize(showForm ? nombre : editForm.nombre) && items.some(u => u.id !== (showForm ? null : editandoId) && normalize(u.nombre) === normalize(showForm ? nombre : editForm.nombre)) && <p className="duplicate-tag" role="status">Ya existe un usuario con el mismo nombre.</p>}
       {error && <div className="admin-error">{error}</div>}
 
       {showForm && (
@@ -418,7 +422,7 @@ export default function Accesos() {
             <tbody>
               {visibles.map((u) => (
                 <tr key={u.id} style={{ opacity: u.activo ? 1 : 0.55 }}>
-                  <td>{u.nombre}</td>
+                  <td>{u.nombre}{items.filter(other => normalize(other.nombre) === normalize(u.nombre)).length > 1 && <span className="duplicate-tag">Ya existe un usuario con el mismo nombre</span>}</td>
                   <td>{u.email}</td>
                   <td>
                     <span className={`rol-badge ${u.rol}`}>{u.rol}</span>

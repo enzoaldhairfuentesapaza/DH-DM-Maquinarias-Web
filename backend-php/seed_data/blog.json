@@ -10,7 +10,7 @@
       "Antes de comprar, verifica siempre el código OEM del fabricante y compáralo contra el modelo de tu máquina, no solo contra el diámetro de la carcasa.",
       "En DH & DM Maquinarias SAC. validamos cada equivalencia con nuestra base técnica antes de recomendar un reemplazo alternativo."
     ],
-    "imagen": "",
+    "imagen": "/blogs/blog5.jpg",
     "destacado": true
   },
   {
@@ -24,7 +24,7 @@
       "Programar el cambio de filtros y lubricantes según las horas de uso del equipo, y no solo por calendario, es clave para evitar fallas.",
       "Contar con kits de mantenimiento por modelo de máquina agiliza la compra y evita errores de compatibilidad."
     ],
-    "imagen": "",
+    "imagen": "/blogs/blog4.jpg",
     "destacado": true
   },
   {
@@ -38,7 +38,7 @@
       "La clave está en trabajar con proveedores que validen la procedencia y calidad de cada pieza alternativa.",
       "En nuestro catálogo indicamos claramente la procedencia (original, reman o alternativo) de cada producto."
     ],
-    "imagen": "",
+    "imagen": "/blogs/blog3.jpg",
     "destacado": true
   },
   {
@@ -52,7 +52,7 @@
       "Cada filtro es validado contra el código original del fabricante antes de incorporarse a nuestro catálogo.",
       "Disponemos de equivalencias para las principales marcas de maquinaria pesada que operan en el Perú."
     ],
-    "imagen": ""
+    "imagen": "/blogs/blog3.jpg"
   },
   {
     "id": 5,
@@ -65,7 +65,7 @@
       "Revisar el indicador de restricción, cuando el equipo lo tiene, es la forma más precisa de saber cuándo cambiarlo.",
       "Postergar el cambio puede derivar en daños a la bomba de inyección, una reparación mucho más costosa."
     ],
-    "imagen": ""
+    "imagen": "/blogs/blog2.jpg"
   },
   {
     "id": 6,
@@ -78,6 +78,6 @@
       "Rotar los componentes cuando el desgaste lo permite ayuda a equilibrar el uso entre ambos lados de la máquina.",
       "Inspeccionar el terreno de trabajo y ajustar la operación reduce el desgaste acelerado por abrasión."
     ],
-    "imagen": ""
+    "imagen": "/blogs/blog1.jpg"
   }
 ]

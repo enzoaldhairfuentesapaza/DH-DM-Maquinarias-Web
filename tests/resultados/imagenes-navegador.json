@@ -1,0 +1,26 @@
+{
+  "passed": 20,
+  "checks": [
+    "home renders",
+    "blog and machinery images decode with external requests blocked",
+    "all three machinery cards include photos",
+    "reference images are labelled",
+    "all downloaded photos have visible credits",
+    "all 4802 products reachable",
+    "pagination previous works",
+    "part-code search works",
+    "catalog fits mobile",
+    "unknown route renders 404 page",
+    "owner panel renders",
+    "admin creates product",
+    "history alias opens calculator",
+    "calculator adds valid product",
+    "CAT adjustment and quantity calculation",
+    "calculator module executes",
+    "formal quote accepted for internal role",
+    "history escapes client HTML",
+    "stored HTML cannot execute",
+    "no runtime errors: "
+  ],
+  "errors": []
+}

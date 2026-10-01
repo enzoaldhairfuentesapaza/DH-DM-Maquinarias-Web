@@ -5,6 +5,7 @@ import { HelpCircle, X } from "lucide-react";
 import { api, resolveApiAsset } from "../../api/client";
 import { entities, FieldConfig } from "./entityConfig";
 import ContentPreview from "./ContentPreview";
+import { normalize } from "./excelFiles";
 import { useFeedback } from "../../context/FeedbackContext";
 import "./admin.css";
 import "./ContentPreview.css";
@@ -19,6 +20,7 @@ export default function ContentForm() {
   const isNew = !id || id === "nuevo";
   const navigate = useNavigate();
 
+  const [peers, setPeers] = useState<Record<string, unknown>[]>([]);
   const [form, setForm] = useState<FormState>({});
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
@@ -68,6 +70,15 @@ export default function ContentForm() {
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entityKey, id]);
+
+  useEffect(() => {
+    if (!config) return;
+    let active = true;
+    api.get<Record<string, unknown>[]>(`${config.apiPath}/`).then(rows => { if (active) setPeers(rows); }).catch(() => {});
+    return () => { active = false; };
+  }, [config]);
+  const name = normalize(form.nombre ?? form.titulo);
+  const repeated = name !== "" && peers.some(row => String(row.id) !== id && normalize(row.nombre ?? row.titulo) === name);
 
   function updateField(name: string, value: ContentField) {
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -419,6 +430,7 @@ export default function ContentForm() {
         </div>
       )}
 
+      {repeated && <p role="status" className="duplicate-tag">Ya existe {config.singular.toLowerCase()} con el mismo nombre. Puedes continuar si se trata de otro registro.</p>}
       {error && <div className="admin-error">{error}</div>}
 
       {config.previewType ? (

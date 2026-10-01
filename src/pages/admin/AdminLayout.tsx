@@ -89,6 +89,7 @@ export default function AdminLayout() {
               <ScrollText size={17} /> Registro de actividad
             </NavLink>
           )}
+          <NavLink to="/admin/excel"><Receipt size={17} /> Importar / exportar Excel</NavLink>
           <button onClick={handleLogout}>
             <LogOut size={17} /> Cerrar sesión
           </button>

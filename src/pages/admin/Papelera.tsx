@@ -1,3 +1,4 @@
+import ExcelTools from "./ExcelTools";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Search, RotateCcw } from "lucide-react";
@@ -70,6 +71,7 @@ export default function Papelera() {
 
   return (
     <div>
+      <ExcelTools entity="papelera"  />
       <div className="admin-header-row">
         <div>
           <h1>Papelera de cotizaciones</h1>

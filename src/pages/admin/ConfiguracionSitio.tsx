@@ -1,3 +1,4 @@
+import ExcelTools from "./ExcelTools";
 import { useEffect, useState, FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Phone, Mail, Save, HelpCircle } from "lucide-react";
@@ -42,6 +43,7 @@ export default function ConfiguracionSitio() {
 
   return (
     <div>
+      <ExcelTools entity="configuracion" onImported={() => window.location.reload()} />
       <div className="admin-header-row">
         <div>
           <h1>Números y correo de contacto</h1>

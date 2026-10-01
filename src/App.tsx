@@ -44,6 +44,8 @@ const Accesos = lazy(() => import("./pages/admin/Accesos"));
 const Papelera = lazy(() => import("./pages/admin/Papelera"));
 const Auditoria = lazy(() => import("./pages/admin/Auditoria"));
 const Sugerencias = lazy(() => import("./pages/admin/Sugerencias"));
+const ContentPreviewCanvas = lazy(() => import("./pages/admin/ContentPreviewCanvas"));
+const ExcelCenter = lazy(() => import("./pages/admin/ExcelCenter"));
 const Estadisticas = lazy(() => import("./pages/admin/Estadisticas"));
 
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -148,6 +150,7 @@ function App() {
         <ScrollToTop />
         <AuthModal />
         <Routes>
+        <Route path="/admin/vista-previa" element={<ProtectedRoute allowedRoles={["admin","owner"]}><ContentPreviewCanvas /></ProtectedRoute>} />
         <Route path="/admin/login" element={<AdminLogin />} />
 
         <Route
@@ -185,6 +188,7 @@ function App() {
             }
           />
           <Route path="ventas-cotizaciones" element={<VentasCotizacionesHub />} />
+          <Route path="excel" element={<ExcelCenter />} />
           <Route path="estadisticas" element={<Estadisticas />} />
           <Route path="cotizaciones" element={<Cotizaciones />} />
           <Route path="cotizaciones/:id" element={<CotizacionDetalle />} />

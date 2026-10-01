@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import type { ContentRecord } from "../../types/content";
 import { Package, Truck, Tag, Megaphone, FileText, Eye } from "lucide-react";
 import { resolveApiAsset } from "../../api/client";
@@ -13,12 +14,28 @@ function Placeholder({ icon }: { icon: React.ReactNode }) {
 }
 
 export default function ContentPreview({ type, form }: { type: PreviewType; form: ContentRecord }) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  const frame = useRef<HTMLIFrameElement>(null);
+  const [width, setWidth] = useState(1200);
+  const send = () => frame.current?.contentWindow?.postMessage({kind:"hdm-preview",draft:{type,form}},window.location.origin);
+  useEffect(() => {
+    const receive = (event: MessageEvent) => { if(event.origin === window.location.origin && event.source === frame.current?.contentWindow && event.data?.kind === "hdm-preview-ready") frame.current?.contentWindow?.postMessage({kind:"hdm-preview",draft:{type,form}},window.location.origin); };
+    window.addEventListener("message",receive);
+    frame.current?.contentWindow?.postMessage({kind:"hdm-preview",draft:{type,form}},window.location.origin);
+    return () => window.removeEventListener("message",receive);
+  }, [type,form]);
   return (
     <div className="preview-panel">
       <div className="preview-panel-header">
         <Eye size={15} />
         <span>Así se verá en la página</span>
       </div>
+      <button type="button" className="btn-admin outline" style={{width:"100%",marginBottom:14}} onClick={() => {dialog.current?.showModal();send();}}>Ampliar · tamaño real</button>
+      <dialog ref={dialog} className="content-preview-dialog" aria-label="Vista previa del contenido a tamaño real">
+        <div className="content-preview-controls"><strong>Vista previa · sin guardar</strong><button type="button" aria-pressed={width===1200} className="btn-admin small outline" onClick={() => setWidth(1200)}>Escritorio · 1200 px</button><button type="button" aria-pressed={width===390} className="btn-admin small outline" onClick={() => setWidth(390)}>Móvil · 390 px</button><button type="button" className="btn-admin small outline" onClick={() => dialog.current?.close()}>Cerrar vista previa</button></div>
+        <p>Contenido a escala 1:1 con los estilos públicos. Desplázate para ver toda la página; encabezado, pie y elementos relacionados se omiten.</p>
+        <div className="content-preview-scroll"><iframe ref={frame} title="Contenido en vista previa" src="/admin/vista-previa" onLoad={send} style={{width,height:"70dvh"}} /></div>
+      </dialog>
       <div className="preview-stage">
         {type === "maquinaria" && <PreviewMaquinaria form={form} />}
         {type === "repuestos" && <PreviewRepuesto form={form} />}
@@ -27,7 +44,7 @@ export default function ContentPreview({ type, form }: { type: PreviewType; form
         {type === "promociones" && <PreviewPromocion form={form} />}
       </div>
       <p className="preview-note">
-        Vista previa aproximada: el tamaño y la posición exactos pueden variar un poco según la pantalla.
+        Abre la vista ampliada para comprobar el contenido y sus tamaños en escritorio y móvil.
       </p>
     </div>
   );

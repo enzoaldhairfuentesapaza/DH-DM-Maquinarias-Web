@@ -1,3 +1,4 @@
+import ImageCredit from "../components/ImageCredit";
 import "./pages.css";
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
@@ -151,6 +152,7 @@ export default function Maquinaria() {
                         </span>
                       </Link>
                       <div className="cat-card-body">
+                        <ImageCredit image={m.imagen} />
                         <span className="cat-card-cat">{m.categoria}</span>
                         <Link to={`/maquinaria/${m.id}`}>
                           <h3>{m.nombre}</h3>

@@ -1,6 +1,6 @@
 # Ejecutar localmente — Windows / PowerShell
 
-Versión 1.6.1. Todos los bloques marcados powershell se ejecutan en PowerShell. Usa la copia del repositorio que ya clonaste; no hace falta volver a clonarlo. La instalación inicial crea SQLite y un owner local; no se conecta a la base del hosting.
+Versión 2.0.0. Todos los bloques marcados powershell se ejecutan en PowerShell. Usa la copia del repositorio que ya clonaste; no hace falta volver a clonarlo. La instalación inicial crea SQLite y un owner local; no se conecta a la base del hosting.
 
 ## 1. Requisitos y carpeta
 
@@ -109,6 +109,8 @@ php .\backend-php\migrate_categorias.php
 if ($LASTEXITCODE -ne 0) { throw 'Falló la preparación de categorías.' }
 ```
 
+Las rutas de imágenes de blog, maquinaria, novedades y promociones ya apuntan a archivos incluidos en public/. La carga también repara rutas vacías de los registros de muestra conocidos, sin reemplazar fotos personalizadas. No necesitas ejecutar add_blog_images.php ni add_missing_images.php.
+
 La carga agrega datos en tablas vacías. No es un mecanismo para sincronizar inventarios comerciales. Omite este paso si prefieres crear tus datos desde el panel.
 
 ## 6. Arrancar la API — terminal 1
@@ -165,6 +167,8 @@ Si tienes Python 3 con el lanzador py:
 ```powershell
 py -3 .\tests\api-smoke.py
 if ($LASTEXITCODE -ne 0) { throw 'Fallaron las pruebas de API.' }
+py -3 .\tests\excel-smoke.py
+if ($LASTEXITCODE -ne 0) { throw 'Fallaron las pruebas de Excel.' }
 ```
 
 Las pruebas de API crean una base temporal. No definas HDM_TEST_CONFIG para tu base de trabajo; esa opción es solo para una base dedicada con app_env=test. Si tu instalación usa python en lugar de py, ejecuta python .\tests\api-smoke.py.
@@ -199,3 +203,24 @@ Detén antes Vite dev para liberar 5173 y conserva la API abierta. Antes de desp
 | Catálogo vacío | Cargar datos de muestra o crear productos desde el panel |
 
 En cada sesión posterior basta con abrir las dos terminales de los pasos 6 y 7. Tras cambiar dependencias usa npm ci; tras cambiar el esquema ejecuta migrate.php con respaldo de datos.
+
+## Base local creada antes de corregir las imágenes
+
+Copia primero los archivos de la actualización de imágenes en el repositorio. Conserva config.local.php y hdm.db; no recrees tu base. Detén la API con Ctrl+C antes del respaldo y ejecuta desde la raíz:
+
+```powershell
+if (Test-Path '.\backend-php\hdm.db') {
+    $respaldoImagenes = Join-Path (Split-Path -Parent (Get-Location).Path) ('hdm-antes-imagenes-' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '.db')
+    Copy-Item -LiteralPath '.\backend-php\hdm.db' -Destination $respaldoImagenes
+}
+php .\backend-php\repair_seed_images.php
+if ($LASTEXITCODE -ne 0) { throw 'Falló la reparación de imágenes.' }
+npm run check:images
+if ($LASTEXITCODE -ne 0) { throw 'Hay rutas de imágenes faltantes.' }
+```
+
+La reparación solo actualiza imágenes vacías y enlaces remotos antiguos conocidos de los scripts de muestra. No inserta productos ni descarga imágenes. Si usas otra ruta de SQLite, respalda ese archivo en lugar de hdm.db. Reinicia los servidores de los pasos 6 y 7. Consulta [IMAGENES-LOCALES.md](IMAGENES-LOCALES.md) para el detalle.
+
+## Versión 2: promociones y Excel
+
+Para actualizar una copia ya instalada conservando sus datos, usa **VERSION-2.md**. En Promociones, marca al menos dos como destacadas para activar la rotación de la portada. El menú del panel incluye el Centro de Excel; los formatos y pasos están en **EXCEL.md**.

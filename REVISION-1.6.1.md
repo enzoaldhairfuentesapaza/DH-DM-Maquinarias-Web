@@ -60,3 +60,11 @@ No hubo un rediseño visual general ni una prueba manual exhaustiva de cada comb
 ## Organización posterior de documentación
 
 README.md describe funciones y novedades; LOCAL.md contiene el arranque en Windows; DEPLOY-WEBUZO.md contiene la publicación. La plantilla local se copia a .env.development.local y .env.production declara https://dh-dm-maquinarias.com. Se retiraron README-BACKEND.md y README-V6.md, que repetían enlaces. Esta etapa cambia documentación y configuración pública de Vite; no modifica la lógica de la aplicación.
+
+## Corrección posterior de imágenes iniciales
+
+La carga inicial dejaba vacías seis rutas del blog y tres de maquinaria. Se incorporaron las asignaciones al JSON y a los datos estáticos. Las fotos del blog y de PC200-8 ya estaban incluidas; se añadieron nueve miniaturas locales de Wikimedia para las dos máquinas restantes y los siete ejemplos optativos, con autores/licencias y etiquetas de referencia.
+
+load_seed_data.php ejecuta una reparación repetible que conserva fotos personalizadas y no inserta inventario adicional. Las utilidades antiguas del blog/maquinaria apuntan a esa reparación. build ahora verifica las rutas iniciales mediante npm run check:images.
+
+Validación adicional: 17 comprobaciones de carga/reparación en SQLite; 20 comprobaciones de navegador, incluidas decodificación con solicitudes externas bloqueadas, tarjetas y créditos; 107 archivos de imágenes iniciales verificados. No se detectaron referencias estáticas a imágenes inexistentes en el código revisado. Los 4.697 repuestos sin fotografía original siguen sin foto; requieren material propio. Resultados en tests/resultados/imagenes-*.json.

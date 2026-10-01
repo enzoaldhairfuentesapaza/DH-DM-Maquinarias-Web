@@ -1,3 +1,5 @@
+import { normalize } from "./excelFiles";
+import ExcelTools from "./ExcelTools";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Plus, Trash2, Pencil, Check, X, Search } from "lucide-react";
@@ -94,6 +96,8 @@ export default function CategoriasAdmin() {
 
   return (
     <div>
+      {items.some(c => c.id !== editId && normalize(c.nombre) === normalize(editId ? editNombre : nuevo)) && normalize(editId ? editNombre : nuevo) !== "" && <p className="duplicate-tag" role="status">Ya existe una categoría con el mismo nombre en {tab}.</p>}
+      <ExcelTools entity="categorias" onImported={() => void load()} />
       <div className="admin-header-row">
         <div>
           <p className="subtitle" style={{ marginBottom: 4 }}>
@@ -188,7 +192,7 @@ export default function CategoriasAdmin() {
                         }}
                       />
                     ) : (
-                      c.nombre
+                      <>{c.nombre}{items.filter(other => normalize(other.nombre) === normalize(c.nombre)).length > 1 && <span className="duplicate-tag">Ya existe una categoría con el mismo nombre</span>}</>
                     )}
                   </td>
                   <td>

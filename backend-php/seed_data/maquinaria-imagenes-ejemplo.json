@@ -1,0 +1,37 @@
+[
+  {
+    "nombre": "Cargador Frontal de Ruedas (ejemplo)",
+    "imagen": "/maquinaria/referencias/cargador.jpg",
+    "imagen_anterior_archivo": "Caterpillar 950k Wheel Loader.jpg"
+  },
+  {
+    "nombre": "Motoniveladora (ejemplo)",
+    "imagen": "/maquinaria/referencias/motoniveladora.jpg",
+    "imagen_anterior_archivo": "Caterpillar 12G grader MD3.jpg"
+  },
+  {
+    "nombre": "Retroexcavadora (ejemplo)",
+    "imagen": "/maquinaria/referencias/retroexcavadora.jpg",
+    "imagen_anterior_archivo": "Caterpillar 908H.JPG"
+  },
+  {
+    "nombre": "Tractor de Orugas (ejemplo)",
+    "imagen": "/maquinaria/referencias/tractor.jpg",
+    "imagen_anterior_archivo": "Caterpillar D4C bulldozer.jpg"
+  },
+  {
+    "nombre": "Volquete Minero (ejemplo)",
+    "imagen": "/maquinaria/referencias/volquete.jpg",
+    "imagen_anterior_archivo": "Caterpillar 769D p1.JPG"
+  },
+  {
+    "nombre": "Grúa Móvil (ejemplo)",
+    "imagen": "/maquinaria/referencias/grua.jpg",
+    "imagen_anterior_archivo": "Mobile crane.jpg"
+  },
+  {
+    "nombre": "Rodillo Compactador (ejemplo)",
+    "imagen": "/maquinaria/referencias/compactadora.jpg",
+    "imagen_anterior_archivo": "Caterpillar 825G Soil Compactor.jpg"
+  }
+]

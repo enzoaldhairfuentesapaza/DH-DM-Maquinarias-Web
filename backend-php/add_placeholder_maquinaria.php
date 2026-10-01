@@ -2,22 +2,16 @@
 require_once __DIR__ . '/cli_only.php';
 /**
  * Agrega maquinaria de EJEMPLO/PLACEHOLDER en las categorias que no tenian
- * productos todavia, con fotos de licencia libre (Wikimedia Commons) mientras
+ * productos todavia, con fotos locales de referencia (creditos en public/creditos-imagenes.html) mientras
  * se completa el inventario real. NO borra ni modifica lo que ya existe.
  *
  * Ejecutar por terminal; nunca desde el navegador.
  * este archivo del servidor.
  *
- * Creditos de fotos (Wikimedia Commons, licencias CC0 / CC-BY-SA):
- * ver el array $items abajo, campo 'credito'.
+ * Las fotos de referencia estan incluidas; no se descarga nada al ejecutar.
  */
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/helpers.php';
-
-function wm(string $filename, int $width = 900): string
-{
-    return 'https://commons.wikimedia.org/wiki/Special:FilePath/' . rawurlencode($filename) . '?width=' . $width;
-}
 
 $items = [
     [
@@ -34,7 +28,7 @@ $items = [
             ['label' => 'Capacidad de cucharón', 'valor' => 'Consultar'],
             ['label' => 'Estado', 'valor' => 'Ficha de ejemplo'],
         ],
-        'imagen' => wm('Caterpillar 950k Wheel Loader.jpg'),
+        'imagen' => '/maquinaria/referencias/cargador.jpg',
         'credito' => 'Wikimedia Commons',
     ],
     [
@@ -51,7 +45,7 @@ $items = [
             ['label' => 'Ancho de cuchilla', 'valor' => 'Consultar'],
             ['label' => 'Estado', 'valor' => 'Ficha de ejemplo'],
         ],
-        'imagen' => wm('Caterpillar 12G grader MD3.jpg'),
+        'imagen' => '/maquinaria/referencias/motoniveladora.jpg',
         'credito' => 'Wikimedia Commons',
     ],
     [
@@ -68,7 +62,7 @@ $items = [
             ['label' => 'Profundidad de excavación', 'valor' => 'Consultar'],
             ['label' => 'Estado', 'valor' => 'Ficha de ejemplo'],
         ],
-        'imagen' => wm('Caterpillar 908H.JPG'),
+        'imagen' => '/maquinaria/referencias/retroexcavadora.jpg',
         'credito' => 'Wikimedia Commons',
     ],
     [
@@ -85,7 +79,7 @@ $items = [
             ['label' => 'Ancho de cuchilla', 'valor' => 'Consultar'],
             ['label' => 'Estado', 'valor' => 'Ficha de ejemplo'],
         ],
-        'imagen' => wm('Caterpillar D4C bulldozer.jpg'),
+        'imagen' => '/maquinaria/referencias/tractor.jpg',
         'credito' => 'Wikimedia Commons',
     ],
     [
@@ -102,7 +96,7 @@ $items = [
             ['label' => 'Capacidad de carga', 'valor' => 'Consultar'],
             ['label' => 'Estado', 'valor' => 'Ficha de ejemplo'],
         ],
-        'imagen' => wm('Caterpillar 769D p1.JPG'),
+        'imagen' => '/maquinaria/referencias/volquete.jpg',
         'credito' => 'Wikimedia Commons (dominio público / CC0)',
     ],
     [
@@ -119,7 +113,7 @@ $items = [
             ['label' => 'Capacidad de izaje', 'valor' => 'Consultar'],
             ['label' => 'Estado', 'valor' => 'Ficha de ejemplo'],
         ],
-        'imagen' => wm('Mobile crane.jpg'),
+        'imagen' => '/maquinaria/referencias/grua.jpg',
         'credito' => 'Wikimedia Commons',
     ],
     [
@@ -136,7 +130,7 @@ $items = [
             ['label' => 'Ancho de rodillo', 'valor' => 'Consultar'],
             ['label' => 'Estado', 'valor' => 'Ficha de ejemplo'],
         ],
-        'imagen' => wm('Caterpillar 825G Soil Compactor.jpg'),
+        'imagen' => '/maquinaria/referencias/compactadora.jpg',
         'credito' => 'Wikimedia Commons',
     ],
 ];

@@ -1,6 +1,6 @@
 # DH & DM Maquinarias
 
-Sitio corporativo y sistema de gestión de maquinaria, repuestos y cotizaciones. Versión **1.6.1**. Desarrollado con React, TypeScript y Vite, con una API PHP. SQLite se usa para desarrollo; MySQL/MariaDB para producción.
+Sitio corporativo y sistema de gestión de maquinaria, repuestos y cotizaciones. Versión **2.0.0**. Desarrollado con React, TypeScript y Vite, con una API PHP. SQLite se usa para desarrollo; MySQL/MariaDB para producción.
 
 Sitio de producción configurado: https://dh-dm-maquinarias.com/. La configuración del proyecto no confirma que esta versión esté publicada en el hosting.
 
@@ -8,8 +8,11 @@ Sitio de producción configurado: https://dh-dm-maquinarias.com/. La configuraci
 
 | Archivo | Qué encontrarás |
 |---|---|
+| [VERSION-2.md](VERSION-2.md) | Cambios y actualización desde tu copia 1.6.1, con comandos PowerShell |
+| [EXCEL.md](EXCEL.md) | Plantillas, importación, exportación, formatos y duplicados |
 | [LOCAL.md](LOCAL.md) | Preparación de PHP, entorno local, base, owner, catálogo y arranque en Windows/PowerShell |
 | [DEPLOY-WEBUZO.md](DEPLOY-WEBUZO.md) | Compilación, MySQL, instalación o actualización en Webuzo/Apache y reversión |
+| [IMAGENES-LOCALES.md](IMAGENES-LOCALES.md) | Corrección de imágenes iniciales y actualización de bases ya creadas |
 | [GIT-GITHUB.md](GIT-GITHUB.md) | Actualizar el repositorio y subir cambios pequeños |
 | [REVISION-1.6.1.md](REVISION-1.6.1.md) | Correcciones técnicas, pruebas y límites de la revisión |
 
@@ -45,7 +48,15 @@ El panel se abre en `/admin`; el acceso está en `/admin/login`. Los permisos se
 
 El cotizador formal permite agregar productos, aplicar ajustes por marca, trabajar con PEN/USD y tipo de cambio, generar PDF y consultar historial. `/cotizador` abre esa herramienta y `/cotizador/historial` abre su historial. Sus archivos están en **public/cotizador-app/**. Guardar una cotización recuperada del historial crea una copia. Los PDF mantienen el redondeo de precios a enteros de la regla comercial existente.
 
-## Novedades de 1.6.1
+## Novedades de 2.0.0
+
+Portada de promociones destacadas con rotación cada seis segundos, controles y pausa; se retira la promoción duplicada junto al tablón. Los globos de sugerencias y cotización ya no se superponen.
+
+El panel incorpora vistas previas ampliadas a escala real en escritorio/móvil, avisos de nombres repetidos y un Centro de Excel: plantillas, importación con revisión y exportación completa de las tablas. Los registros de auditoría, papelera y notificaciones se exportan; las estadísticas se descargan desde su página. Los permisos existentes se mantienen también en la API.
+
+Para actualizar una copia ya instalada, comienza por **VERSION-2.md**; para instalar desde cero, usa **LOCAL.md**. Marca varias promociones como destacadas en el panel para activar la rotación.
+
+## Correcciones previas de 1.6.1
 
 - Configuración PHP privada separada, migraciones aditivas y utilidades disponibles solo por terminal.
 - Autenticación JWT más estricta y revocación de sesiones al restablecer contraseñas.
@@ -101,6 +112,7 @@ Desde la raíz del proyecto, con las dependencias instaladas:
 npm run dev
 npm run lint
 npm run typecheck
+npm run check:images
 npm run build
 npm run release
 ```
@@ -117,3 +129,7 @@ Ejecuta el comando que corresponda a tu tarea. dev mantiene la terminal ocupada;
 - Hacer refactorizaciones pequeñas: componentes del panel grandes, utilidades compartidas y pruebas de los flujos afectados.
 
 Pendientes para una etapa posterior: paginación/filtros desde la API, optimización de imágenes, posible sesión con cookies HttpOnly y revisión de datos estáticos frente a la base. Son cambios funcionales; esta reorganización de documentación no los implementa.
+
+### Imágenes iniciales
+
+El blog y la maquinaria de muestra ya tienen rutas locales; las fotos externas de referencia están incluidas y acreditadas en /creditos-imagenes.html. build comprueba que los archivos iniciales existan. Los repuestos sin foto original conservan su estado sin fotografía; no se les asignan fotos de otros productos.

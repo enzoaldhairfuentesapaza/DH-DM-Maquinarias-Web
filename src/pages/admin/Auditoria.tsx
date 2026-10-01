@@ -1,3 +1,4 @@
+import ExcelTools from "./ExcelTools";
 import { useEffect, useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import { api } from "../../api/client";
@@ -80,6 +81,7 @@ export default function Auditoria() {
 
   return (
     <div>
+      <ExcelTools entity="auditoria"  />
       <div className="admin-header-row">
         <div>
           <h1>Registro de actividad</h1>

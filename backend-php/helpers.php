@@ -12,6 +12,9 @@ function json_response($data, int $status = 200): void
 
 function json_error(string $message, int $status = 400): void
 {
+    // Only excel_review enables this scope, resets it in finally, and reports per-row errors.
+    // Normal endpoints keep their original HTTP error behavior.
+    if (!empty($GLOBALS['hdm_excel_validation'])) throw new InvalidArgumentException($message);
     json_response(['detail' => $message], $status);
 }
 

@@ -12,6 +12,8 @@ import {
   Legend,
 } from "recharts";
 import { TrendingUp, Receipt, ClipboardList, Clock, Package, Truck } from "lucide-react";
+import { saveWorkbook } from "./excelFiles";
+import { Link } from "react-router-dom";
 import { api } from "../../api/client";
 import "./admin.css";
 
@@ -55,6 +57,8 @@ export default function Estadisticas() {
   const [data, setData] = useState<EstadisticasResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [exporting,setExporting] = useState(false);
+  const [exportError,setExportError] = useState("");
   const [agrupacion, setAgrupacion] = useState<Agrupacion>("mes");
 
   useEffect(() => {
@@ -64,6 +68,21 @@ export default function Estadisticas() {
       .catch((err) => setError(err instanceof Error ? err.message : "Error al cargar"))
       .finally(() => setLoading(false));
   }, []);
+
+  async function exportReport() {
+    if (!data) return;
+    setExporting(true); setExportError("");
+    try {
+      const rows: Record<string,unknown>[] = Object.entries(data.resumen).map(([indicador,valor])=>({seccion:"Resumen",indicador,valor}));
+      for (const group of ["semana","mes","anio"] as const) {
+        for (const point of data.ventas[group]) rows.push({seccion:"Ventas",agrupacion:group,...point});
+        for (const point of data.cotizaciones[group]) rows.push({seccion:"Cotizaciones",agrupacion:group,...point});
+      }
+      for (const item of [...data.top_repuestos,...data.top_maquinarias]) rows.push({seccion:"Ranking de solicitudes",...item});
+      await saveWorkbook({key:"estadisticas",fields:[],importable:false,identity:[],updates:false},rows);
+    } catch (e) {setExportError(e instanceof Error?e.message:"No se pudo descargar el informe.");}
+    finally {setExporting(false);}
+  }
 
   if (loading) return <p>Cargando estadísticas...</p>;
   if (error) return <div className="admin-error">{error}</div>;
@@ -83,6 +102,8 @@ export default function Estadisticas() {
         </div>
       </div>
 
+      <div className="excel-toolbar" style={{marginBottom:20}}><button type="button" className="btn-admin small outline" disabled={exporting} onClick={() => void exportReport()}>{exporting?"Preparando informe…":"Descargar estadísticas (.xlsx)"}</button><Link to="/admin/excel?seccion=ventas">Importar ventas</Link><Link to="/admin/excel?seccion=cotizaciones">Importar solicitudes</Link></div>
+      {exportError && <p className="admin-error">{exportError}</p>}
       <div className="admin-cards" style={{ marginBottom: 24 }}>
         <div className="admin-card" style={{ cursor: "default" }}>
           <div className="icon-badge">

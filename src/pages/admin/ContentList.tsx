@@ -5,6 +5,8 @@ import { api } from "../../api/client";
 import { entities } from "./entityConfig";
 import { useFeedback } from "../../context/FeedbackContext";
 import "./admin.css";
+import ExcelTools from "./ExcelTools";
+import { normalize } from "./excelFiles";
 
 type Row = Record<string, unknown> & { id: number };
 type OrdenCampo = "nombre" | "fecha";
@@ -107,6 +109,12 @@ export default function ContentList() {
     return resultado;
   }, [items, busqueda, ordenCampo, ordenDireccion, config]);
 
+  const counts = useMemo(() => {
+    const map = new Map<string, number>();
+    items.forEach(item => { const key = normalize(getCampoNombre(item)); if (key) map.set(key, (map.get(key) ?? 0) + 1); });
+    return map;
+  }, [items]);
+
   if (!config) {
     return <p>Sección no encontrada.</p>;
   }
@@ -131,6 +139,7 @@ export default function ContentList() {
         </button>
       </div>
 
+      <ExcelTools key={config.key} entity={config.key} onImported={() => void load()} />
       <div className="admin-filters-bar">
         <div className="admin-search-box">
           <Search size={16} />
@@ -197,6 +206,7 @@ export default function ContentList() {
                         ? "Sí"
                         : "No"
                       : String(item[c.name] ?? "")}
+                    {["nombre", "titulo"].includes(c.name) && (counts.get(normalize(getCampoNombre(item))) ?? 0) > 1 && <span className="duplicate-tag">Ya existe {config.singular.toLowerCase()} con el mismo nombre</span>}
                   </td>
                 ))}
                 <td>

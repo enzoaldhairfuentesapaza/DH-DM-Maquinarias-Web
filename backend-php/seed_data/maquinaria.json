@@ -28,7 +28,7 @@
         "valor": "8 200 h"
       }
     ],
-    "imagen": "",
+    "imagen": "/maquinaria/referencias/cat-320d.jpg",
     "destacado": true
   },
   {
@@ -60,7 +60,7 @@
         "valor": "7 100 h"
       }
     ],
-    "imagen": "",
+    "imagen": "/maquinaria/pc200-8.jpg",
     "destacado": true
   },
   {
@@ -92,7 +92,7 @@
         "valor": "8 900 h"
       }
     ],
-    "imagen": "",
+    "imagen": "/maquinaria/referencias/hitachi-referencial.jpg",
     "destacado": true
   }
 ]

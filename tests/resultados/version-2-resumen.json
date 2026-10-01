@@ -1,0 +1,21 @@
+{
+  "version": "2.0.0",
+  "checks": {
+    "lint": "passed",
+    "typescript": "passed",
+    "build": "passed",
+    "release": "passed",
+    "api_regression": 61,
+    "excel_sqlite": 71,
+    "excel_mariadb": 71,
+    "browser_development": 30,
+    "browser_compiled_apache_php": 27,
+    "npm_audit_vulnerabilities": 0
+  },
+  "notes": [
+    "ExcelJS se carga únicamente al usar Excel; su chunk comprimido es aproximadamente 271 kB.",
+    "Las pruebas usan datos ficticios y bases desechables.",
+    "Los resultados antiguos de 1.6.1 se conservan como referencia.",
+    "El hosting real no fue actualizado."
+  ]
+}
