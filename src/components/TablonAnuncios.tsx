@@ -11,55 +11,20 @@ type Slide = {
   link?: string;
 };
 
-// Anuncios de respaldo: solo se usan si todavía no hay ninguna novedad
-// marcada como "destacada" en el panel (Editar Página > Novedades), para que
-// el tablón nunca se vea vacío.
-const slidesRespaldo: Slide[] = [
-  {
-    imagen: "/anuncios/slide-1.jpg",
-    titulo: "Excavadoras Caterpillar",
-    texto: "Equipos de excavación de alto rendimiento para tu operación.",
-  },
-  {
-    imagen: "/anuncios/slide-2.jpg",
-    titulo: "Descuentos del mes",
-    texto: "Filtros y mangueras hidráulicas con precios especiales.",
-  },
-  {
-    imagen: "/anuncios/slide-3.jpg",
-    titulo: "Repuestos para todo tipo de obra",
-    texto: "Desde movimiento de tierras hasta demolición.",
-  },
-  {
-    imagen: "/anuncios/slide-4.jpg",
-    titulo: "Atención Personalizada",
-    texto: "Asesoría Comercial.",
-  },
-];
-
 export default function TablonAnuncios() {
   const [activo, setActivo] = useState(0);
-  const { data: novedades } = useNovedades();
-
-  // Las novedades marcadas como destacadas en el panel reemplazan los
-  // anuncios fijos; si todavía no hay ninguna, se usan los de respaldo.
-  const destacadas = novedades.filter((n) => n.destacado);
-  const slides: Slide[] =
-    destacadas.length > 0
-      ? destacadas.map((n) => ({
-          imagen: n.imagen || "/anuncios/slide-1.jpg",
-          titulo: n.titulo,
-          texto: n.resumen,
-          link: "/novedades",
-        }))
-      : slidesRespaldo;
+  const { data: novedades, loading, error } = useNovedades();
+  // Solo contenido de la API: las destacadas aparecen primero.
+  const slides: Slide[] = [...novedades]
+    .sort((a,b) => Number(b.destacado)-Number(a.destacado))
+    .map(n => ({imagen:n.imagen, titulo:n.titulo, texto:n.resumen, link:"/novedades"}));
 
   const siguiente = useCallback(() => {
-    setActivo((a) => (a + 1) % slides.length);
+    setActivo((a) => slides.length ? (a + 1) % slides.length : 0);
   }, [slides.length]);
 
   const anterior = () => {
-    setActivo((a) => (a - 1 + slides.length) % slides.length);
+    setActivo((a) => slides.length ? (a - 1 + slides.length) % slides.length : 0);
   };
 
   // Si cambia la cantidad de slides (ej. se cargan las novedades), evitamos
@@ -70,9 +35,12 @@ export default function TablonAnuncios() {
   }, [slides.length]);
 
   useEffect(() => {
+    if (slides.length < 2) return;
     const id = setInterval(siguiente, 5000);
     return () => clearInterval(id);
-  }, [siguiente]);
+  }, [siguiente, slides.length]);
+
+  if (loading || error || !slides.length) return <section className="tablon tablon-status" aria-label="Tablón de novedades"><p role={error ? "alert" : "status"}>{loading ? "Cargando novedades…" : error ? "No se pudieron cargar las novedades. Intenta recargar la página." : "Todavía no hay novedades publicadas."}</p></section>;
 
   return (
     <section className="tablon">
@@ -91,6 +59,8 @@ export default function TablonAnuncios() {
             <Link
               key={`${s.titulo}-${i}`}
               to={s.link}
+              tabIndex={i === activo ? 0 : -1}
+              aria-hidden={i !== activo}
               className={`tablon-slide ${i === activo ? "active" : ""}`}
               style={{ backgroundImage: `url(${s.imagen})` }}
             >
@@ -108,6 +78,7 @@ export default function TablonAnuncios() {
         })}
       </div>
 
+      {slides.length > 1 && <>
       <button className="tablon-arrow left" onClick={anterior} aria-label="Anterior">
         <ChevronLeft size={22} />
       </button>
@@ -125,6 +96,7 @@ export default function TablonAnuncios() {
           />
         ))}
       </div>
+      </>}
     </section>
   );
 }

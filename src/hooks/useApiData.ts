@@ -151,7 +151,7 @@ export function useCategorias(tipo: "maquinaria" | "repuesto") {
 
 /**
  * Configuración general del sitio (números de contacto, correo, etc.)
- * editable por admins/owners desde "Editar Página > Números y correo".
+ * editable únicamente por el owner desde "Editar Página > Números y correo".
  */
 export interface ConfiguracionSitio {
   whatsapp_primario: string;

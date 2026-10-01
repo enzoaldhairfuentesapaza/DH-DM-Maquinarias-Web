@@ -114,3 +114,9 @@ Sigue **DEPLOY-WEBUZO.md**. `npm run release` genera la API y el frontend juntos
 ## Validación de la entrega
 
 Los resultados de las pruebas están en `tests/resultados/`. Se verificaron permisos e importaciones con SQLite y MariaDB, además del recorrido en navegador de portada, globos, borradores y Excel. La comprobación del hosting real queda pendiente de tu despliegue.
+
+### Ajustes adicionales de 2.1.0
+
+- Bienvenida organizada en cuatro grupos: mensaje, imagen, botones y cifras, con campos amplios y vista previa en vivo.
+- El tablón muestra exclusivamente novedades guardadas en la base de datos, con destacadas primero. Sin novedades o ante un error se muestra un mensaje, sin anuncios fijos de respaldo.
+- Los filtros de cotizaciones identifican el origen: Desde el carrito y Desde Contacto. Las consultas generales de Contacto se conservan en Repuestos y otros.

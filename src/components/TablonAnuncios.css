@@ -157,3 +157,5 @@
     }
 
 }
+
+.tablon-status { display:grid; place-items:center; padding:30px; box-sizing:border-box; color:#fff; text-align:center; }

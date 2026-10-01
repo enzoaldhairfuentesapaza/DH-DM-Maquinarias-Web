@@ -1,10 +1,17 @@
 {
-  "passed": 26,
+  "passed": 33,
   "checks": [
+    "empty database shows empty news state without fixed adverts",
+    "non-featured database news appears in bulletin",
+    "bulletin reflects database edits",
+    "failed news API does not show invented adverts",
     "welcome is always the first slide",
     "welcome statistics and catalogue buttons restored",
     "carousel advances automatically with mouse over the slide and one featured promotion",
     "explicit pause holds welcome slide",
+    "welcome editor groups message, image, buttons and statistics",
+    "welcome text inputs have readable full field styling",
+    "welcome form fits mobile viewport",
     "welcome editor saves separate content",
     "edited welcome is visible on initial home card",
     "plus and minus edit specification rows without delimiter syntax",

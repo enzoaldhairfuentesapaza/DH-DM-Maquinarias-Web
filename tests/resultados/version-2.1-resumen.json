@@ -8,6 +8,11 @@
     "excel_sqlite": 71,
     "workflows_sqlite": 24,
     "workflows_mariadb": 20,
-    "browser": 26
-  }
+    "browser": 33
+  },
+  "refinements": [
+    "Grouped welcome editor",
+    "Database-only news bulletin",
+    "Quotation origin explanation"
+  ]
 }

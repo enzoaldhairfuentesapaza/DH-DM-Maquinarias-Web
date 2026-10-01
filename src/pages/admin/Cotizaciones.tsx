@@ -169,18 +169,20 @@ export default function Cotizaciones() {
             {t === "productos" && (
               <>
                 <Package size={13} style={{ verticalAlign: "-2px", marginRight: 4 }} />
-                Cotizaciones de productos ({totalProductos})
+                Desde el carrito ({totalProductos})
               </>
             )}
             {t === "contacto" && (
               <>
                 <MessageCircle size={13} style={{ verticalAlign: "-2px", marginRight: 4 }} />
-                Consultas de contacto ({totalContacto})
+                Desde Contacto ({totalContacto})
               </>
             )}
           </button>
         ))}
       </div>
+
+      <p className="quote-origin-help"><strong>Origen de la solicitud:</strong> “Desde el carrito” reúne los productos seleccionados para cotizar por WhatsApp, correo o la página. “Desde Contacto” reúne las consultas generales del formulario de Contacto; aparecen en Repuestos y otros.</p>
 
       <div className="admin-tabs">
         {FILTROS.map((f) => (
