@@ -56,3 +56,7 @@ No hubo un rediseño visual general ni una prueba manual exhaustiva de cada comb
 - Paquete de despliegue con public_html/ y mantenimiento/ separados.
 - Tests de API y JWT, y resultados de la verificación.
 - DEPLOY-WEBUZO.md con instrucciones para instalación nueva, actualización y reversión.
+
+## Organización posterior de documentación
+
+README.md describe funciones y novedades; LOCAL.md contiene el arranque en Windows; DEPLOY-WEBUZO.md contiene la publicación. La plantilla local se copia a .env.development.local y .env.production declara https://dh-dm-maquinarias.com. Se retiraron README-BACKEND.md y README-V6.md, que repetían enlaces. Esta etapa cambia documentación y configuración pública de Vite; no modifica la lógica de la aplicación.

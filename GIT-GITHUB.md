@@ -45,7 +45,7 @@ $ignorados | ForEach-Object { git rm --cached -- "$_" }
 
 Esto conserva los archivos locales; el siguiente commit elimina su seguimiento. Si alguna credencial real estaba en el repositorio antiguo, cambia esa credencial: este procedimiento no la borra del historial.
 
-El .gitignore conserva package-lock.json, las imágenes públicas y los SQL de esquema/migración. .env.production está versionado porque en esta entrega contiene únicamente VITE_API_URL vacío; nunca añadas secretos a ese archivo ni a otras variables VITE_.
+El .gitignore conserva package-lock.json, las imágenes públicas y los SQL de esquema/migración. .env.production está versionado porque en esta entrega contiene únicamente el origen público VITE_API_URL=https://dh-dm-maquinarias.com; nunca añadas secretos a ese archivo ni a otras variables VITE_.
 
 ## 4. Probar y subir la actualización
 
@@ -60,7 +60,7 @@ git commit -m "Actualiza DH & DM a 1.6.1: correcciones y preparación de desplie
 git push origin main
 ```
 
-Revisa que el commit no incluya credenciales ni bases personales. git add -A incluye también la eliminación de archivos antiguos. Para configurar y probar PHP localmente, sigue la sección Desarrollo de README.md.
+Revisa que el commit no incluya credenciales ni bases personales. git add -A incluye también la eliminación de archivos antiguos. Para configurar y probar PHP localmente, sigue LOCAL.md.
 
 Clonar y reemplazar los archivos no requiere un push forzado: el commit nuevo parte del historial antiguo y actualiza todo el contenido. Si GitHub tiene commits nuevos desde tu clonación y rechaza el push, primero revisa esos cambios y usa git pull --rebase origin main; resuelve conflictos y repite el push normal.
 
